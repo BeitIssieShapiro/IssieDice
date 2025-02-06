@@ -41,7 +41,7 @@ ViroMaterials.createMaterials({
         diffuseColor: "#008000", // Green like a casino table
       },
       wallMaterial: {
-        diffuseColor: "#222222", // Dark walls
+        diffuseColor: "#ffffff", // Dark walls
       },
     //   dice1: { diffuseTexture: require('./res/dice_1.png') },
     //   dice2: { diffuseTexture: require('./res/dice_2.png') },

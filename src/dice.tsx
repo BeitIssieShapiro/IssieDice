@@ -77,17 +77,17 @@ export default function DiceScene(props: DiceSceneProps) {
 
                 <ViroAmbientLight color="#ffffff" intensity={400} />
 
-                <ViroNode position={[-2.5, 0, -9]}>
+                {/* <ViroNode position={[-2.5, 0, -9]}>
                     <Axes />
-                </ViroNode>
+                </ViroNode> */}
                 {/* Walls [red, blue, green]*/}
 
                 {/* Floor (table surface) */}
                 <ViroQuad
-                    position={[0, 0, -15]}
-                    rotation={[-89, 0, 0]}
-                    width={100}
-                    height={100}
+                    position={[0, 0, -2]}
+                    rotation={[-90, 0, 0]}
+                    width={6}
+                    height={15}
                     materials={["tableSurface"]}
                     physicsBody={{
                         type: "Static",
