@@ -23,12 +23,13 @@ interface DiceSceneProps {
     };
 }
 
+const x = require("../cube2.bin")
 // Define positions and rotations for the floor
 const floorPosition: [number, number, number] = [0, 0, -3];
 const floorRotation: [number, number, number] = [90, 0, 0];
 const initialPosition: Viro3DPoint = [0, 2, -3];
 const initialImpulse: [number, number, number] = [0, 0, -.2];
-const initialTourqe: [number, number, number] = [0, 0, 0];
+const initialTourqe: [number, number, number] = [0, .1, 0];
 const wallHeight = 2
 
 export default function DiceScene(props: DiceSceneProps) {
@@ -126,7 +127,7 @@ export default function DiceScene(props: DiceSceneProps) {
                     key={`dice-${sceneKey}`} // Changing the key will force a re-mount.
                     ref={r => cube.current = r}
                     onLoadEnd={!hideDice ? onDiceLoadEnd : undefined}
-                    source={require("../cube.glb")} // Your dice model
+                    source={require("../cube2.obj")} 
                     position={[0, 4, -1]}
                     rotation={[0, 0, 0]}
                     scale={[0.4, 0.4, 0.4]}
@@ -138,9 +139,9 @@ export default function DiceScene(props: DiceSceneProps) {
                         "top",    // Top face
                         "bottom", // Bottom face
                     ]}
-                    type="GLB"
-                    // Attach a dynamic physics body to the dice.
-                    // You can set initial velocity and angular velocity here.
+                    //materials={[ "top"]}
+                    type="OBJ"
+                    onError={(error) => console.error("Viro3DObject error:", error.nativeEvent.error)}
                     physicsBody={hideDice ? undefined :
                         {
                             type: "Dynamic",
