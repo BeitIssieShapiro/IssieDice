@@ -27,9 +27,9 @@ interface DiceSceneProps {
 const floorPosition: [number, number, number] = [0, 0, -3];
 const floorRotation: [number, number, number] = [90, 0, 0];
 const initialPosition: Viro3DPoint = [0, 2, -3];
-const initialImpulse: [number, number, number] = [0, .1, -.3];
-const initialTourqe: [number, number, number] = [0, .05, -.05];
-
+const initialImpulse: [number, number, number] = [0, 0, -.2];
+const initialTourqe: [number, number, number] = [0, 0, 0];
+const wallHeight = 2
 
 export default function DiceScene(props: DiceSceneProps) {
     const { initialVelocity, initialAngularVelocity, sceneKey } =
@@ -70,14 +70,14 @@ export default function DiceScene(props: DiceSceneProps) {
         //ref={r => scene.current = r}      
         //rotation={[0.1, 0, 0]}
         >
-            <ViroCamera active position={[0, 3, 2]} />
+            <ViroCamera active position={[0, 4, 2]} rotation={[-25, 0, 0]}/>
 
 
-            <ViroNode position={[0, 0, 0]} rotation={[10, 0, 0]}>
+            <ViroNode position={[0, 0, 0]} >
 
                 <ViroAmbientLight color="#ffffff" intensity={400} />
 
-                <ViroNode position={[-1, 0, -3]}>
+                <ViroNode position={[-2.5, 0, -9]}>
                     <Axes />
                 </ViroNode>
                 {/* Walls [red, blue, green]*/}
@@ -91,7 +91,7 @@ export default function DiceScene(props: DiceSceneProps) {
                     materials={["tableSurface"]}
                     physicsBody={{
                         type: "Static",
-                        friction: 0.3,
+                        friction: 0.9,
                         restitution: 0.2,
                     }}
                 />
@@ -101,21 +101,21 @@ export default function DiceScene(props: DiceSceneProps) {
                     // This wall is placed behind the dice so that it acts as a barrier
                     // without breaking the line of sight from the camera.
                     position={[0, 0, -10]}
-                    scale={[10, 3, 0.1]}
+                    scale={[6, wallHeight, 0.1]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
                 />
 
 
                 <ViroBox
-                    position={[-2, 0, -6]}
-                    scale={[0.1, 2, 10]}
+                    position={[-3, 0, -5]}
+                    scale={[0.1, wallHeight, 10]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
                 />
                 <ViroBox
-                    position={[2, 0, -6]}
-                    scale={[0.1, 2, 10]}
+                    position={[3, 0, -5]}
+                    scale={[0.1, wallHeight, 10]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
                 />
@@ -127,9 +127,9 @@ export default function DiceScene(props: DiceSceneProps) {
                     ref={r => cube.current = r}
                     onLoadEnd={!hideDice ? onDiceLoadEnd : undefined}
                     source={require("../cube.glb")} // Your dice model
-                    position={[0, 2, -3]}
+                    position={[0, 4, -1]}
                     rotation={[0, 0, 0]}
-                    scale={[0.2, 0.2, 0.2]}
+                    scale={[0.4, 0.4, 0.4]}
                     materials={[
                         "front",  // Front face
                         "back",   // Back face
