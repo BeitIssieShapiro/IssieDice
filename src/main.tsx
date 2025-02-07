@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { View, StyleSheet, Button, TouchableOpacity } from "react-native";
 import {
   Viro3DSceneNavigator,
@@ -8,7 +8,7 @@ import {
   ViroScene,
   ViroText,
 } from "@reactvision/react-viro";
-import DiceScene from "./dice";
+import { DiceScene, DiceSceneMethods } from "./diceScene";
 
 // 1) Define a dice material up front
 ViroMaterials.createMaterials({
@@ -19,7 +19,7 @@ ViroMaterials.createMaterials({
   redLine: { diffuseColor: '#FF0000' },
   greenLine: { diffuseColor: '#00FF00' },
   blueLine: { diffuseColor: '#0000FF' },
- 
+
   front: {
     diffuseColor: '#FF0000',
   },
@@ -53,9 +53,12 @@ const TestScene = () => <ViroScene>
   <ViroText text="Hello!" position={[-1, 0, -1]} />
 </ViroScene>
 
+const initialImpulse = [0, 0, -.2];
+
+const initialTorque = [.01, .05, -.05];
 
 export default function App() {
-  const [sceneKey, setSceneKey] = useState(0);
+  const sceneRef = useRef<DiceSceneMethods>(undefined); // Create a ref for the scene
 
   // State for dice velocity/spin
   const [initialVelocity, setInitialVelocity] = useState<[number, number, number]>(
@@ -67,21 +70,14 @@ export default function App() {
 
   // 2) Handler for "Throw Dice" button
   const handleThrowDice = () => {
-    // Random linear velocity
-    const vx = Math.random() * 4 - 2; // between -2 and +2
-    const vy = Math.random() * 2 + 2; // between 2 and 4
-    const vz = -(Math.random() * 2 + 2); // negative (further away if camera looks -Z)
+    const fz = -(Math.random() / 6 + .1);
 
     // Random angular velocity
-    const avx = Math.random() * 10 - 5;
-    const avy = Math.random() * 10 - 5;
-    const avz = Math.random() * 10 - 5;
+    const avx = Math.random() / 10;
+    const avy = Math.random() / 10;
+    const avz = Math.random() / 10;
 
-    setInitialVelocity([vx, vy, vz]);
-    setInitialAngularVelocity([avx, avy, avz]);
-
-    // Changing the key forces a re-mount of DiceScene -> new throw
-    setSceneKey(sceneKey => sceneKey + 1);
+    sceneRef.current?.rollDice([0, 0, fz], [avx, avy, avz]);
   };
 
   // 3) "Viro3DSceneNavigator" usage
@@ -98,12 +94,13 @@ export default function App() {
           }}
           initialScene={{
             scene: DiceScene,
+            passProps: {
+              ref: sceneRef,
+              initialImpulse,
+              initialTorque
+            }
           }}
-          viroAppProps={{
-            sceneKey,
-            initialVelocity,
-            initialAngularVelocity,
-          }}
+
           // optional rendering settings
           hdrEnabled={true}
           pbrEnabled={true}
