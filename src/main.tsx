@@ -1,6 +1,6 @@
 // App.tsx
-import React, { useRef, useState } from "react";
-import { View, StyleSheet, Button, TouchableOpacity } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView } from "react-native";
 import {
   Viro3DSceneNavigator,
   ViroCamera,
@@ -9,6 +9,10 @@ import {
   ViroText,
 } from "@reactvision/react-viro";
 import { DiceScene, DiceSceneMethods } from "./diceScene";
+import Icon from 'react-native-vector-icons/AntDesign';
+import { SettingsUI } from "./settings";
+import { Profile, readCurrentProfile } from "./profile";
+
 
 // 1) Define a dice material up front
 ViroMaterials.createMaterials({
@@ -22,27 +26,27 @@ ViroMaterials.createMaterials({
 
   front: {
     //diffuseColor: '#FF0000',
-    diffuseTexture: require("../assets/1.png"),
+    diffuseTexture: require("../assets/colors.png"),
     diffuseColor: '#FFFFFF',
   },
   back: {
-    diffuseTexture: require("../assets/1.png"),
+    diffuseTexture: require("../assets/colors.png"),
     diffuseColor: '#FFFFFF',
   },
   left: {
-    diffuseTexture: require("../assets/1.png"),
+    diffuseTexture: require("../assets/numbers.png"),
     diffuseColor: '#FFFFFF',
   },
   right: {
-    diffuseTexture: require("../assets/1.png"),
+    diffuseTexture: require("../assets/numbers.png"),
     diffuseColor: '#FFFFFF',
   },
   top: {
     diffuseColor: '#FFFFFF',
-    diffuseTexture: require("../assets/1.png"),
+    diffuseTexture: require("../assets/numbers.png"),
   },
   bottom: {
-    diffuseTexture: require("../assets/1.png"),
+    diffuseTexture: require("../assets/numbers.png"),
     diffuseColor: '#FFFFFF',
   },
   tableSurface: {
@@ -55,16 +59,24 @@ ViroMaterials.createMaterials({
   //   dice2: { diffuseTexture: require('./res/dice_2.png') },
 });
 
-const TestScene = () => <ViroScene>
-  {/* <ViroCamera position={[-1, 0, 0]} active={true} /> */}
-  <ViroText text="Hello!" position={[-1, 0, -1]} />
-</ViroScene>
-
 const initialImpulse = [0, -.2, -.2];
 
 const initialTorque = [.01, .05, -.05];
 
 export default function App() {
+  const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
+  const [openSettings, setOpenSettings] = useState<boolean>(false);
+  const [revision, setRevision] = useState<number>(0);
+  const [profile, setProfile] = useState<Profile>(readCurrentProfile());
+
+  useEffect(() => {
+    console.log("App reloading profile")
+    const p = readCurrentProfile();
+    setProfile(p);
+    updateDiceScene(p);
+  }, [revision]);
+
+
   const sceneRef = useRef<DiceSceneMethods>(undefined); // Create a ref for the scene
 
   // State for dice velocity/spin
@@ -88,11 +100,33 @@ export default function App() {
     sceneRef.current?.rollDice([0, fx, fz], [avx, avy, avz]);
   };
 
-   return (
-    <TouchableOpacity style={styles.container} >
-      <Button title="Throw Dice" onPress={handleThrowDice} style={styles.button} />
-      <View style={styles.viroContainer}>
+  const updateDiceScene = (profile: Profile) => {
+
+    sceneRef.current?.update(profile.dice);
+  };
+
+
+  return (
+    <SafeAreaView style={styles.container} onLayout={(e) => {
+      let wz = e.nativeEvent.layout;
+      setWindowSize(wz);
+    }}>
+
+      <TouchableOpacity style={styles.settingsButton}
+        onPress={() => setOpenSettings(prev => !prev)}
+      >
+        <Icon name={openSettings ? "close" : "setting"} color={openSettings ? "black" : "white"} size={35} />
+      </TouchableOpacity>
+
+      {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} />}
+      <>
+        {!openSettings && <TouchableOpacity style={styles.overlay}
+          onPress={handleThrowDice}
+          activeOpacity={1}
+        />}
         <Viro3DSceneNavigator
+          style={styles.viroContainer}
+          onTouchEnd={handleThrowDice}
           debug={true}
           onExitViro={() => {
             console.log("Exiting Viro...");
@@ -102,7 +136,8 @@ export default function App() {
             passProps: {
               ref: sceneRef,
               initialImpulse,
-              initialTorque
+              initialTorque,
+              dice: revision >= 0 ? profile.dice : [],
             }
           }}
 
@@ -113,13 +148,26 @@ export default function App() {
           shadowsEnabled={true}
           multisamplingEnabled={true}
         />
-      </View>
-    </TouchableOpacity>
+      </>
+
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  viroContainer: { flex: 1 },
-  button: { position: "absolute", bottom: 100, width: 100, height: 50 }
+  container: {
+    flex: 1,
+
+  },
+  overlay: {
+    flex: 1,
+    position: "absolute",
+    top: 0, left: 0, width: "100%", height: "100%",
+    backgroundColor: "transparent",
+    zIndex: 500
+  },
+  viroContainer: {
+    backgroundColor: "red",
+  },
+  settingsButton: { position: "absolute", top: 25, right: 10, zIndex: 1000 }
 });

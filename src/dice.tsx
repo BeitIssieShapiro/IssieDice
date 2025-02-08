@@ -19,7 +19,7 @@ interface DiceProps {
     initialTourqe: Viro3DPoint;
 }
 
-export default function Dice({ cubeKey, initialPosition, scale, initialImpulse, initialTourqe }: DiceProps) {
+export default function DiceObject({ cubeKey, initialPosition, scale, initialImpulse, initialTourqe }: DiceProps) {
     const cube = useRef<Viro3DObject | null>(undefined);
     const [hideDice, setHideDice] = useState<boolean>(false);
 
@@ -27,7 +27,6 @@ export default function Dice({ cubeKey, initialPosition, scale, initialImpulse, 
         console.log("reset cube", cubeKey, cube.current)
         setHideDice(true);
         setTimeout(() => {
-            console.log("show cube")
             setHideDice(false)
             setTimeout(() => shootDice(), 50);
         }, 100)
@@ -52,7 +51,7 @@ export default function Dice({ cubeKey, initialPosition, scale, initialImpulse, 
         key={cubeKey}
         ref={r => cube.current = r}
         onLoadEnd={!hideDice ? onDiceLoadEnd : undefined}
-        source={require("../assets/cube2.obj")}
+        source={require("../assets/cube3.obj")}
         position={initialPosition}
         rotation={[0, 0, 0]}
         scale={scale}

@@ -12,31 +12,40 @@ import {
 } from "@reactvision/react-viro";
 import { Axes } from "./axes";
 import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
-import Dice from "./dice";
+import DiceObject from "./dice";
+import { Dice } from "./profile";
 
 interface DiceSceneProps {
     initialImpulse: Viro3DPoint;
     initialTorque: Viro3DPoint;
+    dice: Dice[];
 }
 export interface DiceSceneMethods {
     rollDice: (impolse: Viro3DPoint, torque: Viro3DPoint) => void;
+    update: (dice: Dice[])=>void;
+
 }
 
 const wallHeight = 2
 
-export const DiceScene = forwardRef(({ initialImpulse, initialTorque }: DiceSceneProps, ref: any) => {
+export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: DiceSceneProps, ref: any) => {
     const [sceneKey, setSceneKey] = useState<number>(0);
     const [impulse, setImpulse] = useState<Viro3DPoint>(initialImpulse);
     const [torque, setTorque] = useState<Viro3DPoint>(initialTorque);
+    const [diceInfo, setDiceInfo] = useState<Dice[]>(dice);
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: (i, t) => {
             setImpulse(i);
             setTorque(t);
             setSceneKey(prev => prev + 1);
+        },
+        update: (dice) => {
+            setDiceInfo(dice);
         }
     }));
 
+    console.log("render diceScene", dice)
     return (
         <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
             <ViroCamera active position={[0, 5, 2]} rotation={[-60, 0, 0]} />
@@ -89,22 +98,19 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque }: DiceScen
                     physicsBody={{ type: "Static" }}
                 />
 
-                <Dice
-                    key={`dice1-${sceneKey}`}
-                    cubeKey={`dice2-${sceneKey}`}
-                    initialPosition={[.3, 3, 2]}
-                    scale={[0.4, 0.4, 0.4]}
-                    initialImpulse={impulse}
-                    initialTourqe={torque}
-                />
-                <Dice
-                    key={`dice2-${sceneKey}`}
-                    cubeKey={`dice2-${sceneKey}`}
-                    initialPosition={[-.3, 3, 2]}
-                    scale={[0.4, 0.4, 0.4]}
-                    initialImpulse={impulse}
-                    initialTourqe={torque}
-                />
+                {diceInfo.map((d, i) => (
+                    <DiceObject
+                        key={`dice${i}-${sceneKey}`}
+                        cubeKey={`dice${i}-${sceneKey}`}
+                        initialPosition={[i < dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
+                        scale={[0.4, 0.4, 0.4]}
+                        initialImpulse={impulse}
+                        initialTourqe={torque}
+                    />
+                )
+
+                )}
+
 
             </ViroNode>
         </ViroScene>

@@ -13,8 +13,8 @@ App General:
 Features:
 --------
 
-Number of cubes (up to 4?)
-  - calculate position
+V- Number of cubes (up to 4?)
+V-  - calculate position
 
 Dice Size
   Q: all cubes are same size always, or can it be one cube small and another large?
