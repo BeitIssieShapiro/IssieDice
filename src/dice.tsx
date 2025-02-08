@@ -52,7 +52,7 @@ export default function Dice({ cubeKey, initialPosition, scale, initialImpulse, 
         key={cubeKey}
         ref={r => cube.current = r}
         onLoadEnd={!hideDice ? onDiceLoadEnd : undefined}
-        source={require("../cube2.obj")}
+        source={require("../assets/cube2.obj")}
         position={initialPosition}
         rotation={[0, 0, 0]}
         scale={scale}

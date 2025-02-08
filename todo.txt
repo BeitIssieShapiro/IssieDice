@@ -1,0 +1,47 @@
+Tech Challenges:
+- Generate texture programatically (dots, numbers, texts, shapes)
+- Change material programatically
+- crash at unmout?
+- check android and Viro
+- model with correct UV? bevel should be covered with color/texture? or maybe simply white?
+
+App General:
+- AppIcon
+- Description
+- About text
+
+Features:
+--------
+
+Number of cubes (up to 4?)
+  - calculate position
+
+Dice Size
+  Q: all cubes are same size always, or can it be one cube small and another large?
+  more sizes - how many?
+
+Click to roll
+ - recovery time 0,5,10,20
+
+Dice templates
+- predefined: dots, numbers, shapes, colors
+
+Manage templates
+- colors?
+- text
+- image from web
+- image from cameralroll
+- image from camera
+- audio?
+
+Share and import Dice
+
+Backup all?
+
+floor color
+
+About
+
+Ideas:
+- Augmented Reality?
+- throw by swipe

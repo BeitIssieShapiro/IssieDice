@@ -21,22 +21,29 @@ ViroMaterials.createMaterials({
   blueLine: { diffuseColor: '#0000FF' },
 
   front: {
-    diffuseColor: '#FF0000',
+    //diffuseColor: '#FF0000',
+    diffuseTexture: require("../assets/1.png"),
+    diffuseColor: '#FFFFFF',
   },
   back: {
-    diffuseColor: '#00FF00',
+    diffuseTexture: require("../assets/1.png"),
+    diffuseColor: '#FFFFFF',
   },
   left: {
-    diffuseColor: '#0000FF',
+    diffuseTexture: require("../assets/1.png"),
+    diffuseColor: '#FFFFFF',
   },
   right: {
-    diffuseColor: '#000F0F',
+    diffuseTexture: require("../assets/1.png"),
+    diffuseColor: '#FFFFFF',
   },
   top: {
-    diffuseColor: '#00F00F',
+    diffuseColor: '#FFFFFF',
+    diffuseTexture: require("../assets/1.png"),
   },
   bottom: {
-    diffuseColor: '#F0000F',
+    diffuseTexture: require("../assets/1.png"),
+    diffuseColor: '#FFFFFF',
   },
   tableSurface: {
     diffuseColor: "#008000", // Green like a casino table
@@ -53,7 +60,7 @@ const TestScene = () => <ViroScene>
   <ViroText text="Hello!" position={[-1, 0, -1]} />
 </ViroScene>
 
-const initialImpulse = [0, 0, -.2];
+const initialImpulse = [0, -.2, -.2];
 
 const initialTorque = [.01, .05, -.05];
 
@@ -71,19 +78,17 @@ export default function App() {
   // 2) Handler for "Throw Dice" button
   const handleThrowDice = () => {
     const fz = -(Math.random() / 6 + .1);
+    const fx = -(Math.random() / 6 + .15);
 
     // Random angular velocity
-    const avx = Math.random() / 10;
-    const avy = Math.random() / 10;
-    const avz = Math.random() / 10;
+    const avx = Math.random() / 8;
+    const avy = Math.random() / 8;
+    const avz = Math.random() / 8;
 
-    sceneRef.current?.rollDice([0, 0, fz], [avx, avy, avz]);
+    sceneRef.current?.rollDice([0, fx, fz], [avx, avy, avz]);
   };
 
-  // 3) "Viro3DSceneNavigator" usage
-  //    - pass in "viroAppProps" so DiceScene can read velocity/spin
-  //    - required props: initialScene, onExitViro, etc.
-  return (
+   return (
     <TouchableOpacity style={styles.container} >
       <Button title="Throw Dice" onPress={handleThrowDice} style={styles.button} />
       <View style={styles.viroContainer}>

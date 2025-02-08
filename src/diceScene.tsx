@@ -19,18 +19,18 @@ interface DiceSceneProps {
     initialTorque: Viro3DPoint;
 }
 export interface DiceSceneMethods {
-    rollDice: (impolse:Viro3DPoint, torque:Viro3DPoint) => void;
+    rollDice: (impolse: Viro3DPoint, torque: Viro3DPoint) => void;
 }
 
 const wallHeight = 2
 
-export const DiceScene = forwardRef(({initialImpulse, initialTorque }: DiceSceneProps, ref: any) => {
+export const DiceScene = forwardRef(({ initialImpulse, initialTorque }: DiceSceneProps, ref: any) => {
     const [sceneKey, setSceneKey] = useState<number>(0);
     const [impulse, setImpulse] = useState<Viro3DPoint>(initialImpulse);
     const [torque, setTorque] = useState<Viro3DPoint>(initialTorque);
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
-        rollDice: (i, t ) => {
+        rollDice: (i, t) => {
             setImpulse(i);
             setTorque(t);
             setSceneKey(prev => prev + 1);
@@ -39,7 +39,7 @@ export const DiceScene = forwardRef(({initialImpulse, initialTorque }: DiceScene
 
     return (
         <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
-            <ViroCamera active position={[0, 4, 2]} rotation={[-25, 0, 0]} />
+            <ViroCamera active position={[0, 5, 2]} rotation={[-60, 0, 0]} />
 
 
             <ViroNode position={[0, 0, 0]} >
@@ -77,22 +77,30 @@ export const DiceScene = forwardRef(({initialImpulse, initialTorque }: DiceScene
 
 
                 <ViroBox
-                    position={[-3, 0, -5]}
-                    scale={[0.1, wallHeight, 10]}
+                    position={[-3, 0, -3]}
+                    scale={[0.1, wallHeight, 14]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
                 />
                 <ViroBox
-                    position={[3, 0, -5]}
-                    scale={[0.1, wallHeight, 10]}
+                    position={[3, 0, -3]}
+                    scale={[0.1, wallHeight, 14]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
                 />
 
                 <Dice
-                    key={`dice-${sceneKey}`}
-                    cubeKey={`dice-${sceneKey}`}
-                    initialPosition={[0, 4, -1]}
+                    key={`dice1-${sceneKey}`}
+                    cubeKey={`dice2-${sceneKey}`}
+                    initialPosition={[.3, 3, 2]}
+                    scale={[0.4, 0.4, 0.4]}
+                    initialImpulse={impulse}
+                    initialTourqe={torque}
+                />
+                <Dice
+                    key={`dice2-${sceneKey}`}
+                    cubeKey={`dice2-${sceneKey}`}
+                    initialPosition={[-.3, 3, 2]}
                     scale={[0.4, 0.4, 0.4]}
                     initialImpulse={impulse}
                     initialTourqe={torque}
