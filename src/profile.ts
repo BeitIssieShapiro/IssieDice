@@ -36,21 +36,21 @@ export enum Templates {
 }
 
 export interface List {
-    key:string | Templates,
+    key: string | Templates,
     name: string;
     icon: string | undefined;
 }
 
-const templatesList = [
+export const templatesList = [
     {
-        key:Templates.Numbers,
-        name:translate("Numbers"),
-        icon: undefined,
+        key: Templates.Numbers,
+        name: translate("Numbers"),
+        icon: require("../assets/numbers-preview.png"),
     },
     {
-        key:Templates.Colors,
-        name:translate("Colors"),
-        icon: undefined,
+        key: Templates.Colors,
+        name: translate("Colors"),
+        icon: require("../assets/colors-preview.png"),
     }
 
 ]

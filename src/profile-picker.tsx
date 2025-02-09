@@ -1,12 +1,12 @@
 import { Fragment, useEffect, useState } from "react";
 import { Folders, List, ListElements, Templates } from "./profile";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { FadeInView, IconButton } from "./components";
 
 
-function Seperator({width}:{width:string}) {
+function Seperator({ width }: { width: string }) {
     return <View
         style={{
             width,
@@ -47,7 +47,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             folder == Folders.Profiles ?
                 translate("SelectProfileTitle") : translate("SelectButtonTitle")
         }</Text>
-        <Seperator width="90%"/>
+        <Seperator width="90%" />
         <View style={styles.closeButton}>
             <Icon name="close" size={45} onPress={onClose} />
         </View>
@@ -58,10 +58,11 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                     <Fragment key={item.key}>
                         <View style={{
                             flexDirection: isRTL() ? "row-reverse" : "row",
-                            width: "90%",
+                            width: "95%",
                             justifyContent: "space-between",
                         }}>
                             <View style={styles.listItem} key={item.key} >
+                                {item.icon && <Image source={item.icon} style={styles.pickerImage} />}
                                 <Text
                                     allowFontScaling={false}
                                     numberOfLines={1}
@@ -77,7 +78,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                 {onEdit && <IconButton icon="edit" text={translate("Rename")} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
                             </View>
                         </View>
-                        <Seperator  width="100%"/>
+                        <Seperator width="100%" />
                     </Fragment>
 
                 ))}
@@ -113,6 +114,7 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
     },
     listItem: {
+        flexDirection: "row",
         paddingLeft: "10%",
         paddingRight: "10%",
         flex: 1,
@@ -120,5 +122,9 @@ const styles = StyleSheet.create({
     listHost: {
         padding: 20,
         width: "100%",
+    },
+    pickerImage: {
+        width: 45,
+        height: 45,
     }
 });

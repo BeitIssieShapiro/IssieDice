@@ -1,5 +1,5 @@
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Dice } from "./profile";
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dice, templatesList } from "./profile";
 import { isRTL, translate } from "./lang";
 import { IconButton, Spacer } from "./components";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -24,6 +24,7 @@ interface DiceSettingsProps {
 export function DiceSettings({ index, revision, dice, isBusy, onSetActive,
     onOpenLoadDice, onSaveDice, onImageSearchOpen, onSelectTemplate, isLast, isScreenNarrow }: DiceSettingsProps) {
 
+    const templ = templatesList.find(t => t.key == dice.template);
 
     return <View style={[{
         direction: isRTL() ? "rtl" : "ltr",
@@ -73,7 +74,7 @@ export function DiceSettings({ index, revision, dice, isBusy, onSetActive,
                 }} />
                 <Spacer w={20} />
                 <View style={styles.verticalSeperator} />
-
+                {templ?.icon && <Image source={templ.icon } style={styles.previewIcon} />}
 
             </View>
 
@@ -104,7 +105,6 @@ export function DiceSettings({ index, revision, dice, isBusy, onSetActive,
 
 }
 
-
 const styles = StyleSheet.create({
     verticalSeperator: {
         width: 2,
@@ -121,4 +121,8 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         marginBottom: 5,
     },
+    previewIcon: {
+        width: 45,
+        height: 45
+    }
 });
