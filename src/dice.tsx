@@ -31,7 +31,8 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
         console.log("reset cube", cubeKey, cube.current)
 
         const texture = template == Templates.Numbers ? require("../assets/numbers.png") :
-            require("../assets/colors.png");
+            (template == Templates.Colors ? require("../assets/colors.png") :
+                require("../assets/dots.png"));
 
         const suffix = `_${index}`;
         // Define the Material

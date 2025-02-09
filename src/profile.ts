@@ -33,6 +33,7 @@ export enum Templates {
     Custom = "custom",
     Numbers = "numbers",
     Colors = "colors",
+    Dots = "dots",
 }
 
 export interface List {
@@ -51,6 +52,11 @@ export const templatesList = [
         key: Templates.Colors,
         name: translate("Colors"),
         icon: require("../assets/colors-preview.png"),
+    },
+    {
+        key: Templates.Dots,
+        name: translate("Dots"),
+        icon: require("../assets/dots-preview.png"),
     }
 
 ]
