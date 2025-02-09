@@ -1,6 +1,7 @@
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
+import { useEffect, useState } from "react";
 
 
 export function IconButton({ icon, onPress, text }: { icon?: string, text: string, onPress: () => void }) {
@@ -11,6 +12,42 @@ export function IconButton({ icon, onPress, text }: { icon?: string, text: strin
     </TouchableOpacity>
 }
 
+export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
+    return <View style={{ height: h, width: w, backgroundColor: bc }} />
+}
+
+export const FadeInView = (props: any) => {
+    const [fadeAdmin] = useState(new Animated.Value(0))
+    const [hide, setHide] = useState(false)
+    useEffect(() => {
+        setHide(false)
+
+        Animated.timing(
+            fadeAdmin,
+            {
+                toValue: props.width ? props.width : props.height,
+                duration: props.duration || 500,
+                useNativeDriver: false,
+
+            }
+        ).start((res) => {
+            setHide(props.width ? props.width == 0 : props.height == 0)
+        });
+    }, [props.height, props.width])
+
+    if (hide) {
+        return (<View />);
+    }
+    return (<Animated.View
+        style={[props.style, {
+            overflow: props.overflow || "hidden",
+            //opacity: fadeAdmin,         // Bind opacity to animated value
+        }, props.width ? { width: fadeAdmin } : { height: fadeAdmin }]}
+    >
+        {props.children}
+    </Animated.View>
+    );
+}
 
 const styles = StyleSheet.create({
 

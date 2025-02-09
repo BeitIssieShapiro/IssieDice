@@ -16,10 +16,6 @@ import { Profile, readCurrentProfile } from "./profile";
 
 // 1) Define a dice material up front
 ViroMaterials.createMaterials({
-  diceMaterial: {
-    diffuseColor: "#FFA500",
-
-  },
   redLine: { diffuseColor: '#FF0000' },
   greenLine: { diffuseColor: '#00FF00' },
   blueLine: { diffuseColor: '#0000FF' },
@@ -55,8 +51,6 @@ ViroMaterials.createMaterials({
   wallMaterial: {
     diffuseColor: "#ffffff", // Dark walls
   },
-  //   dice1: { diffuseTexture: require('./res/dice_1.png') },
-  //   dice2: { diffuseTexture: require('./res/dice_2.png') },
 });
 
 const initialImpulse = [0, -.2, -.2];

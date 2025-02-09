@@ -3,8 +3,10 @@ import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { IconButton } from "./components";
 import { useEffect, useState } from "react";
-import { Profile, readCurrentProfile, SettingsKeys } from "./profile";
+import { Folders, Profile, readCurrentProfile, SettingsKeys, Templates } from "./profile";
 import { Settings } from "./setting-storage";
+import { DiceSettings } from "./dice-settings";
+import { ProfilePicker } from "./profile-picker";
 // import IconIonic from 'react-native-vector-icons/Ionicons';
 
 // import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -18,13 +20,17 @@ const BTN_FOR_COLOR = "#CD6438";
 
 interface SettingsProp {
     windowSize: { width: number, height: number }
-    onChange: ()=>void,
+    onChange: () => void,
 }
 
 export function SettingsUI({ windowSize, onChange }: SettingsProp) {
     const [revision, setRevision] = useState<number>(0);
     const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
+    const [diceBusy, setDiceBusy] = useState<number>(-1);
+    const [openSelectTemplate, setOpenSelectTemplate] = useState<number>(-1);
+
+
     const [profileName, setProfileName] = useState<string>("");
     const [profile, setProfile] = useState<Profile>(readCurrentProfile());
 
@@ -40,12 +46,27 @@ export function SettingsUI({ windowSize, onChange }: SettingsProp) {
 
     function closeProfile() { }
     function saveAsNewProfile() { }
+
     function changeNumOfButton(delta: number) {
         const current = Settings.getNumber(SettingsKeys.DiceCount, 1);
         let newVal = current + delta;
         if (newVal < 1) return;
         if (newVal > 4) return;
         Settings.set(SettingsKeys.DiceCount, newVal);
+        setRevision(old => old + 1);
+    }
+
+    function setDiceActive(index: number, newVal: boolean) {
+        let newDiceActive = profile.dice.map(b => b.active);
+        newDiceActive[index] = newVal
+        Settings.setArray(SettingsKeys.DiceActive, newDiceActive);
+        setRevision(old => old + 1);
+    }
+
+    function setDiceTemplate(index:number, newTemplate:Templates) {
+        let newDiceTemplates = profile.dice.map(b => b.template);
+        newDiceTemplates[index] = newTemplate as Templates;
+        Settings.setArray(SettingsKeys.DiceTemplates, newDiceTemplates);
         setRevision(old => old + 1);
     }
 
@@ -58,6 +79,18 @@ export function SettingsUI({ windowSize, onChange }: SettingsProp) {
     const onAbout = () => { }
 
     return <View style={styles.container}>
+
+        <ProfilePicker
+            folder={Folders.DiceTemplates}
+            open={openSelectTemplate > -1}
+            height={windowSize.height * .6}
+            onSelect={async (template) => {
+                setDiceTemplate(openSelectTemplate, template as Templates);
+                setOpenSelectTemplate(-1);
+                setRevision(prev => prev + 1);
+            }}
+            onClose={() => setOpenLoadProfile(false)}
+        />
 
         {/** Title */}
         <View style={styles.settingTitle}>
@@ -105,6 +138,32 @@ export function SettingsUI({ windowSize, onChange }: SettingsProp) {
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Dice")}</Text>
             </View>
+
+            <View style={[styles.cubes, marginHorizontal]}>
+                {
+                    Array.from(Array(profile.dice.length).keys()).map((i: any) => (
+                        <DiceSettings
+                            key={i}
+                            index={i}
+                            revision={revision}
+                            dice={profile.dice[i]}
+                            isBusy={diceBusy == i}
+                            onSetActive={(newVal) => setDiceActive(i, newVal)}
+                            onOpenLoadDice={() => { }
+                                //setOpenLoadDice(i)
+                            }
+                            onSaveDice={() => { }} //handleSaveButton(profile.buttons[i].name, i)}
+                            onImageSearchOpen={() => { }}//setImageSearchOpen(i)}
+                            onSelectTemplate={() => setOpenSelectTemplate(i)}
+                            onEditName={() => { }}//handleButtonEditName(i)}
+                            isLast={i == profile.dice.length - 1}
+                            isScreenNarrow={isScreenNarrow}
+                        />
+
+                    ))
+                }
+            </View>
+
 
         </ScrollView>
     </View>
@@ -159,5 +218,15 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         height: "100%"
+    },
+    cubes: {
+        backgroundColor: "white",
+        padding: 20,
+        flexDirection: "column",
+        alignItems: "center",
+        borderRadius: 45,
+        marginTop: 15,
+        marginHorizontal: 40,
+        height: "auto"
     },
 });

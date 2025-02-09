@@ -5,17 +5,22 @@ import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
 import { ensureAndroidCompatible, joinPaths } from './utils';
 import Dice from './dice';
+import { translate } from './lang';
 
 export const enum Folders {
     Profiles = "profiles",
     Dice = "dice",
+    DiceTemplates = "templates",
 }
+
+
 
 export const SettingsKeys = {
     CurrentProfileName: "CurrentProfileName",
     DiceCount: "DiceCount",
     DiceTemplates: "DiceTemplates",
-    DiceNames:"DiceNames"
+    DiceNames: "DiceNames",
+    DiceActive: "DiceActive",
 }
 
 
@@ -24,15 +29,36 @@ export class InvalidFileName extends Error { }
 
 export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
 
-enum Templates {
+export enum Templates {
     Custom = "custom",
     Numbers = "numbers",
     Colors = "colors",
 }
 
+export interface List {
+    key:string | Templates,
+    name: string;
+    icon: string | undefined;
+}
+
+const templatesList = [
+    {
+        key:Templates.Numbers,
+        name:translate("Numbers"),
+        icon: undefined,
+    },
+    {
+        key:Templates.Colors,
+        name:translate("Colors"),
+        icon: undefined,
+    }
+
+]
+
 export interface Dice {
     name: string;
-    template: Templates,
+    template: Templates;
+    active: boolean;
 }
 
 export interface Profile {
@@ -167,16 +193,19 @@ export async function clearProfile() {
 
 async function writeCurrentProfile(p: Profile, name: string) {
     const diceTemplateType = [];
-    const diceNames = []
+    const diceNames = [];
+    const diceActive = [];
 
     for (let i = 0; i < 4; i++) {
         if (p.dice.length > i) {
             const dice = p.dice[i];
             diceTemplateType.push(dice.template);
             diceNames.push(dice.name);
+            diceActive.push(dice.active);
         } else {
             diceTemplateType.push(Templates.Numbers);
             diceNames.push("");
+            diceActive.push(true);
         }
     }
     Settings.set(SettingsKeys.CurrentProfileName, name);
@@ -184,19 +213,22 @@ async function writeCurrentProfile(p: Profile, name: string) {
 
     Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
     Settings.setArray(SettingsKeys.DiceNames, diceNames);
+    Settings.setArray(SettingsKeys.DiceActive, diceActive);
 }
 
 export function readCurrentProfile(): Profile {
     const numOfDice = Settings.getNumber(SettingsKeys.DiceCount, 1);
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
-    const diceNames = Settings.getArray<string>(SettingsKeys.DiceNames, "string", ["","","",""]);
+    const diceNames = Settings.getArray<string>(SettingsKeys.DiceNames, "string", ["", "", "", ""]);
+    const diceActive = Settings.getArray<boolean>(SettingsKeys.DiceActive, "boolean", [true, true, true, true]);
 
     const dice = [] as Dice[];
-    
+
     for (let i = 0; i < numOfDice; i++) {
         dice.push({
             name: diceNames[i] || "",
             template: diceTemplateType[i] as Templates || Templates.Numbers,
+            active: diceActive[i] ?? true,
         });
     }
 
@@ -257,20 +289,25 @@ export function readCurrentProfile(): Profile {
 // }
 
 
-export async function ListElements(folder: Folders): Promise<string[]> {
-    const listPath = path.join(RNFS.DocumentDirectoryPath, folder);
-    console.log("List Path", folder);
-    const dir = await RNFS.readDir(ensureAndroidCompatible(listPath));
-
-    const list = [];
-    for (const elem of dir) {
-        //console.log("Element", elem.name)
-        if (elem.name.endsWith(".json")) {
-
-            list.push(elem.name.substring(0, elem.name.length - 5));
-        }
+export async function ListElements(folder: Folders): Promise<List[]> {
+    if (folder == Folders.DiceTemplates) {
+        return templatesList;
     }
-    return list;
+    return [];
+
+    // const listPath = path.join(RNFS.DocumentDirectoryPath, folder);
+    // console.log("List Path", folder);
+    // const dir = await RNFS.readDir(ensureAndroidCompatible(listPath));
+
+    // const list = [];
+    // for (const elem of dir) {
+    //     //console.log("Element", elem.name)
+    //     if (elem.name.endsWith(".json")) {
+
+    //         list.push(elem.name.substring(0, elem.name.length - 5));
+    //     }
+    // }
+    // return list;
 }
 
 export function isValidFilename(filename: string): boolean {

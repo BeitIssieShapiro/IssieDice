@@ -22,7 +22,7 @@ interface DiceSceneProps {
 }
 export interface DiceSceneMethods {
     rollDice: (impolse: Viro3DPoint, torque: Viro3DPoint) => void;
-    update: (dice: Dice[])=>void;
+    update: (dice: Dice[]) => void;
 
 }
 
@@ -98,18 +98,22 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                     physicsBody={{ type: "Static" }}
                 />
 
-                {diceInfo.map((d, i) => (
-                    <DiceObject
-                        key={`dice${i}-${sceneKey}`}
-                        cubeKey={`dice${i}-${sceneKey}`}
-                        initialPosition={[i < dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
-                        scale={[0.4, 0.4, 0.4]}
-                        initialImpulse={impulse}
-                        initialTourqe={torque}
-                    />
-                )
+                {diceInfo
+                    .filter(d => d.active)
+                    .map((d, i) => (
+                        <DiceObject
+                            key={`dice${i}-${sceneKey}`}
+                            index={i}
+                            cubeKey={`dice${i}-${sceneKey}`}
+                            initialPosition={[i < dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
+                            template={d.template}
+                            scale={[0.4, 0.4, 0.4]}
+                            initialImpulse={impulse}
+                            initialTourqe={torque}
+                        />
+                    )
 
-                )}
+                    )}
 
 
             </ViroNode>
