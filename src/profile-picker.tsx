@@ -19,6 +19,7 @@ function Seperator({ width }: { width: string }) {
 
 interface ProfilePickerProps {
     open: boolean;
+    isLoad: boolean;
     height: number | string;
     onClose: () => void;
     onSelect: (item: string) => void;
@@ -26,9 +27,10 @@ interface ProfilePickerProps {
     folder: Folders
     onDelete?: (name: string, afterDelete: () => void) => void;
     onEdit?: (name: string, afterSave: () => void) => void;
+    onCreate?: () => void;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit }: ProfilePickerProps) {
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, isLoad }: ProfilePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
@@ -43,10 +45,13 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
 
     return <FadeInView height={open ? height : 0}
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
-        <Text allowFontScaling={false} style={{ fontSize: 28, margin: 25 }}>{
-            folder == Folders.Profiles ?
-                translate("SelectProfileTitle") : translate("SelectButtonTitle")
-        }</Text>
+        <View style={styles.titleHost}>
+            {onCreate && <Icon name="pluscircleo" size={50} onPress={() => onCreate()} />}
+            <Text allowFontScaling={false} style={{ fontSize: 28, margin: 25 }}>{
+                folder == Folders.Profiles ?
+                    translate("SelectProfileTitle") : translate("SelectButtonTitle")
+            }</Text>
+        </View>
         <Seperator width="90%" />
         <View style={styles.closeButton}>
             <Icon name="close" size={45} onPress={onClose} />
@@ -60,6 +65,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                             flexDirection: isRTL() ? "row-reverse" : "row",
                             width: "95%",
                             justifyContent: "space-between",
+                            alignItems: "center",
                         }}>
                             <View style={styles.listItem} key={item.key} >
                                 {item.icon && <Image source={item.icon} style={styles.pickerImage} />}
@@ -69,11 +75,15 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                     ellipsizeMode="tail"
                                     style={{
                                         textAlign: (isRTL() ? "right" : "left"),
-                                        fontSize: 28, paddingLeft: 15, paddingRight: 15
+                                        fontSize: 28, paddingLeft: 15, paddingRight: 15,
+                                        paddingTop: 10, paddingBottom: 10,
                                     }}>{item.name}</Text>
                             </View>
                             <View style={{ flexDirection: "row" }}>
-                                <IconButton icon="upload" onPress={() => onSelect(item.key)} text={translate("Load")} />
+                                {isLoad ?
+                                    <IconButton icon="upload" onPress={() => onSelect(item.key)} text={translate("Load")} /> :
+                                    <IconButton onPress={() => onSelect(item.key)} text={translate("Select")} />
+                                }
                                 {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
                                 {onEdit && <IconButton icon="edit" text={translate("Rename")} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
                             </View>
@@ -86,6 +96,31 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
         }
     </FadeInView>
 }
+
+export enum FaceType {
+    Image = "image",
+    Search = "search",
+    Camera = "camera",
+    Text = "text",
+}
+
+interface FaceTypePickerProps {
+    open: boolean;
+    onSelect: (item: string) => void;
+    onClose: () => void;
+}
+
+export function FaceTypePicker(props: FaceTypePickerProps) {
+    return <ProfilePicker
+        open={props.open}
+        height={300}
+        onSelect={props.onSelect}
+        onClose={props.onClose}
+        folder={Folders.FaceType}
+        isLoad={false}
+    />
+}
+
 
 const styles = StyleSheet.create({
     closeButton: {
@@ -126,5 +161,9 @@ const styles = StyleSheet.create({
     pickerImage: {
         width: 45,
         height: 45,
+    },
+    titleHost: {
+        flexDirection: "row",
+        alignItems: "center"
     }
 });

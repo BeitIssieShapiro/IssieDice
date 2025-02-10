@@ -47,7 +47,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
 
     console.log("render diceScene", dice)
     return (
-        <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
+        <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false}}>
             <ViroCamera active position={[0, 5, 2]} rotation={[-60, 0, 0]} />
 
 
@@ -55,13 +55,16 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
 
                 <ViroAmbientLight color="#ffffff" intensity={400} />
 
-                {/* <ViroNode position={[-2.5, 0, -9]}>
-                    <Axes />
-                </ViroNode> */}
-                {/* Walls [red, blue, green]*/}
+                {// <ViroNode position={[-2.5, 0, -9]}>
+                    //   <Axes />
+                    //</ViroNode> 
+                }
+                {// Walls [red, blue, green]
+                }
 
-                {/* Floor (table surface) */}
-                <ViroQuad
+                {// Floor (table surface) 
+                }
+                < ViroQuad
                     position={[0, 0, -2]}
                     rotation={[-90, 0, 0]}
                     width={6}
@@ -74,7 +77,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                     }}
                 />
 
-                {/* Back Wall */}
+                {// Back Wall 
+                }
                 <ViroBox
                     // This wall is placed behind the dice so that it acts as a barrier
                     // without breaking the line of sight from the camera.

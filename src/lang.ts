@@ -1,4 +1,6 @@
 
+export const gCurrentLang = "en";
+
 export function isRTL() {
     return false;
 }

@@ -20,31 +20,6 @@ ViroMaterials.createMaterials({
   greenLine: { diffuseColor: '#00FF00' },
   blueLine: { diffuseColor: '#0000FF' },
 
-  front: {
-    //diffuseColor: '#FF0000',
-    diffuseTexture: require("../assets/colors.png"),
-    diffuseColor: '#FFFFFF',
-  },
-  back: {
-    diffuseTexture: require("../assets/colors.png"),
-    diffuseColor: '#FFFFFF',
-  },
-  left: {
-    diffuseTexture: require("../assets/numbers.png"),
-    diffuseColor: '#FFFFFF',
-  },
-  right: {
-    diffuseTexture: require("../assets/numbers.png"),
-    diffuseColor: '#FFFFFF',
-  },
-  top: {
-    diffuseColor: '#FFFFFF',
-    diffuseTexture: require("../assets/numbers.png"),
-  },
-  bottom: {
-    diffuseTexture: require("../assets/numbers.png"),
-    diffuseColor: '#FFFFFF',
-  },
   tableSurface: {
     diffuseColor: "#008000", // Green like a casino table
   },
@@ -63,6 +38,13 @@ export default function App() {
   const [revision, setRevision] = useState<number>(0);
   const [profile, setProfile] = useState<Profile>(readCurrentProfile());
 
+  useEffect(()=>{
+    return ()=>{
+      console.log("about to unmount")
+    }
+  }, [])
+
+
   useEffect(() => {
     console.log("App reloading profile")
     const p = readCurrentProfile();
@@ -71,17 +53,8 @@ export default function App() {
   }, [revision]);
 
 
-  const sceneRef = useRef<DiceSceneMethods>(undefined); // Create a ref for the scene
+  const sceneRef = useRef<DiceSceneMethods>(undefined); 
 
-  // State for dice velocity/spin
-  const [initialVelocity, setInitialVelocity] = useState<[number, number, number]>(
-    [1, 0, -2]
-  );
-  const [initialAngularVelocity, setInitialAngularVelocity] = useState<
-    [number, number, number]
-  >([5, 5, 0]);
-
-  // 2) Handler for "Throw Dice" button
   const handleThrowDice = () => {
     const fz = -(Math.random() / 6 + .1);
     const fx = -(Math.random() / 6 + .15);
@@ -107,12 +80,12 @@ export default function App() {
     }}>
 
       <TouchableOpacity style={styles.settingsButton}
-        onPress={() => setOpenSettings(prev => !prev)}
+        onPress={() => setOpenSettings(true)}
       >
-        <Icon name={openSettings ? "close" : "setting"} color={openSettings ? "black" : "white"} size={35} />
+        <Icon name={ "setting"} color={"white"} size={35} />
       </TouchableOpacity>
 
-      {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} />}
+      {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={()=>setOpenSettings(false)}/>}
       <>
         {!openSettings && <TouchableOpacity style={styles.overlay}
           onPress={handleThrowDice}
@@ -122,9 +95,10 @@ export default function App() {
           style={styles.viroContainer}
           onTouchEnd={handleThrowDice}
           debug={true}
-          onExitViro={() => {
-            console.log("Exiting Viro...");
-          }}
+          // onExitViro={() => {
+          //   console.log("Exiting Viro...");
+          // }}
+          
           initialScene={{
             scene: DiceScene,
             passProps: {
@@ -135,7 +109,7 @@ export default function App() {
             }
           }}
 
-          // optional rendering settings
+          optional rendering settings
           hdrEnabled={true}
           pbrEnabled={true}
           bloomEnabled={false}
@@ -163,5 +137,5 @@ const styles = StyleSheet.create({
   viroContainer: {
     backgroundColor: "red",
   },
-  settingsButton: { position: "absolute", top: 25, right: 10, zIndex: 1000 }
+  settingsButton: { position: "absolute", top: 25, right: 10, zIndex: 600 }
 });

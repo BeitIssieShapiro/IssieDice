@@ -1,12 +1,13 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
-import { IconButton } from "./components";
+import { IconButton, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { Folders, Profile, readCurrentProfile, SettingsKeys, Templates } from "./profile";
+import { Dice, Folders, Profile, readCurrentProfile, SettingsKeys, Templates } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { ProfilePicker } from "./profile-picker";
+import { EditDice } from "./edit-dice";
 // import IconIonic from 'react-native-vector-icons/Ionicons';
 
 // import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -19,13 +20,15 @@ const BTN_FOR_COLOR = "#CD6438";
 
 
 interface SettingsProp {
-    windowSize: { width: number, height: number }
-    onChange: () => void,
+    windowSize: { width: number, height: number };
+    onChange: () => void;
+    onClose: () => void;
 }
 
-export function SettingsUI({ windowSize, onChange }: SettingsProp) {
+export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [revision, setRevision] = useState<number>(0);
     const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
+    const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined)
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
     const [diceBusy, setDiceBusy] = useState<number>(-1);
     const [openSelectTemplate, setOpenSelectTemplate] = useState<number>(-1);
@@ -63,7 +66,7 @@ export function SettingsUI({ windowSize, onChange }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
-    function setDiceTemplate(index:number, newTemplate:Templates) {
+    function setDiceTemplate(index: number, newTemplate: Templates) {
         let newDiceTemplates = profile.dice.map(b => b.template);
         newDiceTemplates[index] = newTemplate as Templates;
         Settings.setArray(SettingsKeys.DiceTemplates, newDiceTemplates);
@@ -83,18 +86,30 @@ export function SettingsUI({ windowSize, onChange }: SettingsProp) {
         <ProfilePicker
             folder={Folders.DiceTemplates}
             open={openSelectTemplate > -1}
+            isLoad={false}
             height={windowSize.height * .6}
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
                 setOpenSelectTemplate(-1);
                 setRevision(prev => prev + 1);
             }}
-            onClose={() => setOpenLoadProfile(false)}
+            onClose={() => setOpenSelectTemplate(-1)}
+            onCreate={() => {
+                setOpenSelectTemplate(-1);
+                setEditOrCreateDice("")
+            }}
         />
+
+        {editOrCreateDice != undefined && <EditDice 
+        name={"temp"}
+            //"editOrCreateDice"} 
+        onClose={() => setEditOrCreateDice(undefined)} />}
 
         {/** Title */}
         <View style={styles.settingTitle}>
+            <Spacer w={35} />
             <Text allowFontScaling={false} style={styles.settingTitleText}>{translate("Settings")}</Text>
+            <Icon name={"close"} color={"black"} size={35} onPress={onClose} />
         </View>
 
         <ScrollView style={styles.settingHost}>
@@ -181,8 +196,9 @@ const styles = StyleSheet.create({
     settingTitle: {
         backgroundColor: "white",
         display: "flex",
+        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "space-between",
         height: 80,
         fontSize: 25,
         borderRadius: 5,

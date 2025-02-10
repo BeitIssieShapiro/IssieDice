@@ -6,11 +6,13 @@ import { MMKV } from 'react-native-mmkv';
 import { ensureAndroidCompatible, joinPaths } from './utils';
 import Dice from './dice';
 import { translate } from './lang';
+import { FaceType } from './profile-picker';
 
 export const enum Folders {
     Profiles = "profiles",
     Dice = "dice",
     DiceTemplates = "templates",
+    FaceType = "faceType",
 }
 
 
@@ -58,12 +60,31 @@ export const templatesList = [
         name: translate("Dots"),
         icon: require("../assets/dots-preview.png"),
     }
+]
+
+export const faceTypes = [
+    {
+        key: FaceType.Image,
+        name: translate("Image"),
+    },
+    {
+        key: FaceType.Camera,
+        name: translate("Camera"),
+    },
+    {
+        key: FaceType.Text,
+        name: translate("Text"),
+    },
+    {
+        key: FaceType.Search,
+        name: translate("Search"),
+    },
 
 ]
 
 export interface Dice {
-    name: string;
     template: Templates;
+    templateName?: string;
     active: boolean;
 }
 
@@ -245,6 +266,28 @@ export function readCurrentProfile(): Profile {
     };
 }
 
+export function getCustomTypePath(name:string):string {
+    return `${RNFS.DocumentDirectoryPath}/custom-dice/${name}`;
+}
+
+export async function loadFaceImages(name: string) {
+    const customDicePath = getCustomTypePath(name);
+
+    return RNFS.readDir(customDicePath).then(files => {
+        const list = ["", "", "", "", "", ""];
+        for (const elem of files) {
+            if (elem.name.startsWith("face")) {
+                const index = parseInt(elem.name.substring(5,6));
+                list[index] = elem.path
+            }
+        }
+        return list;
+    });
+}
+
+export async function saveDataUrlAs(dataUrl:string, filePath:string){
+    RNFS.writeFile(filePath, dataUrl, "base64");
+}
 
 // export async function loadButton(name: string, index: number) {
 //     console.log("Load Button", name, index)
@@ -298,6 +341,8 @@ export function readCurrentProfile(): Profile {
 export async function ListElements(folder: Folders): Promise<List[]> {
     if (folder == Folders.DiceTemplates) {
         return templatesList;
+    } else if (folder == Folders.FaceType) {
+        return faceTypes;
     }
     return [];
 

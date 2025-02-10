@@ -7,3 +7,9 @@
                     react_native_1.NativeModules.VRTCameraModule.setSceneCamera(t,c),100);
                 }
             },
+
+
+Mockups:
+
+https://xd.adobe.com/view/43e02c8a-ebee-4495-aff9-042b85e213b6-16b3
+https://xd.adobe.com/view/2787b739-50b8-4610-b19a-fcadc5c5f1ff-72d4/
