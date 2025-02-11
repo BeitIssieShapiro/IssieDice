@@ -1,4 +1,4 @@
-package com.issiedice3
+package com.issiedice
 
 import android.app.Application
 import com.facebook.react.PackageList

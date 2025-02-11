@@ -293,6 +293,9 @@ async function loadCustomDice(): Promise<List[]> {
             })
         }
         return list;
+    }).catch((e)=>{
+        console.log("Fail browsing custom dices", e);
+        return [];
     });
 }
 

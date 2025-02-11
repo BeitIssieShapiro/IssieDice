@@ -39,6 +39,8 @@ export function DiceSettings({ index, revision, dice, isBusy, onSetActive,
         paddingBottom: 15,
         paddingTop: 15,
     }, isScreenNarrow && { flexDirection: "column", alignItems: "flex-start" }]}>
+        <Text>{templ?.name || dice.template}</Text>
+
         {/* Buttons */}
         <View style={{ flexDirection: "column" }}>
 
@@ -57,7 +59,7 @@ export function DiceSettings({ index, revision, dice, isBusy, onSetActive,
                 {isBusy && <ActivityIndicator size="large" color="#0000ff" />}
             </View>
             {/* Bottom Row */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent:"center", height: 60 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 60 }}>
 
                 {templ?.icon && <Image source={templ.icon} style={styles.previewIcon} />}
                 {dice.faces && <DicePreview faces={dice.faces} size={styles.previewIcon.width} />}
