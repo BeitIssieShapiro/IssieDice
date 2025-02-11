@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { Folders, List, ListElements, Templates } from "./profile";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { FadeInView, IconButton } from "./components";

@@ -7,6 +7,7 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFS from 'react-native-fs';
 
+export function doNothing(){}
 
 export async function SelectFromGallery(targetFolder: string, fileName: string): Promise<string> {
     const options: any = {
@@ -38,17 +39,20 @@ export async function SelectFromGallery(targetFolder: string, fileName: string):
 
 }
 
-const copyFileToFolder = async (sourcePath: string, targetPath: string, fileName: string) => {
+export const copyFileToFolder = async (sourcePath: string, targetPath: string, fileName: string, overwrite = true) => {
 
 
     const p = `${RNFS.DocumentDirectoryPath}/${targetPath}`;
     await RNFS.mkdir(p);
     const destinationPath = `${p}/${fileName}`;
 
+    if (overwrite) {
+        await RNFS.unlink(destinationPath).catch(doNothing);
+    }
     // Copy the file from the sourcePath to the destinationPath
     await RNFS.copyFile(sourcePath, destinationPath);
 
-    return destinationPath; 
+    return destinationPath;
 };
 
 export const deleteFile = async (filePath: string) => {

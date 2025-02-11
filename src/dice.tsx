@@ -11,7 +11,7 @@ import {
     ViroMaterials,
 } from "@reactvision/react-viro";
 import { Viro3DPoint } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
-import { Templates } from "./profile";
+import { getCustomTypePath, Templates } from "./profile";
 
 interface DiceProps {
     cubeKey: string;
@@ -28,11 +28,28 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
     const [hideDice, setHideDice] = useState<boolean>(false);
 
     useEffect(() => {
-        console.log("reset cube", cubeKey, cube.current)
+        console.log("reset cube", cubeKey, cube.current, template)
 
-        const texture = template == Templates.Numbers ? require("../assets/numbers.png") :
-            (template == Templates.Colors ? require("../assets/colors.png") :
-                require("../assets/dots.png"));
+        let texture: string | { uri: string } = "";
+        switch (template) {
+            case Templates.Numbers:
+                texture = require("../assets/numbers.png");
+                break;
+            case Templates.Colors:
+                texture = require("../assets/colors.png");
+                break;
+            case Templates.Dots:
+                texture = require("../assets/dots.png");
+                break;
+            case undefined:
+                texture = require("../assets/dots.png");
+                break;
+            default:
+                //texture = require("../assets/dots.png");
+                texture = { uri: getCustomTypePath(template) + "/dice.jpg" };
+                break;
+
+        }
 
         const suffix = `_${index}`;
         // Define the Material

@@ -13,6 +13,7 @@ export const enum Folders {
     Dice = "dice",
     DiceTemplates = "templates",
     FaceType = "faceType",
+    CustomDice = "custom-dice"
 }
 
 
@@ -32,16 +33,18 @@ export class InvalidFileName extends Error { }
 export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
 
 export enum Templates {
-    Custom = "custom",
-    Numbers = "numbers",
-    Colors = "colors",
-    Dots = "dots",
+    prefix = "__",
+    Custom = "__custom",
+    Numbers = "__numbers",
+    Colors = "__colors",
+    Dots = "__dots",
 }
 
 export interface List {
     key: string | Templates,
     name: string;
-    icon: string | undefined;
+    icon?: string;
+    custom?: boolean;
 }
 
 export const templatesList = [
@@ -266,8 +269,24 @@ export function readCurrentProfile(): Profile {
     };
 }
 
-export function getCustomTypePath(name:string):string {
-    return `${RNFS.DocumentDirectoryPath}/custom-dice/${name}`;
+export function getCustomTypePath(name: string): string {
+    return `${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}/${name}`;
+}
+
+
+
+async function loadCustomDice(): Promise<List[]> {
+    return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(folders => {
+        const list = [];
+        for (const folder of folders) {
+            list.push({
+                key: folder.name,
+                name: folder.name,
+                custom: true,
+            })
+        }
+        return list;
+    });
 }
 
 export async function loadFaceImages(name: string) {
@@ -277,7 +296,7 @@ export async function loadFaceImages(name: string) {
         const list = ["", "", "", "", "", ""];
         for (const elem of files) {
             if (elem.name.startsWith("face")) {
-                const index = parseInt(elem.name.substring(5,6));
+                const index = parseInt(elem.name.substring(5, 6));
                 list[index] = elem.path
             }
         }
@@ -285,7 +304,7 @@ export async function loadFaceImages(name: string) {
     });
 }
 
-export async function saveDataUrlAs(dataUrl:string, filePath:string){
+export async function saveDataUrlAs(dataUrl: string, filePath: string) {
     RNFS.writeFile(filePath, dataUrl, "base64");
 }
 
@@ -340,7 +359,7 @@ export async function saveDataUrlAs(dataUrl:string, filePath:string){
 
 export async function ListElements(folder: Folders): Promise<List[]> {
     if (folder == Folders.DiceTemplates) {
-        return templatesList;
+        return [...templatesList, ...(await loadCustomDice())];
     } else if (folder == Folders.FaceType) {
         return faceTypes;
     }

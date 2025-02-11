@@ -92,8 +92,8 @@ import RNPhotoManipulator, {
     faceSize: number,
     blankBase: ImageSource
   ): Promise<string> {
-    if (faces.length < 4) {
-      throw new Error("At least 4 face images are required for cube preview.");
+    if (faces.length < 3) {
+      throw new Error("At least 3 face images are required for cube preview.");
     }
   
     const previewWidth = 2 * faceSize;
@@ -102,11 +102,11 @@ import RNPhotoManipulator, {
     // Define overlay operations (simple positioning without skewing)
     const operations: PhotoBatchOperations[] = [
       // Draw front face centered.
-      { operation: 'overlay', overlay: faces[2], position: { x: faceSize / 2, y: faceSize / 2 } },
+      { operation: 'overlay', overlay: faces[0], position: { x: faceSize / 2, y: faceSize / 2 } },
       // Draw top face above the front face.
-      { operation: 'overlay', overlay: faces[0], position: { x: faceSize / 2, y: 0 } },
+      { operation: 'overlay', overlay: faces[1], position: { x: faceSize / 2, y: 0 } },
       // Draw right face to the right of the front face.
-      { operation: 'overlay', overlay: faces[3], position: { x: faceSize, y: faceSize / 2 } },
+      { operation: 'overlay', overlay: faces[2], position: { x: faceSize, y: faceSize / 2 } },
     ];
   
     const cropRegion: Rect = { x: 0, y: 0, width: previewWidth, height: previewHeight };
