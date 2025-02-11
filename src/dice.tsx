@@ -45,10 +45,8 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
                 texture = require("../assets/dots.png");
                 break;
             default:
-                //texture = require("../assets/dots.png");
                 texture = { uri: getCustomTypePath(template) + "/dice.jpg" };
                 break;
-
         }
 
         const suffix = `_${index}`;
@@ -56,27 +54,35 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
         ViroMaterials.createMaterials({
             ["front" + suffix]: {
                 diffuseTexture: texture,
-                diffuseColor: '#FFFFFF',
+                //diffuseColor: "0xFFFFFF",
+                lightingModel: "Lambert",
             },
             ["back" + suffix]: {
                 diffuseTexture: texture,
-                diffuseColor: '#FFFFFF',
+                //diffuseColor: "0xffffff",
+                lightingModel: "Lambert",
             },
             ["left" + suffix]: {
                 diffuseTexture: texture,
-                diffuseColor: '#FFFFFF',
+                //diffuseColor: "0xffffff",
+                lightingModel: "Lambert",
             },
             ["right" + suffix]: {
                 diffuseTexture: texture,
-                diffuseColor: '#FFFFFF',
+                //diffuseColor: "0xffffff",
+                lightingModel: "Lambert",
             },
             ["top" + suffix]: {
                 diffuseTexture: texture,
-                diffuseColor: '#FFFFFF',
+                //diffuseColor: "0xffffff",
+                lightingModel: "Lambert",
+                
             },
             ["bottom" + suffix]: {
                 diffuseTexture: texture,
-                diffuseColor: '#FFFFFF',
+                //diffuseColor: "0xffffff",
+                lightingModel: "Lambert",
+
             },
         });
 
@@ -128,5 +134,6 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
                 restitution: 0.6,
                 useGravity: true,
             }}
+        lightReceivingBitMask={1.5}
     />);
 }

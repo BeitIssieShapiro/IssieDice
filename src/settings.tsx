@@ -93,17 +93,21 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 setOpenSelectTemplate(-1);
                 setRevision(prev => prev + 1);
             }}
+            onEdit={(template) => {
+                setOpenSelectTemplate(-1);
+                setEditOrCreateDice(template);
+            }}
             onClose={() => setOpenSelectTemplate(-1)}
             onCreate={() => {
                 setOpenSelectTemplate(-1);
                 setEditOrCreateDice("")
             }}
+            isNarrow={isScreenNarrow}
         />
 
-        {editOrCreateDice != undefined && <EditDice 
-        name={"temp"}
-            //"editOrCreateDice"} 
-        onClose={() => setEditOrCreateDice(undefined)} />}
+        {editOrCreateDice != undefined && <EditDice
+            name={editOrCreateDice}
+            onClose={() => setEditOrCreateDice(undefined)} />}
 
         {/** Title */}
         <View style={styles.settingTitle}>

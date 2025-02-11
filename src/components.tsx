@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export function IconButton({ icon, onPress, text }: { icon?: string, text: string, onPress: () => void }) {
 
     return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }]} onPress={onPress} >
-        <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5 }}>{text}</Text>
+        {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5 }}>{text}</Text>}
         {icon && <IconAnt name={icon} style={styles.icon} />}
     </TouchableOpacity>
 }
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
         marginInlineEnd: 10,
         maxHeight: 39,
         minHeight: 39,
-        minWidth: 80,
+        minWidth: 39,
         alignItems: "center",
         borderColor: "gray",
         borderStyle: "solid",

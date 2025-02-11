@@ -22,9 +22,11 @@ ViroMaterials.createMaterials({
 
   tableSurface: {
     diffuseColor: "#008000", // Green like a casino table
+    lightingModel:"Lambert"
   },
   wallMaterial: {
     diffuseColor: "#ffffff", // Dark walls
+    lightingModel:"Lambert"
   },
 });
 
@@ -38,8 +40,8 @@ export default function App() {
   const [revision, setRevision] = useState<number>(0);
   const [profile, setProfile] = useState<Profile>(readCurrentProfile());
 
-  useEffect(()=>{
-    return ()=>{
+  useEffect(() => {
+    return () => {
       console.log("about to unmount")
     }
   }, [])
@@ -53,7 +55,7 @@ export default function App() {
   }, [revision]);
 
 
-  const sceneRef = useRef<DiceSceneMethods>(undefined); 
+  const sceneRef = useRef<DiceSceneMethods>(undefined);
 
   const handleThrowDice = () => {
     const fz = -(Math.random() / 6 + .1);
@@ -82,10 +84,10 @@ export default function App() {
       <TouchableOpacity style={styles.settingsButton}
         onPress={() => setOpenSettings(true)}
       >
-        <Icon name={ "setting"} color={"white"} size={35} />
+        <Icon name={"setting"} color={"white"} size={35} />
       </TouchableOpacity>
 
-      {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={()=>setOpenSettings(false)}/>}
+      {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => setOpenSettings(false)} />}
       <>
         {!openSettings && <TouchableOpacity style={styles.overlay}
           onPress={handleThrowDice}
@@ -98,7 +100,7 @@ export default function App() {
           // onExitViro={() => {
           //   console.log("Exiting Viro...");
           // }}
-          
+
           initialScene={{
             scene: DiceScene,
             passProps: {
@@ -109,12 +111,15 @@ export default function App() {
             }
           }}
 
-          optional rendering settings
-          hdrEnabled={true}
-          pbrEnabled={true}
+          // optional rendering settings
+          hdrEnabled={false}
+          pbrEnabled={false}
           bloomEnabled={false}
+          // hdrEnabled={true}
+          // pbrEnabled={true}
+          // bloomEnabled={false}
           shadowsEnabled={true}
-          multisamplingEnabled={true}
+        // multisamplingEnabled={true}
         />
       </>
 

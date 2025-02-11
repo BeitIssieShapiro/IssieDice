@@ -4,6 +4,7 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { FadeInView, IconButton } from "./components";
+import { DicePreview } from "./edit-dice";
 
 
 function Seperator({ width }: { width: string }) {
@@ -28,11 +29,14 @@ interface ProfilePickerProps {
     onDelete?: (name: string, afterDelete: () => void) => void;
     onEdit?: (name: string, afterSave: () => void) => void;
     onCreate?: () => void;
+    isNarrow?:boolean;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, isLoad }: ProfilePickerProps) {
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, isLoad, isNarrow }: ProfilePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
+
+    const isDicePicker = folder == Folders.DiceTemplates;
 
     useEffect(() => {
         if (open) {
@@ -69,6 +73,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                         }}>
                             <View style={styles.listItem} key={item.key} >
                                 {item.icon && <Image source={item.icon} style={styles.pickerImage} />}
+                                {!item.icon && isDicePicker && <DicePreview size={45} faces={item.faces} />}
                                 <Text
                                     allowFontScaling={false}
                                     numberOfLines={1}
@@ -85,7 +90,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                     <IconButton onPress={() => onSelect(item.key)} text={translate("Select")} />
                                 }
                                 {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
-                                {onEdit && <IconButton icon="edit" text={translate("Rename")} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onEdit && !item.readOnly && <IconButton icon="edit" text={isNarrow?"":translate("Rename")} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
                             </View>
                         </View>
                         <Seperator width="100%" />

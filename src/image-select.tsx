@@ -7,9 +7,9 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFS from 'react-native-fs';
 
-export function doNothing(){}
+export function doNothing() { }
 
-export async function SelectFromGallery(targetFolder: string, fileName: string): Promise<string> {
+export async function SelectFromGallery(targetFolder: string, fileName: string, cacheBusterPrefix: string | undefined): Promise<string> {
     const options: any = {
         mediaType: 'photo',
         selectionLimit: 1,
@@ -27,7 +27,7 @@ export async function SelectFromGallery(targetFolder: string, fileName: string):
                 // Copy the image to the app's document folder
                 if (selectedImageUri) {
                     try {
-                        resolve(copyFileToFolder(selectedImageUri, targetFolder, fileName));
+                        resolve(copyFileToFolder(selectedImageUri, targetFolder, fileName, true, cacheBusterPrefix));
                     } catch (error) {
                         reject(error)
                     }
@@ -39,20 +39,29 @@ export async function SelectFromGallery(targetFolder: string, fileName: string):
 
 }
 
-export const copyFileToFolder = async (sourcePath: string, targetPath: string, fileName: string, overwrite = true) => {
+export const copyFileToFolder = async (sourcePath: string, targetPath: string, fileName: string, overwrite = true, cacheBusterPrefix: string | undefined = undefined) => {
 
 
-    const p = `${RNFS.DocumentDirectoryPath}/${targetPath}`;
-    await RNFS.mkdir(p);
-    const destinationPath = `${p}/${fileName}`;
+    const destPath = `${RNFS.DocumentDirectoryPath}/${targetPath}`;
+    await RNFS.mkdir(destPath);
+    const targetFilePath = `${destPath}/${fileName}`;
 
     if (overwrite) {
-        await RNFS.unlink(destinationPath).catch(doNothing);
+        if (!cacheBusterPrefix) {
+            await RNFS.unlink(targetFilePath).catch(doNothing);
+        } else {
+            const files = await RNFS.readDir(destPath);
+            for (const file of files) {
+                if (file.name.indexOf(cacheBusterPrefix) > 0) {
+                    await RNFS.unlink(file.path);
+                }
+            }
+        }
     }
     // Copy the file from the sourcePath to the destinationPath
-    await RNFS.copyFile(sourcePath, destinationPath);
+    await RNFS.copyFile(sourcePath, targetFilePath);
 
-    return destinationPath;
+    return targetFilePath;
 };
 
 export const deleteFile = async (filePath: string) => {

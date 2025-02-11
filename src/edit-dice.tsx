@@ -1,12 +1,13 @@
-import { Button, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { translate } from "./lang";
+import { Alert, Button, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { fTranslate, translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { FaceType, FaceTypePicker } from "./profile-picker";
 import { copyFileToFolder, SelectFromGallery } from "./image-select";
-import { loadFaceImages, } from "./profile";
+import { existsFolder, Folders, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, } from "./profile";
 import { captureRef } from "react-native-view-shot";
+import prompt from "react-native-prompt-android";
 
 const blankImg = require("../assets/blank.png");
 interface EditDiceProps {
@@ -14,23 +15,28 @@ interface EditDiceProps {
     onClose: () => void;
 }
 
-export function EditDice({ onClose, }: EditDiceProps) {
+export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
+
+
+export function EditDice({ onClose, name }: EditDiceProps) {
     const [addFace, setAddFace] = useState<number>(-1);
+    const [editedName, setEditedName] = useState<string>(name);
+    const [lastSaveddName, setLastSavedName] = useState<string>(name);
     const [faces, setFaces] = useState<string[]>(["", "", "", "", "", ""]);
     const [dicePreview, setDicePreview] = useState<boolean>(false);
     const diceLayoutRef = useRef<any>(null);
-    const name = "temp"
 
     useEffect(() => {
         if (name.length > 0) {
             //fetch the existing faces
             loadFaceImages(name).then((images) => setFaces(images));
         }
-    }, [name])
+    }, [editedName])
 
-    async function handleAddFace(index: number, type: FaceType) {
+    async function handleAddFace(index: number, type: FaceType, editedName:string) {
         if (type == FaceType.Image) {
-            const filePath = await SelectFromGallery(`custom-dice/${"temp"}`, `face_${index}.jpg`);
+            const filePath = await SelectFromGallery(`${Folders.CustomDice}/${editedName}`, `face_${index}$$${Math.floor(Math.random()*1000000)}.jpg`, `face_${index}$$`);
+            console.log("added Face", filePath)
             setFaces(curr => {
                 curr[index] = filePath;
                 return [...curr];
@@ -38,10 +44,54 @@ export function EditDice({ onClose, }: EditDiceProps) {
         }
     }
 
-    async function handleSave(name: string) {
-        const filePath = await diceLayoutRef.current?.toImage().catch((e:any)=>console.log("fail capture", e));
+    const handleEditName = (editedName:string) => {
+        prompt(translate("SetDicenName"), undefined, [
+            { text: translate("Cancel"), style: "cancel" },
+            {
+                text: translate("OK"),
+                onPress: (newName) => {
+                    console.log("OK pressed", newName)
+                    if (newName) {
+                        if (!isValidFilename(newName)) {
+                            Alert.alert(fTranslate("InvalidName", InvalidCharachters));
+                            return;
+                        }
+                        setEditedName(newName);
+                    }
+                }
+            },
+        ], { type: 'plain-text', defaultValue: editedName });
+    }
+
+    async function handleSave(editedName: string, lastSavedName: string) {
+        if (editedName.length == 0) {
+            Alert.alert(translate("DiceMissingName"), "", [{ text: translate("OK") }]);
+            return;
+        }
+
+        if (editedName != lastSavedName) {
+
+
+            if (!isValidFilename(editedName)) {
+                Alert.alert(translate("InvalideDiceName"), "", [{ text: translate("OK") }]);
+                return;
+            }
+
+            if (await existsFolder(getCustomTypePath(editedName))) {
+                Alert.alert(translate("AlreadyExistsDice"), "", [{ text: translate("OK") }]);
+                return;
+                //todo - allow overwrite
+            }
+            if (lastSavedName.length > 0) {
+                await renameDiceFolder(lastSavedName, editedName);
+                setLastSavedName(editedName);
+            }
+            // else this is a new Dice, folder will be created
+        }
+
+        const filePath = await diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e));
         console.log("save", filePath)
-        await copyFileToFolder(filePath, `custom-dice/${name}`, "dice.jpg");
+        await copyFileToFolder(filePath, `${Folders.CustomDice}/${editedName}`, "dice.jpg");
     }
 
     console.log("faces", faces)
@@ -53,11 +103,18 @@ export function EditDice({ onClose, }: EditDiceProps) {
             <Icon name={"close"} color={"black"} size={35} onPress={onClose} />
         </View>
 
+        <View style={[styles.section]} >
+            <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
+            <Text style={styles.sectionValue}>{editedName}</Text>
+            <Icon name="edit" size={35} onPress={() => handleEditName(editedName)} />
+
+        </View>
+
         <FaceTypePicker
             open={addFace >= 0}
             onClose={() => setAddFace(-1)}
             onSelect={(type) => {
-                handleAddFace(addFace, type as FaceType);
+                handleAddFace(addFace, type as FaceType, editedName);
                 setAddFace(-1);
             }}
         />
@@ -66,7 +123,13 @@ export function EditDice({ onClose, }: EditDiceProps) {
 
             {[0, 1, 2, 3, 4, 5].map(index => {
                 return <TouchableOpacity key={index} style={styles.addFace}
-                    onPress={() => setAddFace(index)}>
+                    onPress={() => {
+                        if (editedName.length == 0) {
+                            Alert.alert(translate("MustHaveDiceNameBeforeAddFace"))
+                            return;
+                        }
+                        setAddFace(index)
+                    }}>
                     {faces[index]?.length > 0 ?
                         <Image source={{ uri: faces[index] }} style={{ width: 75, height: 75 }} /> :
                         <Icon name="plus" size={35} />
@@ -76,9 +139,9 @@ export function EditDice({ onClose, }: EditDiceProps) {
         </View>
         <View style={{ flexDirection: "row" }}>
             <DicePreview faces={faces} size={150} />
-            <DiceLayout faces={faces} size={200} ref={diceLayoutRef}/>
+            <DiceLayout faces={faces} size={200} ref={diceLayoutRef} />
         </View>
-        <Button title={translate("Save")} onPress={() => handleSave(name)} />
+        <Button title={translate("Save")} onPress={() => handleSave(editedName, lastSaveddName)} />
     </View>
 }
 
@@ -197,6 +260,25 @@ const styles = StyleSheet.create({
         fontSize: 25,
         borderRadius: 5,
         margin: 10
+    },
+    section: {
+        flexDirection: "row",
+        backgroundColor: "white",
+        height: 60,
+        padding: 8,
+        paddingHorizontal: 20,
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderRadius: 45,
+        marginTop: 10,
+        marginHorizontal: 40
+    },
+    sectionName: {
+        fontSize: 25,
+        fontWeight: "bold",
+    },
+    sectionValue: {
+        fontSize: 25,
     },
     settingTitleText: {
         fontSize: 35,

@@ -44,7 +44,8 @@ export interface List {
     key: string | Templates,
     name: string;
     icon?: string;
-    custom?: boolean;
+    faces?: string[];
+    readOnly?: boolean;
 }
 
 export const templatesList = [
@@ -52,16 +53,19 @@ export const templatesList = [
         key: Templates.Numbers,
         name: translate("Numbers"),
         icon: require("../assets/numbers-preview.png"),
+        readOnly: true,
     },
     {
         key: Templates.Colors,
         name: translate("Colors"),
         icon: require("../assets/colors-preview.png"),
+        readOnly: true,
     },
     {
         key: Templates.Dots,
         name: translate("Dots"),
         icon: require("../assets/dots-preview.png"),
+        readOnly: true,
     }
 ]
 
@@ -276,13 +280,13 @@ export function getCustomTypePath(name: string): string {
 
 
 async function loadCustomDice(): Promise<List[]> {
-    return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(folders => {
+    return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(async (folders) => {
         const list = [];
         for (const folder of folders) {
             list.push({
                 key: folder.name,
                 name: folder.name,
-                custom: true,
+                faces: await loadFaceImages(folder.name),
             })
         }
         return list;
@@ -387,4 +391,14 @@ export function isValidFilename(filename: string): boolean {
         return false;
     }
     return true;
+}
+
+export function existsFolder(name: string): Promise<boolean> {
+    return RNFS.exists(`${RNFS.DocumentDirectoryPath}/${name}`);
+}
+
+export function renameDiceFolder(currName: string, newName: string) {
+    const srcPath = getCustomTypePath(currName);
+    const destPath = getCustomTypePath(newName);
+    return RNFS.moveFile(srcPath, destPath);
 }

@@ -9,6 +9,7 @@ import {
     ViroQuad,
     ViroCamera,
     ViroOrbitCamera,
+    ViroSpotLight,
 } from "@reactvision/react-viro";
 import { Axes } from "./axes";
 import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
@@ -47,14 +48,30 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
 
     console.log("render diceScene", dice)
     return (
-        <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false}}>
+        <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
+            <ViroAmbientLight color="#FFFFFF" intensity={500} />
+            <ViroSpotLight color="#FFFFFF" direction={[0, -1, 0]} castsShadow={true} />
+
             <ViroCamera active position={[0, 5, 2]} rotation={[-60, 0, 0]} />
 
 
-            <ViroNode position={[0, 0, 0]} >
+            <ViroNode position={[0, 0, 0]}>
 
-                <ViroAmbientLight color="#ffffff" intensity={400} />
-
+                {/* <ViroAmbientLight color="#ffffff" intensity={100}  />  */}
+                {/* <ViroSpotLight color="#ffffff" intensity={300} position={[0, 5, 2]} direction={[0, 0, 0]} castsShadow={true} /> */}
+                <ViroSpotLight
+                    innerAngle={5}
+                    outerAngle={85}
+                    direction={[-1, -1.5, -.5]}
+                    position={[2, 4, 1]}
+                    color="#ffffff"
+                    castsShadow={true}
+                    shadowMapSize={2048}
+                    shadowNearZ={2}
+                    shadowFarZ={5}
+                    shadowOpacity={1} 
+                    intensity={1500}
+                    />
                 {// <ViroNode position={[-2.5, 0, -9]}>
                     //   <Axes />
                     //</ViroNode> 
@@ -75,6 +92,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                         friction: 0.9,
                         restitution: 0.7,
                     }}
+                    shadowCastingBitMask={1.5}
                 />
 
                 {// Back Wall 
@@ -86,6 +104,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                     scale={[6, wallHeight, 0.1]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
+
                 />
 
 
@@ -114,6 +133,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                             scale={[0.4, 0.4, 0.4]}
                             initialImpulse={impulse}
                             initialTourqe={torque}
+
                         />
                     )
 
