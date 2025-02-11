@@ -96,34 +96,34 @@ export default function App() {
           onPress={handleThrowDice}
           activeOpacity={1}
         />}
-        <Viro3DSceneNavigator
-          style={styles.viroContainer}
-          onTouchEnd={handleThrowDice}
-          debug={true}
-          // onExitViro={() => {
-          //   console.log("Exiting Viro...");
-          // }}
+          <Viro3DSceneNavigator
+            style={styles.viroContainer}
+            onTouchEnd={handleThrowDice}
+            debug={true}
+            // onExitViro={() => {
+            //   console.log("Exiting Viro...");
+            // }}
 
-          initialScene={{
-            scene: DiceScene,
-            passProps: {
-              ref: sceneRef,
-              initialImpulse,
-              initialTorque,
-              dice: revision >= 0 ? profile.dice : [],
-            }
-          }}
+            initialScene={{
+              scene: DiceScene,
+              passProps: {
+                ref: sceneRef,
+                initialImpulse,
+                initialTorque,
+                dice: revision >= 0 ? profile.dice : [],
+              }
+            }}
 
-          // optional rendering settings
-          hdrEnabled={false}
-          pbrEnabled={false}
-          bloomEnabled={false}
-          // hdrEnabled={true}
-          // pbrEnabled={true}
-          // bloomEnabled={false}
-          shadowsEnabled={true}
-        // multisamplingEnabled={true}
-        />
+            // optional rendering settings
+            hdrEnabled={false}
+            pbrEnabled={false}
+            bloomEnabled={false}
+            // hdrEnabled={true}
+            // pbrEnabled={true}
+            // bloomEnabled={false}
+            shadowsEnabled={true}
+          // multisamplingEnabled={true}
+          />
       </>
 
     </SafeAreaView>

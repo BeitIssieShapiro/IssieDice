@@ -33,12 +33,12 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>Use photos as dice faces</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Uses photos as dice faces</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Uses microphone to recod short voice message to attach to a dice faces</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Take pictures for dice faces</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Takes pictures for dice faces</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>
