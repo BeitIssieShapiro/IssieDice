@@ -22,11 +22,11 @@ ViroMaterials.createMaterials({
 
   tableSurface: {
     diffuseColor: "#008000", // Green like a casino table
-    lightingModel:"Lambert"
+    lightingModel: "Lambert"
   },
   wallMaterial: {
     diffuseColor: "#ffffff", // Dark walls
-    lightingModel:"Lambert"
+    lightingModel: "Lambert"
   },
 });
 
@@ -38,9 +38,10 @@ export default function App() {
   const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [revision, setRevision] = useState<number>(0);
-  const [profile, setProfile] = useState<Profile>(readCurrentProfile());
+  const [profile, setProfile] = useState<Profile>({ dice: [] });
 
   useEffect(() => {
+
     return () => {
       console.log("about to unmount")
     }
@@ -49,9 +50,11 @@ export default function App() {
 
   useEffect(() => {
     console.log("App reloading profile")
-    const p = readCurrentProfile();
-    setProfile(p);
-    updateDiceScene(p);
+    readCurrentProfile().then(p => {
+      setProfile(p);
+      setTimeout(() => updateDiceScene(p), 100);
+
+    })
   }, [revision]);
 
 

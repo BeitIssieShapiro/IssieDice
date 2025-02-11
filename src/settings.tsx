@@ -35,15 +35,17 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
 
     const [profileName, setProfileName] = useState<string>("");
-    const [profile, setProfile] = useState<Profile>(readCurrentProfile());
+    const [profile, setProfile] = useState<Profile>({ dice: [] });
 
     useEffect(() => {
-        const p = readCurrentProfile();
-        setProfile(p);
-        setProfileName(Settings.getString(SettingsKeys.CurrentProfileName, ""));
-        console.log("reload settings", p.dice.map(b => b.name))
+        readCurrentProfile().then(p => {
+            setProfile(p);
+            setProfileName(Settings.getString(SettingsKeys.CurrentProfileName, ""));
+            console.log("reload settings", p.dice.map(b => b.template))
 
-        onChange()
+            onChange()
+
+        });
     }, [revision]);
 
 
@@ -168,8 +170,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                             dice={profile.dice[i]}
                             isBusy={diceBusy == i}
                             onSetActive={(newVal) => setDiceActive(i, newVal)}
-                            onOpenLoadDice={() => { }
-                                //setOpenLoadDice(i)
+                            onOpenLoadDice={() => setOpenSelectTemplate(i)
                             }
                             onSaveDice={() => { }} //handleSaveButton(profile.buttons[i].name, i)}
                             onImageSearchOpen={() => { }}//setImageSearchOpen(i)}

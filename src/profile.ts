@@ -91,8 +91,8 @@ export const faceTypes = [
 
 export interface Dice {
     template: Templates;
-    templateName?: string;
     active: boolean;
+    faces?: string[] | undefined;
 }
 
 export interface Profile {
@@ -250,19 +250,22 @@ async function writeCurrentProfile(p: Profile, name: string) {
     Settings.setArray(SettingsKeys.DiceActive, diceActive);
 }
 
-export function readCurrentProfile(): Profile {
+export async function readCurrentProfile(): Promise<Profile> {
     const numOfDice = Settings.getNumber(SettingsKeys.DiceCount, 1);
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
-    const diceNames = Settings.getArray<string>(SettingsKeys.DiceNames, "string", ["", "", "", ""]);
     const diceActive = Settings.getArray<boolean>(SettingsKeys.DiceActive, "boolean", [true, true, true, true]);
 
     const dice = [] as Dice[];
 
     for (let i = 0; i < numOfDice; i++) {
+        let faces = []
+        if (!diceTemplateType[i].startsWith(Templates.prefix)) {
+            faces = await loadFaceImages(diceTemplateType[i]);
+        }
         dice.push({
-            name: diceNames[i] || "",
             template: diceTemplateType[i] as Templates || Templates.Numbers,
             active: diceActive[i] ?? true,
+            faces,
         });
     }
 

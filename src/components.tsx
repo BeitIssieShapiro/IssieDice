@@ -1,14 +1,18 @@
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
+import IconIonicons from 'react-native-vector-icons/Ionicons';
+
 import { useEffect, useState } from "react";
 
 
-export function IconButton({ icon, onPress, text }: { icon?: string, text: string, onPress: () => void }) {
+export function IconButton({ icon, onPress, text, type }: { icon?: string, text: string, onPress: () => void, type?: undefined | "Ionicon" }) {
+    const IconElem = type == "Ionicon" ? IconIonicons : IconAnt;
 
     return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }]} onPress={onPress} >
         {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5 }}>{text}</Text>}
-        {icon && <IconAnt name={icon} style={styles.icon} />}
+
+        <IconElem name={icon} style={styles.icon} />
     </TouchableOpacity>
 }
 

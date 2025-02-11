@@ -23,7 +23,6 @@ export function EditDice({ onClose, name }: EditDiceProps) {
     const [editedName, setEditedName] = useState<string>(name);
     const [lastSaveddName, setLastSavedName] = useState<string>(name);
     const [faces, setFaces] = useState<string[]>(["", "", "", "", "", ""]);
-    const [dicePreview, setDicePreview] = useState<boolean>(false);
     const diceLayoutRef = useRef<any>(null);
 
     useEffect(() => {
