@@ -45,3 +45,7 @@ About
 Ideas:
 - Augmented Reality?
 - throw by swipe
+
+
+Bugs:
+- no need to load model on every throw

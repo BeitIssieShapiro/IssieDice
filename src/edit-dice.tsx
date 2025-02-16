@@ -32,9 +32,9 @@ export function EditDice({ onClose, name }: EditDiceProps) {
         }
     }, [editedName])
 
-    async function handleAddFace(index: number, type: FaceType, editedName:string) {
+    async function handleAddFace(index: number, type: FaceType, editedName: string) {
         if (type == FaceType.Image) {
-            const filePath = await SelectFromGallery(`${Folders.CustomDice}/${editedName}`, `face_${index}$$${Math.floor(Math.random()*1000000)}.jpg`, `face_${index}$$`);
+            const filePath = await SelectFromGallery(`${Folders.CustomDice}/${editedName}`, `face_${index}$$${Math.floor(Math.random() * 1000000)}.jpg`, `face_${index}$$`);
             console.log("added Face", filePath)
             setFaces(curr => {
                 curr[index] = filePath;
@@ -43,7 +43,7 @@ export function EditDice({ onClose, name }: EditDiceProps) {
         }
     }
 
-    const handleEditName = (editedName:string) => {
+    const handleEditName = (editedName: string) => {
         prompt(translate("SetDicenName"), undefined, [
             { text: translate("Cancel"), style: "cancel" },
             {
@@ -194,7 +194,7 @@ function DiceLayoutImpl({ faces, size }: DicePreviewProps, ref: any) {
 
     useImperativeHandle(ref, () => ({
         toImage: () => {
-            return captureRef(viewShotRef, { format: "jpg", quality: 1 });
+            return captureRef(viewShotRef, { format: "jpg", quality: 1,  width: 3 * faceSize, height: 4 * faceSize  });
         }
     }));
 
@@ -202,7 +202,7 @@ function DiceLayoutImpl({ faces, size }: DicePreviewProps, ref: any) {
     const faceSizeStyle = { width: faceSize, height: faceSize }
     console.log("usedFaces", usedFaces)
     return (
-        <View style={[styles.previewContainer, { width: size * 3 / 4, height: size }]} collapsable={false} ref={viewShotRef}>
+        <View style={[styles.previewContainer, { width: 3 * faceSize, height: 4 * faceSize }]} collapsable={false} ref={viewShotRef}>
             {/* Right Face */}
             <Image
                 source={usedFaces[0]}

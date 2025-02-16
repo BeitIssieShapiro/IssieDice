@@ -24,6 +24,7 @@ export const SettingsKeys = {
     DiceTemplates: "DiceTemplates",
     DiceNames: "DiceNames",
     DiceActive: "DiceActive",
+    DiceSize: "DiceSize",
 }
 
 
@@ -92,6 +93,7 @@ export const faceTypes = [
 export interface Dice {
     template: Templates;
     active: boolean;
+    size: number;
     faces?: string[] | undefined;
 }
 
@@ -227,18 +229,18 @@ export async function clearProfile() {
 
 async function writeCurrentProfile(p: Profile, name: string) {
     const diceTemplateType = [];
-    const diceNames = [];
     const diceActive = [];
+    const diceSize = [];
 
     for (let i = 0; i < 4; i++) {
         if (p.dice.length > i) {
             const dice = p.dice[i];
             diceTemplateType.push(dice.template);
-            diceNames.push(dice.name);
             diceActive.push(dice.active);
+            diceSize.push(dice.size);
         } else {
             diceTemplateType.push(Templates.Numbers);
-            diceNames.push("");
+            diceSize.push(2);
             diceActive.push(true);
         }
     }
@@ -246,7 +248,6 @@ async function writeCurrentProfile(p: Profile, name: string) {
     Settings.set(SettingsKeys.DiceCount, p.dice.length);
 
     Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
-    Settings.setArray(SettingsKeys.DiceNames, diceNames);
     Settings.setArray(SettingsKeys.DiceActive, diceActive);
 }
 
@@ -254,17 +255,19 @@ export async function readCurrentProfile(): Promise<Profile> {
     const numOfDice = Settings.getNumber(SettingsKeys.DiceCount, 1);
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
     const diceActive = Settings.getArray<boolean>(SettingsKeys.DiceActive, "boolean", [true, true, true, true]);
+    const diceSize = Settings.getArray<number>(SettingsKeys.DiceSize, "number", [2, 2, 2, 2]);
 
     const dice = [] as Dice[];
 
     for (let i = 0; i < numOfDice; i++) {
-        let faces = []
+        let faces: string[] = []
         if (!diceTemplateType[i].startsWith(Templates.prefix)) {
             faces = await loadFaceImages(diceTemplateType[i]);
         }
         dice.push({
             template: diceTemplateType[i] as Templates || Templates.Numbers,
             active: diceActive[i] ?? true,
+            size: diceSize[i] ?? 2,
             faces,
         });
     }
@@ -293,7 +296,7 @@ async function loadCustomDice(): Promise<List[]> {
             })
         }
         return list;
-    }).catch((e)=>{
+    }).catch((e) => {
         console.log("Fail browsing custom dices", e);
         return [];
     });

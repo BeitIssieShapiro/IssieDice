@@ -68,6 +68,13 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
+    function setDiceSize(index: number, newVal: number) {
+        let newDiceSizes = profile.dice.map(b => b.size);
+        newDiceSizes[index] = newVal
+        Settings.setArray(SettingsKeys.DiceSize, newDiceSizes);
+        setRevision(old => old + 1);
+    }
+
     function setDiceTemplate(index: number, newTemplate: Templates) {
         let newDiceTemplates = profile.dice.map(b => b.template);
         newDiceTemplates[index] = newTemplate as Templates;
@@ -157,7 +164,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                     <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{revision >= 0 && profile.dice.length}</Text>
                     <Icon name="pluscircleo" color={profile.dice.length == 4 ? "lightgray" : BTN_COLOR} size={35} onPress={() => changeNumOfButton(1)} />
                 </View>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Dice")}</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("NumberOfDice")}</Text>
             </View>
 
             <View style={[styles.cubes, marginHorizontal]}>
@@ -170,6 +177,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                             dice={profile.dice[i]}
                             isBusy={diceBusy == i}
                             onSetActive={(newVal) => setDiceActive(i, newVal)}
+                            onSetSize={(newSize)=>setDiceSize(i, newSize)}
                             onOpenLoadDice={() => setOpenSelectTemplate(i)
                             }
                             onSaveDice={() => { }} //handleSaveButton(profile.buttons[i].name, i)}

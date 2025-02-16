@@ -69,9 +69,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                     shadowMapSize={2048}
                     shadowNearZ={2}
                     shadowFarZ={5}
-                    shadowOpacity={1} 
+                    shadowOpacity={1}
                     intensity={1500}
-                    />
+                />
                 {// <ViroNode position={[-2.5, 0, -9]}>
                     //   <Axes />
                     //</ViroNode> 
@@ -130,7 +130,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                             cubeKey={`dice${i}-${sceneKey}`}
                             initialPosition={[i < dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
                             template={d.template}
-                            scale={[0.4, 0.4, 0.4]}
+                            scale={[0.3 * d.size / 2, 0.3 * d.size / 2, 0.3 * d.size / 2]}
                             initialImpulse={impulse}
                             initialTourqe={torque}
 
