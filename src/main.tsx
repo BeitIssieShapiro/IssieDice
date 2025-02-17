@@ -39,8 +39,10 @@ export default function App() {
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [revision, setRevision] = useState<number>(0);
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
-  useEffect(() => {
+  const [inRecovery, setInRecovery] = useState<boolean>(false);
+  const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
+  useEffect(() => {
     return () => {
       console.log("about to unmount")
     }
@@ -60,6 +62,20 @@ export default function App() {
   const sceneRef = useRef<DiceSceneMethods>(undefined);
 
   const handleThrowDice = () => {
+    if (inRecoveryRef.current && profile?.recoveryTime) {
+      return;
+    }
+    if (profile && profile.recoveryTime > 0) {
+      inRecoveryRef.current = setTimeout(() => {
+        if (inRecoveryRef.current != undefined) {
+          clearTimeout(inRecoveryRef.current);
+          inRecoveryRef.current = undefined;
+          setInRecovery(false);
+        }
+      }, profile?.recoveryTime! * 1000);
+      setInRecovery(true);
+    }
+
     const fz = -(Math.random() / 6 + .1);
     const fx = -(Math.random() / 6 + .15);
 
@@ -94,7 +110,10 @@ export default function App() {
         {!openSettings && <TouchableOpacity style={styles.overlay}
           onPress={handleThrowDice}
           activeOpacity={1}
-        />}
+        >
+          {/** indicator to a lock */}
+          {inRecovery && <View style={styles.lockIndicator} />}
+        </TouchableOpacity>}
         {profile && <Viro3DSceneNavigator
           style={styles.viroContainer}
           onTouchEnd={handleThrowDice}
@@ -140,6 +159,13 @@ const styles = StyleSheet.create({
     top: 0, left: 0, width: "100%", height: "100%",
     backgroundColor: "transparent",
     zIndex: 500
+  },
+  lockIndicator: {
+    position: "absolute",
+    left: 5, top: 4,
+    width: 10, height: 10,
+    borderRadius: 5,
+    backgroundColor: "red"
   },
   viroContainer: {
     backgroundColor: "red",

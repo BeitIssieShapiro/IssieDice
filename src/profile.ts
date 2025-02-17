@@ -27,7 +27,7 @@ export const SettingsKeys = {
     DiceSize: "DiceSize",
     RecoveryTime: "RecoveryTime",
     TableColor: "TableColor",
-    LastColors:"LastColors",
+    LastColors: "LastColors",
 }
 
 
@@ -300,6 +300,26 @@ export function getCustomTypePath(name: string): string {
 
 
 
+async function loadProfiles(): Promise<List[]> {
+    return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.Profiles}`).then(async (files) => {
+        const list = [];
+        for (const file of files) {
+            if (file.name.endsWith(".json")) {
+                const name = file.name.substring(0, file.name.length - 5);
+                list.push({
+                    key: name,
+                    name
+                })
+            }
+
+        }
+        return list;
+    }).catch((e) => {
+        console.log("Fail browsing profiles", e);
+        return [];
+    });
+}
+
 async function loadCustomDice(): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(async (folders) => {
         const list = [];
@@ -390,6 +410,8 @@ export async function ListElements(folder: Folders): Promise<List[]> {
         return [...templatesList, ...(await loadCustomDice())];
     } else if (folder == Folders.FaceType) {
         return faceTypes;
+    } else if (folder == Folders.Profiles) {
+        return loadProfiles();
     }
     return [];
 

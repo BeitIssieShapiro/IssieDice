@@ -18,9 +18,15 @@ function Seperator({ width }: { width: string }) {
     />
 }
 
+interface ButtonInfo {
+    name: string;
+    icon?: string;
+}
+
 interface ProfilePickerProps {
     open: boolean;
-    isLoad: boolean;
+    loadButton: ButtonInfo;
+    editButton?: ButtonInfo;
     height: number | string;
     onClose: () => void;
     onSelect: (item: string) => void;
@@ -29,10 +35,10 @@ interface ProfilePickerProps {
     onDelete?: (name: string, afterDelete: () => void) => void;
     onEdit?: (name: string, afterSave: () => void) => void;
     onCreate?: () => void;
-    isNarrow?:boolean;
+    isNarrow?: boolean;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, isLoad, isNarrow }: ProfilePickerProps) {
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, loadButton, editButton, isNarrow }: ProfilePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
@@ -85,12 +91,10 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                     }}>{item.name}</Text>
                             </View>
                             <View style={{ flexDirection: "row" }}>
-                                {isLoad ?
-                                    <IconButton icon="upload" onPress={() => onSelect(item.key)} text={translate("Load")} /> :
-                                    <IconButton onPress={() => onSelect(item.key)} text={translate("Select")} />
-                                }
+                                <IconButton icon={loadButton.icon} onPress={() => onSelect(item.key)} text={loadButton.name} />
                                 {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
-                                {onEdit && !item.readOnly && <IconButton icon="edit" text={isNarrow?"":translate("Edit")} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} text={isNarrow && editButton?.icon ? "" :editButton?.name!} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+
                             </View>
                         </View>
                         <Seperator width="100%" />

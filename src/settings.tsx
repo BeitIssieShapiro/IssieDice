@@ -1,15 +1,18 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { isRTL, translate } from "./lang";
+import { fTranslate, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { IconButton, NumberSelector, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { Dice, Folders, Profile, readCurrentProfile, SettingsKeys, Templates } from "./profile";
+import { AlreadyExists, deleteProfile, Dice, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { ProfilePicker } from "./profile-picker";
 import { EditDice } from "./edit-dice";
 import ColorPicker from "react-native-wheel-color-picker";
 import { MyColorPicker } from "./color-picker";
+import { Alert } from "react-native";
+import prompt from "react-native-prompt-android";
+import Toast from "react-native-toast-message";
 // import IconIonic from 'react-native-vector-icons/Ionicons';
 
 // import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -53,9 +56,6 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     }, [revision]);
 
 
-    function closeProfile() { }
-    function saveAsNewProfile() { }
-
     function changeNumOfButton(delta: number) {
         const current = Settings.getNumber(SettingsKeys.DiceCount, 1);
         let newVal = current + delta;
@@ -94,6 +94,120 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
+    /* Profile actions */
+    const doProfileSave = async (name: string, previousName: string, isCurrent: boolean, overwrite = false) => {
+        console.log("doProfileSave")
+        if (!isValidFilename(name)) {
+            throw new InvalidFileName(name);
+        }
+        if (previousName == "") {
+            // new profile
+            if (!overwrite) {
+                return verifyProfileNameFree(name).then(async () => {
+                    const currentProfile = await readCurrentProfile();
+                    await SaveProfile(name, currentProfile, true);
+                    Settings.set(SettingsKeys.CurrentProfileName, name);
+                });
+            } else {
+                Settings.set(SettingsKeys.CurrentProfileName, name);
+            }
+            setRevision(prev => prev + 1);
+        } else {
+            // rename profile
+            return renameProfile(previousName, name).then(() => {
+                if (isCurrent) {
+                    Settings.set(SettingsKeys.CurrentProfileName, name);
+                    setRevision(prev => prev + 1);
+                }
+            })
+        }
+    }
+
+    const handleProfileDelete = async (name: string, afterDelete: () => void, force = false) => {
+        const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
+        const isCurrent = name == currName;
+
+        if (!force) {
+            const msg = isCurrent ?
+                fTranslate("DeleteCurrentProfileWarnning", name) :
+                fTranslate("DeleteProfileWarnning", name);
+
+            Alert.alert(translate("DeleteProfileTitle"), msg, [
+                { text: translate("Cancel"), style: "cancel" },
+                { text: translate("Delete"), style: "destructive", onPress: () => handleProfileDelete(name, afterDelete, true) }
+            ]);
+            return;
+        }
+
+        if (isCurrent) {
+            await LoadProfile("");
+            setTimeout(() => setRevision(prev => prev + 1), 100);
+        }
+        await deleteProfile(name);
+        afterDelete();
+    }
+
+    const handleProfileEditName = (name: string, isRename: boolean, afterSave: () => void) => {
+        const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
+        const isCurrent = currName == name;
+        prompt(isRename ? translate("RenameProfile") : translate("SetProfileName"), undefined, [
+            { text: translate("Cancel"), style: "cancel" },
+            {
+                text: translate("Save"),
+                onPress: (newName) => {
+                    console.log("save pressed", newName)
+                    if (newName) {
+                        doProfileSave(newName, name, isCurrent)
+                            .then(() => {
+                                afterSave();
+                                Toast.show({
+                                    autoHide: true,
+                                    type: 'success',
+                                    text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
+                                })
+                            })
+                            .catch((err) => {
+                                if (err instanceof AlreadyExists) {
+                                    Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", name),
+                                        [
+                                            {
+                                                text: translate("Overwrite"), onPress: () => {
+                                                    doProfileSave(newName, name, isCurrent, true).then(() => {
+                                                        afterSave();
+                                                        Toast.show({
+                                                            autoHide: true,
+                                                            type: 'success',
+                                                            text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
+                                                        })
+                                                    })
+                                                }
+                                            },
+                                            { text: translate("Cancel") }
+                                        ])
+                                } else if (err instanceof InvalidFileName) {
+                                    Alert.alert(fTranslate("InvalidName", InvalidCharachters));
+                                } else {
+                                    Toast.show({
+                                        autoHide: true,
+                                        type: 'error',
+                                        text1: translate(translate("ProfileSaveFailed"))
+                                    })
+                                }
+                            });
+                    }
+                }
+            },
+        ], { type: 'plain-text', defaultValue: name });
+    }
+
+    const closeProfile = async () => {
+        const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
+        if (currName.length > 0) {
+            await LoadProfile("");
+            setTimeout(() => setRevision(prev => prev + 1), 100);
+        }
+    }
+
     let marginHorizontal = {}
     if (windowSize.width < 450) {
         marginHorizontal = { marginHorizontal: 5 };
@@ -106,11 +220,34 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
     return <View style={styles.container}>
+        {/** Profile Picker */}
+        <ProfilePicker
+            folder={Folders.Profiles}
+            open={openLoadProfile}
+            loadButton={{ name: translate("Load"), icon: "upload" }}
+            height={windowSize.height * .6}
+            onSelect={async (profileName) => {
+                console.log("select profile", profileName)
+                setProfileBusy(true);
+                LoadProfile(profileName)
+                    .then(() => setRevision(prev => prev + 1))
+                    .finally(() => setProfileBusy(false));
+                setOpenLoadProfile(false);
 
+            }}
+            editButton={{ name: translate("Rename") }}
+            onEdit={(name, afterSave) => handleProfileEditName(name, true, afterSave)}
+            onClose={() => setOpenLoadProfile(false)}
+            isNarrow={isScreenNarrow}
+        />
+
+
+        {/** Cube Picker */}
         <ProfilePicker
             folder={Folders.DiceTemplates}
             open={openSelectTemplate > -1}
-            isLoad={false}
+            loadButton={{ name: translate("Select") }}
+            editButton={{ name: translate("Edit") }}
             height={windowSize.height * .6}
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
@@ -162,8 +299,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                     {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
                     <IconButton text={translate("Load")} onPress={() => setOpenLoadProfile(true)} />
                     {profileName.length > 0 ?
-                        <IconButton text={translate("Close")} onPress={() => closeProfile()} /> :
-                        <IconButton text={translate("Create")} onPress={() => saveAsNewProfile()} />
+                        <IconButton text={translate("Close")} onPress={closeProfile} /> :
+                        <IconButton text={translate("Create")} onPress={() => handleProfileEditName("", false, () => setRevision(prev => prev + 1))} />
                     }
                 </View>
                 <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
