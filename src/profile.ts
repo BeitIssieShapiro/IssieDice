@@ -25,6 +25,9 @@ export const SettingsKeys = {
     DiceNames: "DiceNames",
     DiceActive: "DiceActive",
     DiceSize: "DiceSize",
+    RecoveryTime: "RecoveryTime",
+    TableColor: "TableColor",
+    LastColors:"LastColors",
 }
 
 
@@ -93,13 +96,27 @@ export const faceTypes = [
 export interface Dice {
     template: Templates;
     active: boolean;
-    size: number;
     faces?: string[] | undefined;
 }
 
 export interface Profile {
     dice: Dice[]
+    size: number;
+    recoveryTime: number;
+    tableColor: string;
 }
+
+export const EmptyProfile = {
+    dice: [
+        {
+            template: Templates.Numbers,
+            active: true,
+        }
+    ],
+    size: 2,
+    recoveryTime: 3,
+    tableColor: "green"
+} as Profile;
 
 export const getRecordingFileName = (recName: string | number, forceFilePrefix?: boolean) => {
     return ensureAndroidCompatible(joinPaths(RNFS.DocumentDirectoryPath, recName + ".mp4"), forceFilePrefix);
@@ -215,37 +232,31 @@ export async function LoadProfile(name: string) {
 }
 
 export async function clearProfile() {
-    const p = {
-        dice: [
-            {
-                name: ""
-            }
-        ]
-    } as Profile;
 
-    writeCurrentProfile(p, "");
+
+    writeCurrentProfile(EmptyProfile, "");
 }
 
 
 async function writeCurrentProfile(p: Profile, name: string) {
     const diceTemplateType = [];
     const diceActive = [];
-    const diceSize = [];
 
     for (let i = 0; i < 4; i++) {
         if (p.dice.length > i) {
             const dice = p.dice[i];
             diceTemplateType.push(dice.template);
             diceActive.push(dice.active);
-            diceSize.push(dice.size);
         } else {
             diceTemplateType.push(Templates.Numbers);
-            diceSize.push(2);
             diceActive.push(true);
         }
     }
     Settings.set(SettingsKeys.CurrentProfileName, name);
     Settings.set(SettingsKeys.DiceCount, p.dice.length);
+    Settings.set(SettingsKeys.DiceSize, p.size);
+    Settings.set(SettingsKeys.RecoveryTime, p.recoveryTime);
+    Settings.set(SettingsKeys.TableColor, p.tableColor);
 
     Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
     Settings.setArray(SettingsKeys.DiceActive, diceActive);
@@ -255,7 +266,9 @@ export async function readCurrentProfile(): Promise<Profile> {
     const numOfDice = Settings.getNumber(SettingsKeys.DiceCount, 1);
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
     const diceActive = Settings.getArray<boolean>(SettingsKeys.DiceActive, "boolean", [true, true, true, true]);
-    const diceSize = Settings.getArray<number>(SettingsKeys.DiceSize, "number", [2, 2, 2, 2]);
+    const size = Settings.getNumber(SettingsKeys.DiceSize, 2);
+    const recoveryTime = Settings.getNumber(SettingsKeys.RecoveryTime, EmptyProfile.recoveryTime);
+    const tableColor = Settings.getString(SettingsKeys.TableColor, EmptyProfile.tableColor);
 
     const dice = [] as Dice[];
 
@@ -267,7 +280,6 @@ export async function readCurrentProfile(): Promise<Profile> {
         dice.push({
             template: diceTemplateType[i] as Templates || Templates.Numbers,
             active: diceActive[i] ?? true,
-            size: diceSize[i] ?? 2,
             faces,
         });
     }
@@ -276,6 +288,9 @@ export async function readCurrentProfile(): Promise<Profile> {
 
     return {
         dice,
+        size,
+        recoveryTime,
+        tableColor
     };
 }
 

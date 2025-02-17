@@ -10,30 +10,42 @@ import {
     ViroCamera,
     ViroOrbitCamera,
     ViroSpotLight,
+    ViroMaterials,
 } from "@reactvision/react-viro";
 import { Axes } from "./axes";
 import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import DiceObject from "./dice";
-import { Dice } from "./profile";
+import { Dice, Profile } from "./profile";
 
 interface DiceSceneProps {
     initialImpulse: Viro3DPoint;
     initialTorque: Viro3DPoint;
-    dice: Dice[];
+    profile: Profile;
 }
 export interface DiceSceneMethods {
     rollDice: (impolse: Viro3DPoint, torque: Viro3DPoint) => void;
-    update: (dice: Dice[]) => void;
+    update: (profile: Profile) => void;
 
 }
 
 const wallHeight = 2
 
-export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: DiceSceneProps, ref: any) => {
+export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }: DiceSceneProps, ref: any) => {
     const [sceneKey, setSceneKey] = useState<number>(0);
     const [impulse, setImpulse] = useState<Viro3DPoint>(initialImpulse);
     const [torque, setTorque] = useState<Viro3DPoint>(initialTorque);
-    const [diceInfo, setDiceInfo] = useState<Dice[]>(dice);
+    const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
+    const [sceneRevision, setSceneRevision] = useState<number>(0);
+
+    const tableRef = useRef<any>(undefined);
+
+    useEffect(() => ViroMaterials.createMaterials({
+        ["tableSurface_" + profile.tableColor]: {
+            diffuseColor: profile.tableColor,
+            lightingModel: "Lambert"
+        },
+    }), []);
+
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: (i, t) => {
@@ -41,12 +53,27 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
             setTorque(t);
             setSceneKey(prev => prev + 1);
         },
-        update: (dice) => {
-            setDiceInfo(dice);
+        update: (profile) => {
+            ViroMaterials.createMaterials({
+                tableSurface: {
+                    diffuseColor: profile.tableColor,
+                    lightingModel: "Lambert"
+                },
+            });
+            setDiceInfo(profile.dice);
+            ViroMaterials.createMaterials({
+                ["tableSurface_" + profile.tableColor]: {
+                    diffuseColor: profile.tableColor,
+                    lightingModel: "Lambert"
+                },
+            });
+            // setSceneRevision(prev => prev + 1);
+            tableRef.current?.setNativeProps({materials: ["tableSurface_" + profile.tableColor]})
         }
     }));
 
-    console.log("render diceScene", dice)
+
+    console.log("render scene", sceneRevision)
     return (
         <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
             <ViroAmbientLight color="#FFFFFF" intensity={500} />
@@ -55,7 +82,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
             <ViroCamera active position={[0, 5, 2]} rotation={[-60, 0, 0]} />
 
 
-            <ViroNode position={[0, 0, 0]}>
+            <ViroNode position={[0, 0, 0]} >
 
                 {/* <ViroAmbientLight color="#ffffff" intensity={100}  />  */}
                 {/* <ViroSpotLight color="#ffffff" intensity={300} position={[0, 5, 2]} direction={[0, 0, 0]} castsShadow={true} /> */}
@@ -82,11 +109,12 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                 {// Floor (table surface) 
                 }
                 < ViroQuad
+                    ref={tableRef}
                     position={[0, 0, -2]}
                     rotation={[-90, 0, 0]}
                     width={6}
                     height={15}
-                    materials={["tableSurface"]}
+                    materials={[sceneRevision == 0 ? "tableSurface_0" : "tableSurface_" + profile.tableColor]}
                     physicsBody={{
                         type: "Static",
                         friction: 0.9,
@@ -128,9 +156,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, dice }: Di
                             key={`dice${i}-${sceneKey}`}
                             index={i}
                             cubeKey={`dice${i}-${sceneKey}`}
-                            initialPosition={[i < dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
+                            initialPosition={[i < profile.dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
                             template={d.template}
-                            scale={[0.3 * d.size / 2, 0.3 * d.size / 2, 0.3 * d.size / 2]}
+                            scale={[0.3 * profile.size / 2, 0.3 * profile.size / 2, 0.3 * profile.size / 2]}
                             initialImpulse={impulse}
                             initialTourqe={torque}
 

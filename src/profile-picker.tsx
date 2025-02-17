@@ -90,7 +90,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                     <IconButton onPress={() => onSelect(item.key)} text={translate("Select")} />
                                 }
                                 {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
-                                {onEdit && !item.readOnly && <IconButton icon="edit" text={isNarrow?"":translate("Rename")} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onEdit && !item.readOnly && <IconButton icon="edit" text={isNarrow?"":translate("Edit")} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
                             </View>
                         </View>
                         <Seperator width="100%" />

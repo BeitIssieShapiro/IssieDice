@@ -1,13 +1,7 @@
 // DiceScene.tsx
 import React, { useEffect, useRef, useState } from "react";
 import {
-    ViroScene,
-    ViroBox,
-    ViroAmbientLight,
-    ViroNode,
     Viro3DObject,
-    ViroQuad,
-    ViroCamera,
     ViroMaterials,
 } from "@reactvision/react-viro";
 import { Viro3DPoint } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
@@ -48,7 +42,6 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
                 texture = { uri: getCustomTypePath(template) + "/dice.jpg" };
                 break;
         }
-        console.log("texture", texture)
 
         const suffix = `_${index}`;
         // Define the Material
@@ -98,7 +91,7 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
 
     const shootDice = () => {
         // Apply a one-time impulse to "kick" the dice into motion.
-        cube.current?.setNativeProps({position: initialPosition})
+        //cube.current?.setNativeProps({position: initialPosition})
         cube.current?.applyImpulse(initialImpulse, [0, 0, 0]);
         cube.current?.applyTorqueImpulse(initialTourqe);
     }

@@ -2,8 +2,11 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native
 import { isRTL } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 
 import { useEffect, useState } from "react";
+import { BTN_COLOR } from "./settings";
 
 
 export function IconButton({ icon, onPress, text, type }: { icon?: string, text: string, onPress: () => void, type?: undefined | "Ionicon" }) {
@@ -19,6 +22,69 @@ export function IconButton({ icon, onPress, text, type }: { icon?: string, text:
 export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
     return <View style={{ height: h, width: w, backgroundColor: bc }} />
 }
+
+export function isTooWhite(color: string) {
+    try {
+        const limit = 210;
+        const bigint = parseInt(color.slice(1), 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+
+        return (r > limit && g > limit && b > limit);
+    } catch (e) {
+    }
+    return false;
+}
+
+export function ColorButton({ callback, color, size, icon, index, iconColor }: any) {
+    let borderStyle = {}
+    if (isTooWhite(color)) {
+        borderStyle = { borderWidth: 1, borderColor: "gray" }
+    }
+
+    return <TouchableOpacity
+        onPress={callback}
+        activeOpacity={0.7}
+        key={"" + index}
+    >
+        <View style={[{
+            backgroundColor: color,
+            borderRadius: size / 2,
+            width: size,
+            height: size,
+            alignItems: 'center',
+            justifyContent: 'center'
+
+        }, borderStyle]}
+        >
+
+            {icon && <Icon color={iconColor || "white"} size={size / 2} name={icon}></Icon>}
+        </View>
+    </TouchableOpacity>
+}
+export interface NumberSelectorProps {
+    title: string;
+    style: any;
+    min: number;
+    max: number;
+    value: number;
+    onUp: () => void;
+    onDown: () => void;
+}
+export function NumberSelector({ style, title, min, max, value, onUp, onDown }: NumberSelectorProps) {
+    return (
+        <View style={style}>
+            <View style={styles.numberSelector}>
+                <IconAnt name="minuscircleo" color={value == min ? "lightgray" : BTN_COLOR} size={35} onPress={value > min ? onDown : undefined} />
+                <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{value}</Text>
+                <IconAnt name="pluscircleo" color={value == max ? "lightgray" : BTN_COLOR} size={35} onPress={value < max ? onUp : undefined} />
+            </View>
+            <Text allowFontScaling={false} style={styles.sectionTitle}>{title}</Text>
+        </View>
+    )
+}
+
 
 export const FadeInView = (props: any) => {
     const [fadeAdmin] = useState(new Animated.Value(0))
@@ -72,5 +138,16 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         padding: 2,
         borderRadius: 20,
+    },
+    numberSelector: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        height: "100%"
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#0D3D63",
     }
 });

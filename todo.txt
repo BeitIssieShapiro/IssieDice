@@ -16,14 +16,14 @@ Features:
 V- Number of cubes (up to 4?)
 V-  - calculate position
 
-Dice Size
+V -Dice Size
   Q: all cubes are same size always, or can it be one cube small and another large?
   more sizes - how many?
 
 Click to roll
  - recovery time 0,5,10,20
 
-Dice templates
+- Dice templates
 - predefined: dots, numbers, shapes, colors
 
 Manage templates

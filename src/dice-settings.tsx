@@ -9,16 +9,13 @@ import { BTN_COLOR } from "./settings";
 import { DicePreview } from "./edit-dice";
 import { Settings } from "./setting-storage";
 
-const MAX_DICE_SIZE = 7;
 
 interface DiceSettingsProps {
-    index: 0 | 1 | 2 | 3;
-    revision: number;
+    sectionStyle: any;
     dice: Dice;
     isBusy: boolean;
     onOpenLoadDice: () => void;
     onSetActive: (active: boolean) => void;
-    onSetSize: (size: number) => void;
     onSaveDice: () => void;
     onImageSearchOpen: () => void;
     onSelectTemplate: () => void;
@@ -27,65 +24,40 @@ interface DiceSettingsProps {
     isScreenNarrow: boolean;
 }
 
-export function DiceSettings({ index, revision, dice, isBusy, onSetActive, onSetSize,
+export function DiceSettings({ sectionStyle, dice, isBusy, onSetActive,
     onOpenLoadDice, onSaveDice, onImageSearchOpen, onSelectTemplate, isLast, isScreenNarrow }: DiceSettingsProps) {
 
     const templ = templatesList.find(t => t.key == dice.template);
     const dirStyle: any = { flexDirection: (isRTL() ? "row" : "row-reverse") }
 
-    return <View style={[{
-        direction: isRTL() ? "rtl" : "ltr",
-        width: "100%",
-        //height: 160,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        borderBottomColor: "lightgray",
-        borderBottomWidth: isLast ? 0 : 2,
-        paddingBottom: 15,
-        paddingTop: 15,
-    }, isScreenNarrow && { flexDirection: "column", alignItems: "flex-start" }]}>
-
-        <View style={{ flexDirection: "column" }}>
-            <View style={styles.settingsRow}>
-                <Text style={styles.cubeTitle}>{templ?.name || dice.template}</Text>
-                <IconButton icon="cube-outline" text={translate("Change")} onPress={() => onOpenLoadDice()} type="Ionicon" />
-                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15 }}
-                    onPress={() => onSetActive(!dice.active)}>
-                    {dice.active ?
-                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
-                    }
-                    <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("Active")}</Text>
-                </TouchableOpacity>
+    return <View style={{ width: "100%", flexDirection: "column" }}>
+        <View style={styles.section}>
+            <View style={{ flexDirection: "row" }}>
+                <Text style={styles.sectionTitle}>{translate("CubeName")}:</Text>
+                <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" }]}>
+                    {templ ? templ.name : dice.template}
+                </Text>
             </View>
-
-            {/* Dice Size */}
-            <View style={[styles.section, dirStyle]} >
-                <View style={styles.numberSelector}>
-                    <IconAnt name="minuscircleo" color={dice.size == 1 ? "lightgray" : BTN_COLOR} size={35} onPress={() => onSetSize(dice.size - 1)} />
-                    <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{dice.size}</Text>
-                    <IconAnt name="pluscircleo" color={dice.size == MAX_DICE_SIZE ? "lightgray" : BTN_COLOR} size={35} onPress={() => onSetSize(dice.size + 1)} />
-                </View>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("DiceSize")}</Text>
-            </View>
-            {/* Top Row */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", height: 60 }}>
-
-
-
-
-                {isBusy && <ActivityIndicator size="large" color="#0000ff" />}
-            </View>
-            {/* Bottom Row */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 60 }}>
-
-                {templ?.icon && <Image source={templ.icon} style={styles.previewIcon} />}
-                {dice.faces && <DicePreview faces={dice.faces} size={styles.previewIcon.width} />}
-            </View>
-
+            <IconButton icon="cube-outline" text={translate("Change")} onPress={() => onOpenLoadDice()} type="Ionicon" />
         </View>
-    </View >
+        <View style={styles.section} >
+            <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}
+                onPress={() => onSetActive(!dice.active)}>
+                {dice.active ?
+                    <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
+                    <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                }
+                <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("Active")}</Text>
+            </TouchableOpacity>
+
+
+
+            {templ?.icon && <Image source={templ.icon} style={styles.previewIcon} />}
+            {dice.faces && dice.faces.length > 0 && <DicePreview faces={dice.faces} size={styles.previewIcon.width} />}
+            <View style={{ height: 10, width: styles.previewIcon.width}} />
+        </View>
+        {!isLast && <View style={styles.horizontalSeperator} />}
+    </View>
 
 }
 
@@ -102,7 +74,12 @@ const styles = StyleSheet.create({
     },
     verticalSeperator: {
         width: 2,
-        height: "80%",
+        height: "100%",
+        backgroundColor: "lightgray",
+    },
+    horizontalSeperator: {
+        height: 2,
+        width: "100%",
         backgroundColor: "lightgray",
     },
     buttonPreview: {
@@ -116,12 +93,13 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     previewIcon: {
-        width: 55,
-        height: 55
+        width: 65,
+        height: 65
     },
     section: {
         backgroundColor: "white",
-        height: 60,
+        flexDirection: "row",
+        height: 70,
         alignItems: "center",
         justifyContent: "space-between",
         borderRadius: 45,
@@ -137,5 +115,11 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
         color: "#0D3D63",
+    },
+    textValue: {
+        marginEnd: 10,
+        marginStart: 10,
+        fontSize: 20,
+        color: "black"
     },
 });

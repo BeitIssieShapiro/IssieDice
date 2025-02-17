@@ -19,11 +19,11 @@ ViroMaterials.createMaterials({
   redLine: { diffuseColor: '#FF0000' },
   greenLine: { diffuseColor: '#00FF00' },
   blueLine: { diffuseColor: '#0000FF' },
-
-  tableSurface: {
-    diffuseColor: "#008000", // Green like a casino table
+  tableSurface_0: {
+    diffuseColor: 'green',
     lightingModel: "Lambert"
   },
+
   wallMaterial: {
     diffuseColor: "#ffffff", // Dark walls
     lightingModel: "Lambert"
@@ -38,8 +38,7 @@ export default function App() {
   const [windowSize, setWindowSize] = useState({ width: 500, height: 500 });
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [revision, setRevision] = useState<number>(0);
-  const [profile, setProfile] = useState<Profile>({ dice: [] });
-
+  const [profile, setProfile] = useState<Profile | undefined>(undefined);
   useEffect(() => {
 
     return () => {
@@ -74,10 +73,10 @@ export default function App() {
 
   const updateDiceScene = (profile: Profile) => {
 
-    sceneRef.current?.update(profile.dice);
+    sceneRef.current?.update(profile);
   };
 
-
+  console.log("current profile", profile)
   return (
     <SafeAreaView style={styles.container} onLayout={(e) => {
       let wz = e.nativeEvent.layout;
@@ -96,34 +95,34 @@ export default function App() {
           onPress={handleThrowDice}
           activeOpacity={1}
         />}
-          <Viro3DSceneNavigator
-            style={styles.viroContainer}
-            onTouchEnd={handleThrowDice}
-            debug={true}
-            // onExitViro={() => {
-            //   console.log("Exiting Viro...");
-            // }}
+        {profile && <Viro3DSceneNavigator
+          style={styles.viroContainer}
+          onTouchEnd={handleThrowDice}
+          debug={true}
+          // onExitViro={() => {
+          //   console.log("Exiting Viro...");
+          // }}
 
-            initialScene={{
-              scene: DiceScene,
-              passProps: {
-                ref: sceneRef,
-                initialImpulse,
-                initialTorque,
-                dice: revision >= 0 ? profile.dice : [],
-              }
-            }}
+          initialScene={{
+            scene: DiceScene,
+            passProps: {
+              ref: sceneRef,
+              initialImpulse,
+              initialTorque,
+              profile: revision >= 0 && profile ? profile : { dice: [] },
+            }
+          }}
 
-            // optional rendering settings
-            hdrEnabled={false}
-            pbrEnabled={false}
-            bloomEnabled={false}
-            // hdrEnabled={true}
-            // pbrEnabled={true}
-            // bloomEnabled={false}
-            shadowsEnabled={true}
-          // multisamplingEnabled={true}
-          />
+          // optional rendering settings
+          hdrEnabled={false}
+          pbrEnabled={false}
+          bloomEnabled={false}
+          // hdrEnabled={true}
+          // pbrEnabled={true}
+          // bloomEnabled={false}
+          shadowsEnabled={true}
+        // multisamplingEnabled={true}
+        />}
       </>
 
     </SafeAreaView>
