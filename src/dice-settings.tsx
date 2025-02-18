@@ -38,7 +38,7 @@ export function DiceSettings({ sectionStyle, dice, isBusy, onSetActive,
                     {templ ? templ.name : dice.template}
                 </Text>
             </View>
-            <IconButton icon="cube-outline" text={translate("Change")} onPress={() => onOpenLoadDice()} type="Ionicon" />
+            <IconButton icon="cube-outline" text={translate("List")} onPress={() => onOpenLoadDice()} type="Ionicon" />
         </View>
         <View style={styles.section} >
             <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}

@@ -27,6 +27,7 @@ interface ProfilePickerProps {
     open: boolean;
     loadButton: ButtonInfo;
     editButton?: ButtonInfo;
+    exportButton?: ButtonInfo;
     height: number | string;
     onClose: () => void;
     onSelect: (item: string) => void;
@@ -35,10 +36,11 @@ interface ProfilePickerProps {
     onDelete?: (name: string, afterDelete: () => void) => void;
     onEdit?: (name: string, afterSave: () => void) => void;
     onCreate?: () => void;
+    onExport?: (name: string) => void;
     isNarrow?: boolean;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, loadButton, editButton, isNarrow }: ProfilePickerProps) {
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, loadButton, editButton, isNarrow, onExport, exportButton }: ProfilePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
@@ -78,8 +80,8 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                             alignItems: "center",
                         }}>
                             <View style={styles.listItem} key={item.key} >
-                                {item.icon && <Image source={item.icon} style={styles.pickerImage} />}
-                                {!item.icon && isDicePicker && <DicePreview size={45} faces={item.faces} />}
+                                {item && item.icon && <Image source={item.icon} style={styles.pickerImage} />}
+                                {item && !item.icon && isDicePicker && <DicePreview size={45} faces={item.faces} />}
                                 <Text
                                     allowFontScaling={false}
                                     numberOfLines={1}
@@ -91,9 +93,10 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                     }}>{item.name}</Text>
                             </View>
                             <View style={{ flexDirection: "row" }}>
-                                <IconButton icon={loadButton.icon} onPress={() => onSelect(item.key)} text={loadButton.name} />
+                                <IconButton icon={loadButton?.icon} onPress={() => onSelect(item.key)} text={loadButton.name} />
                                 {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
                                 {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} text={isNarrow && editButton?.icon ? "" :editButton?.name!} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon} text={isNarrow && exportButton?.icon ? "" :exportButton?.name!} onPress={() => onExport(item.key)} />}
 
                             </View>
                         </View>
@@ -126,7 +129,7 @@ export function FaceTypePicker(props: FaceTypePickerProps) {
         onSelect={props.onSelect}
         onClose={props.onClose}
         folder={Folders.FaceType}
-        isLoad={false}
+        loadButton={{name:translate("Select")}}
     />
 }
 

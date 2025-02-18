@@ -3,26 +3,19 @@ import { fTranslate, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { IconButton, NumberSelector, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { AlreadyExists, deleteProfile, Dice, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, deleteProfile, Dice, exportAll, exportDice, exportProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { ProfilePicker } from "./profile-picker";
 import { EditDice } from "./edit-dice";
-import ColorPicker from "react-native-wheel-color-picker";
 import { MyColorPicker } from "./color-picker";
 import { Alert } from "react-native";
 import prompt from "react-native-prompt-android";
 import Toast from "react-native-toast-message";
-// import IconIonic from 'react-native-vector-icons/Ionicons';
-
-// import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
-// import IconMI from 'react-native-vector-icons/MaterialIcons';
+import Share from 'react-native-share';
 
 export const BTN_COLOR = "#6E6E6E";
 const disabledColor = "gray";
-
-const BTN_FOR_COLOR = "#CD6438";
-const MAX_DICE_SIZE = 7;
 
 
 interface SettingsProp {
@@ -217,6 +210,55 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         // todo
     }
 
+    async function handleExportDice(name: string) {
+        //todo busy
+        const zipPath = await exportDice(name);
+        const shareOptions = {
+            title: translate("ShareDiceWithTitle"),
+            subject: translate("ShareDiceEmailSubject"),
+            urls: [zipPath],
+        };
+
+        Share.open(shareOptions).then(() => {
+            Alert.alert(translate("ShareSuccessful"));
+        }).catch(err => {
+            Alert.alert(translate("ActionCancelled"));
+        });
+    }
+
+    async function handleExportProfile(name: string) {
+        //todo busy
+        const zipPath = await exportProfile(name, [], true) as string;
+        const shareOptions = {
+            title: translate("ShareProfileWithTitle"),
+            subject: translate("ShareProfileEmailSubject"),
+            urls: [zipPath],
+        };
+
+        Share.open(shareOptions).then(() => {
+            Alert.alert(translate("ShareSuccessful"));
+        }).catch(err => {
+            Alert.alert(translate("ActionCancelled"));
+        });
+    }
+
+    async function handleBackupAll() {
+        //todo busy
+        const zipPath = await exportAll() as string;
+        const shareOptions = {
+            title: translate("ShareBackupWithTitle"),
+            subject: translate("ShareBackupEmailSubject"),
+            urls: [zipPath],
+        };
+
+        Share.open(shareOptions).then(() => {
+            Alert.alert(translate("ShareSuccessful"));
+        }).catch(err => {
+            Alert.alert(translate("ActionCancelled"));
+        });
+    }
+
+
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
     return <View style={styles.container}>
@@ -225,6 +267,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             folder={Folders.Profiles}
             open={openLoadProfile}
             loadButton={{ name: translate("Load"), icon: "upload" }}
+            exportButton={{ name: translate("Export") }}
             height={windowSize.height * .6}
             onSelect={async (profileName) => {
                 console.log("select profile", profileName)
@@ -238,6 +281,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             editButton={{ name: translate("Rename") }}
             onEdit={(name, afterSave) => handleProfileEditName(name, true, afterSave)}
             onClose={() => setOpenLoadProfile(false)}
+            onExport={handleExportProfile}
             isNarrow={isScreenNarrow}
         />
 
@@ -248,6 +292,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             open={openSelectTemplate > -1}
             loadButton={{ name: translate("Select") }}
             editButton={{ name: translate("Edit") }}
+            exportButton={{ name: translate("Export") }}
             height={windowSize.height * .6}
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
@@ -263,6 +308,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 setOpenSelectTemplate(-1);
                 setEditOrCreateDice("")
             }}
+            onExport={handleExportDice}
             isNarrow={isScreenNarrow}
         />
 
@@ -297,7 +343,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             <View style={sectionStyle} >
                 <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
                     {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
-                    <IconButton text={translate("Load")} onPress={() => setOpenLoadProfile(true)} />
+                    <IconButton text={translate("List")} onPress={() => setOpenLoadProfile(true)} />
                     {profileName.length > 0 ?
                         <IconButton text={translate("Close")} onPress={closeProfile} /> :
                         <IconButton text={translate("Create")} onPress={() => handleProfileEditName("", false, () => setRevision(prev => prev + 1))} />
@@ -357,6 +403,14 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
                     ))
                 }
+            </View>
+
+            {/* Table Color */}
+            <View style={sectionStyle}>
+                <View style={{ flexDirection: "row" }}>
+                    <IconButton text={translate("BackupAll")} onPress={handleBackupAll} />
+                </View>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Backup")}:</Text>
             </View>
 
 

@@ -1,6 +1,6 @@
 // App.tsx
-import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView } from "react-native";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert } from "react-native";
 import {
   Viro3DSceneNavigator,
   ViroCamera,
@@ -12,6 +12,7 @@ import { DiceScene, DiceSceneMethods } from "./diceScene";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { SettingsUI } from "./settings";
 import { Profile, readCurrentProfile } from "./profile";
+import { GlobalContext } from "./global-context";
 
 
 // 1) Define a dice material up front
@@ -46,11 +47,28 @@ export default function App() {
   const [inRecovery, setInRecovery] = useState<boolean>(false);
   const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
+  const context = useContext(GlobalContext);
+
   useEffect(() => {
+
+    Linking.addEventListener("url", handleImport);
+
+    if (context && context.url) {
+        setTimeout(() => handleImport({ url: context.url }));
+    }
+
     return () => {
       console.log("about to unmount")
     }
   }, [])
+
+  async function handleImport (event:any) {
+    console.log("handleImport event:", JSON.stringify(event));
+    let url = event.url
+    url = decodeURI(url);
+    //url = await FileSystem.contentUriToFilePath(url);
+    Alert.alert("Import: " + url);
+}
 
 
   useEffect(() => {

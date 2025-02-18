@@ -3,10 +3,11 @@ import * as path from 'path';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
-import { ensureAndroidCompatible, joinPaths } from './utils';
+import { ensureAndroidCompatible, ignore, joinPaths } from './utils';
 import Dice from './dice';
-import { translate } from './lang';
+import { fTranslate, translate } from './lang';
 import { FaceType } from './profile-picker';
+import { unzip, zip } from 'react-native-zip-archive';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -151,33 +152,19 @@ export async function Init() {
 }
 
 
-export async function SaveProfile(name: string, p: Profile, overwrite = false) {
+export async function SaveProfile(name: string, profile: Profile, overwrite = false) {
     if (!isValidFilename(name)) {
         throw new InvalidFileName(name);
     }
-    // todo verify name is a valid file name
     const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
     if (!overwrite) {
         if (await RNFS.exists(ensureAndroidCompatible(profilePath))) {
             throw new AlreadyExists(name);
         }
     }
+    const profileClean = { ...profile, dice: profile.dice.map(d => ({ template: d.template, active: d.active })) }
 
-    const profileToSave = { ...p, buttons: [] } as Profile;
-    // load the audio into the json
-    // let index = 0
-    // for (const dice of p.dice) {
-    //     const audioB64 = await RNFS.exists(getRecordingFileName(index)) ?
-    //         await RNFS.readFile(getRecordingFileName(index), 'base64') :
-    //         "";
-    //     profileToSave.dice.push({
-    //         ...dice,
-    //         recording: audioB64,
-    //     } as Dice);
-    //     index++;
-    // }
-
-    const str = JSON.stringify(profileToSave);
+    const str = JSON.stringify(profileClean, undefined, " ");
     return RNFS.writeFile(ensureAndroidCompatible(profilePath), str, 'utf8');
 }
 
@@ -224,16 +211,19 @@ export async function LoadProfile(name: string) {
         return;
     }
 
-    const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
-    const p: Profile = JSON.parse(fileContents);
-
+    const p: Profile = await (readProfile(name));
     return writeCurrentProfile(p, name);
 }
 
+export async function readProfile(name: string): Promise<Profile> {
+    const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
+    const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
+    const p: Profile = JSON.parse(fileContents);
+    return p;
+}
+
+
 export async function clearProfile() {
-
-
     writeCurrentProfile(EmptyProfile, "");
 }
 
@@ -298,7 +288,9 @@ export function getCustomTypePath(name: string): string {
     return `${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}/${name}`;
 }
 
-
+export function getProfilePath(name: string): string {
+    return `${RNFS.DocumentDirectoryPath}/${Folders.Profiles}/${name}`;
+}
 
 async function loadProfiles(): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.Profiles}`).then(async (files) => {
@@ -320,14 +312,14 @@ async function loadProfiles(): Promise<List[]> {
     });
 }
 
-async function loadCustomDice(): Promise<List[]> {
+async function loadCustomDice(ommitFaces = false): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(async (folders) => {
         const list = [];
         for (const folder of folders) {
             list.push({
                 key: folder.name,
                 name: folder.name,
-                faces: await loadFaceImages(folder.name),
+                faces: ommitFaces ? [] : await loadFaceImages(folder.name),
             })
         }
         return list;
@@ -356,54 +348,6 @@ export async function saveDataUrlAs(dataUrl: string, filePath: string) {
     RNFS.writeFile(filePath, dataUrl, "base64");
 }
 
-// export async function loadButton(name: string, index: number) {
-//     console.log("Load Button", name, index)
-//     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
-//     const fileContents = await RNFS.readFile(ensureAndroidCompatible(buttonPath), 'utf8');
-//     const newBtn: Button = JSON.parse(fileContents);
-
-//     const p = readCurrentProfile();
-//     p.buttons = p.buttons.map((btn, i) => i != index ? btn : newBtn);
-//     console.log("btns", p.buttons.map(b => b.name))
-//     const currName = Settings.getString(CURRENT_PROFILE.name, "");
-
-//     writeCurrentProfile(p, currName);
-
-// }
-
-// export async function saveButton(name: string, index: number, overwrite = false) {
-//     if (!isValidFilename(name)) {
-//         throw new InvalidFileName(name);
-//     }
-
-//     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
-//     console.log("save button", name)
-//     if (!overwrite && await RNFS.exists(ensureAndroidCompatible(buttonPath))) {
-//         throw new AlreadyExists(name);
-//     }
-
-//     const p = readCurrentProfile();
-//     const btn = p.buttons[index]
-//     if (btn) {
-
-//         const audioB64 = await RNFS.exists(getRecordingFileName(index)) ?
-//             await RNFS.readFile(getRecordingFileName(index), 'base64') :
-//             "";
-//         const btnToSave = {
-//             ...btn,
-//             recording: audioB64,
-//         }
-
-//         const str = JSON.stringify(btnToSave);
-//         return RNFS.writeFile(ensureAndroidCompatible(buttonPath), str, 'utf8');
-//     }
-// }
-
-// export async function deleteButton(name: string) {
-//     const buttonPath = path.join(RNFS.DocumentDirectoryPath, Folders.Buttons, `${name}.json`);
-//     return RNFS.unlink(ensureAndroidCompatible(buttonPath));
-// }
-
 
 export async function ListElements(folder: Folders): Promise<List[]> {
     if (folder == Folders.DiceTemplates) {
@@ -414,20 +358,6 @@ export async function ListElements(folder: Folders): Promise<List[]> {
         return loadProfiles();
     }
     return [];
-
-    // const listPath = path.join(RNFS.DocumentDirectoryPath, folder);
-    // console.log("List Path", folder);
-    // const dir = await RNFS.readDir(ensureAndroidCompatible(listPath));
-
-    // const list = [];
-    // for (const elem of dir) {
-    //     //console.log("Element", elem.name)
-    //     if (elem.name.endsWith(".json")) {
-
-    //         list.push(elem.name.substring(0, elem.name.length - 5));
-    //     }
-    // }
-    // return list;
 }
 
 export function isValidFilename(filename: string): boolean {
@@ -447,4 +377,167 @@ export function renameDiceFolder(currName: string, newName: string) {
     const srcPath = getCustomTypePath(currName);
     const destPath = getCustomTypePath(newName);
     return RNFS.moveFile(srcPath, destPath);
+}
+
+
+export async function exportDice(name: string): Promise<string> {
+    const metaDataFile = getTempFileName("json");
+    const metaData = {
+        version: "1.0",
+        type: "dice",
+        name
+    }
+    const files = (await loadFaceImages(name)).filter(f => f.length > 0).map(f => ensureAndroidCompatible(f));
+
+    const diceMaterialUri = path.join(getCustomTypePath(name), "dice.jpg");
+    files.push(diceMaterialUri);
+
+    files.push(ensureAndroidCompatible(metaDataFile));
+    await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
+
+    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
+    // delete if exists before
+    await RNFS.unlink(targetFile).catch(ignore);
+
+    return zip(files, targetFile).then(path => {
+        return ensureAndroidCompatible(path);
+    });
+}
+
+interface ExportProfileResponse {
+    profileZip: string;
+    diceZips: string[];
+    diceNames: string[];
+}
+
+export async function exportProfile(name: string, alreadyIncludedCubes: string[], returnInOne = false): Promise<ExportProfileResponse | string> {
+    const metaDataFile = getTempFileName("json");
+
+    const p = await readProfile(name);
+
+    const metaData = {
+        version: "1.0",
+        type: "profile",
+        name,
+        ...p,
+    }
+    await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
+
+    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".zip"));
+    // delete if exists before
+    await RNFS.unlink(targetFile).catch(ignore);
+
+    const profileZip = await zip([ensureAndroidCompatible(metaDataFile)], targetFile);
+    const diceZips = [];
+    const diceNames = [];
+    for (const dice of p.dice) {
+        if (alreadyIncludedCubes.includes(dice.template) || dice.template.startsWith(Templates.prefix)) continue;
+        diceNames.push(dice.template);
+        diceZips.push(
+            await exportDice(dice.template)
+        );
+    }
+
+    if (returnInOne) {
+        const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
+
+        return zip([profileZip, ...diceZips], targetFile).then(path => {
+            return ensureAndroidCompatible(path);
+        });
+    }
+
+    return {
+        profileZip,
+        diceZips,
+        diceNames,
+    };
+}
+
+export async function exportAll(): Promise<string> {
+    const files = [];
+    const diceList = await loadCustomDice(true);
+    const diceNames = diceList.map(d => d.name);
+    for (const name of diceNames) {
+        files.push(
+            await exportDice(name)
+        );
+    }
+
+    const profileList = await loadProfiles();
+    for (const profileItem of profileList) {
+        files.push(
+            (await exportProfile(profileItem.name, diceNames) as ExportProfileResponse).profileZip
+        );
+    }
+
+    const date = new Date()
+    let fn = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + ' ' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
+    console.log("about to zip", files)
+    const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieDice Backup-" + fn + ".zip"));
+    await RNFS.unlink(targetPath).catch(ignore);
+
+    return zip(files, targetPath).then(path => {
+        return ensureAndroidCompatible(path);
+    });
+}
+
+export async function importPackage(packagePath: string, overwrite = false) {
+    const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported"));
+    const unzipFolderPath = await unzip(packagePath, unzipTargetPath);
+
+    const items = await RNFS.readDir(ensureAndroidCompatible(unzipFolderPath));
+    const metaDataItem = items.find(f => f.name.endsWith(".json"));
+    if (metaDataItem) {
+        const metadataStr = await loadFile(metaDataItem.path);
+        const md = JSON.parse(metadataStr);
+        if (md.type == "dice") {
+            const targetPath = getCustomTypePath(md.name);
+            if (!overwrite && await existsFolder(targetPath)) {
+                throw fTranslate("ImportDiceExist", md.name);
+            }
+
+            await RNFS.mkdir(targetPath);
+            for (const file of items.filter(item => !item.name.endsWith(".json"))) {
+                await RNFS.moveFile(file.path, targetPath);
+            }
+        } else if (md.type == "profile") {
+            const targetPath = getProfilePath(md.name);
+            if (!overwrite && await existsFolder(targetPath)) {
+                throw fTranslate("ImportProfileExist", md.name);
+            }
+
+            const p: Profile = {
+                dice: md.dice,
+                size: md.size,
+                recoveryTime: md.recoveryTime,
+                tableColor: md.tableColor,
+            }
+
+            await SaveProfile(md.name, p, true);
+        } else {
+            throw "Unknown package type";
+        }
+    } else {
+        // list of zips
+        for (const item of items) {
+            await importPackage(item.path);
+        }
+    }
+}
+
+
+
+function loadFile(path: string) {
+    return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
+}
+
+function writeFile(path: string, content: string) {
+    return RNFS.writeFile(ensureAndroidCompatible(path), content);
+}
+
+function getTempFileName(ext: string) {
+    const date = new Date()
+    let fn = Math.random() + '-' + date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + 'T' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
+
+    return path.join(RNFS.TemporaryDirectoryPath, fn + "." + ext);
 }
