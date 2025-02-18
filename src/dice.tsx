@@ -4,7 +4,7 @@ import {
     Viro3DObject,
     ViroMaterials,
 } from "@reactvision/react-viro";
-import { Viro3DPoint } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
+import { Viro3DPoint, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import { getCustomTypePath, Templates } from "./profile";
 
 interface DiceProps {
@@ -20,6 +20,12 @@ interface DiceProps {
 export default function DiceObject({ cubeKey, index, template, initialPosition, scale, initialImpulse, initialTourqe }: DiceProps) {
     const cube = useRef<Viro3DObject | null>(undefined);
     const [hideDice, setHideDice] = useState<boolean>(false);
+
+    const scaleRef = useRef<ViroScale>(scale);
+
+    useEffect(()=>{
+        scaleRef.current = scale;
+    },[scale])
 
     useEffect(() => {
         console.log("reset cube", cubeKey, cube.current, template)
@@ -70,7 +76,7 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
                 diffuseTexture: texture,
                 //diffuseColor: "0xffffff",
                 lightingModel: "Lambert",
-                
+
             },
             ["bottom" + suffix]: {
                 diffuseTexture: texture,
@@ -82,9 +88,23 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
 
         setHideDice(true);
         setTimeout(() => {
+            // cube.current?.setNativeProps({
+            //     scale: scale as ViroScale,
+            // });
+            //     materials: [
+            //         `front_${index}`,  // Front face
+            //         `back_${index}`,   // Back face
+            //         `left_${index}`,   // Left face
+            //         `right_${index}`,  // Right face
+            //         `top_${index}`,    // Top face
+            //         `bottom_${index}`, // Bottom face
+            //     ]
+            // })
+            console.log("scale", scaleRef.current)
+            cube.current?.setNativeProps({scale: scaleRef.current})
             setHideDice(false)
             setTimeout(() => shootDice(), 50);
-        }, 100)
+        }, 500)
 
     }, [cubeKey])
 
@@ -93,40 +113,62 @@ export default function DiceObject({ cubeKey, index, template, initialPosition, 
         // Apply a one-time impulse to "kick" the dice into motion.
         //cube.current?.setNativeProps({position: initialPosition})
         cube.current?.applyImpulse(initialImpulse, [0, 0, 0]);
+        //cube.current?.applyImpulse(initialImpulse ?? [0, -.5, .5], [0, 0, 0]);
         cube.current?.applyTorqueImpulse(initialTourqe);
     }
 
     const onDiceLoadEnd = () => {
         if (cube.current) {
+            console.log("initial")
             shootDice()
         }
     };
 
+    console.log("Initial Position", initialPosition)
+
     return (<Viro3DObject
-        key={cubeKey}
+        //key={cubeKey}
         ref={r => cube.current = r}
         onLoadEnd={!hideDice ? onDiceLoadEnd : undefined}
         source={require("../assets/cube3.obj")}
-        position={initialPosition}
+        position={hideDice ? [5, 5, 5] : initialPosition}//.map(p => p * Math.random() * .2) as Viro3DPoint}
+
         rotation={[0, 0, 0]}
-        scale={scale}
-        materials={[
-            `front_${index}`,  // Front face
-            `back_${index}`,   // Back face
-            `left_${index}`,   // Left face
-            `right_${index}`,  // Right face
-            `top_${index}`,    // Top face
-            `bottom_${index}`, // Bottom face
-        ]}
+        scale={hideDice ? [.1, .1, .1] : scale}
+        //scale={scale}
+        materials={hideDice ?
+            [
+                "default",
+                "default",
+                "default",
+                "default",
+                "default",
+                "default",
+            ] :
+            [
+                `front_${index}`,  // Front face
+                `back_${index}`,   // Back face
+                `left_${index}`,   // Left face
+                `right_${index}`,  // Right face
+                `top_${index}`,    // Top face
+                `bottom_${index}`, // Bottom face
+            ]}
         type="OBJ"
         onError={(error) => console.error("Viro3DObject error:", error.nativeEvent.error)}
-        physicsBody={hideDice ? undefined :
+        physicsBody={hideDice ?
+            {
+                type: "Dynamic",
+                velocity: [.01, .01, .01],
+                mass: 0.1,
+            } :
             {
                 type: "Dynamic",
                 mass: 0.1,
                 friction: 0.3,
                 restitution: 0.6,
                 useGravity: true,
+                enabled: true,
+
             }}
         lightReceivingBitMask={1.5}
     />);

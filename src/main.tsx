@@ -23,6 +23,10 @@ ViroMaterials.createMaterials({
     diffuseColor: 'green',
     lightingModel: "Lambert"
   },
+  default: {
+    diffuseColor: 'white',
+    lightingModel: "Lambert"
+  },
 
   wallMaterial: {
     diffuseColor: "#ffffff", // Dark walls
@@ -170,5 +174,5 @@ const styles = StyleSheet.create({
   viroContainer: {
     backgroundColor: "red",
   },
-  settingsButton: { position: "absolute", top: 25, right: 10, zIndex: 600 }
+  settingsButton: { position: "absolute", top: 35, right: 15, zIndex: 600 }
 });

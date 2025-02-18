@@ -35,6 +35,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
     const [impulse, setImpulse] = useState<Viro3DPoint>(initialImpulse);
     const [torque, setTorque] = useState<Viro3DPoint>(initialTorque);
     const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
+    const [diceSize, setDiceSize] = useState<number>(profile.size);
     const [sceneRevision, setSceneRevision] = useState<number>(0);
 
     const tableRef = useRef<any>(undefined);
@@ -54,6 +55,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
             setSceneKey(prev => prev + 1);
         },
         update: (profile) => {
+            setDiceSize(profile.size);
             ViroMaterials.createMaterials({
                 tableSurface: {
                     diffuseColor: profile.tableColor,
@@ -153,18 +155,17 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
                     .filter(d => d.active)
                     .map((d, i) => (
                         <DiceObject
-                            key={`dice${i}-${sceneKey}`}
+                            key={i}//`dice${i}-${sceneKey}`}
                             index={i}
                             cubeKey={`dice${i}-${sceneKey}`}
                             initialPosition={[i < profile.dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
                             template={d.template}
-                            scale={[0.3 * profile.size / 2, 0.3 * profile.size / 2, 0.3 * profile.size / 2]}
+                            scale={[0.3 * diceSize / 2, 0.3 * diceSize / 2, 0.3 * diceSize / 2]}
                             initialImpulse={impulse}
                             initialTourqe={torque}
 
                         />
                     )
-
                     )}
 
 

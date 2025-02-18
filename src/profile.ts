@@ -274,12 +274,12 @@ export async function readCurrentProfile(): Promise<Profile> {
 
     for (let i = 0; i < numOfDice; i++) {
         let faces: string[] = []
-        if (!diceTemplateType[i].startsWith(Templates.prefix)) {
+        if (diceTemplateType.length > i && !diceTemplateType[i].startsWith(Templates.prefix)) {
             faces = await loadFaceImages(diceTemplateType[i]);
         }
         dice.push({
-            template: diceTemplateType[i] as Templates || Templates.Numbers,
-            active: diceActive[i] ?? true,
+            template: diceTemplateType.length > i && diceTemplateType[i] ? diceTemplateType[i] as Templates : Templates.Numbers,
+            active: diceActive.length > i && diceActive[i] != undefined ? diceActive[i] : true,
             faces,
         });
     }
