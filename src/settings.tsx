@@ -31,6 +31,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined)
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
     const [diceBusy, setDiceBusy] = useState<number>(-1);
+    const [busy, setBusy] = useState<boolean>(false);
     const [openSelectTemplate, setOpenSelectTemplate] = useState<number>(-1);
 
 
@@ -211,8 +212,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     }
 
     async function handleExportDice(name: string) {
-        //todo busy
-        const zipPath = await exportDice(name);
+        setBusy(true)
+        const zipPath = await exportDice(name)
+            .finally(() => setBusy(false));
+
+
         const shareOptions = {
             title: translate("ShareDiceWithTitle"),
             subject: translate("ShareDiceEmailSubject"),
@@ -227,8 +231,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     }
 
     async function handleExportProfile(name: string) {
-        //todo busy
-        const zipPath = await exportProfile(name, [], true) as string;
+        setBusy(true)
+        const zipPath = (await exportProfile(name, [], true)
+            .finally(() => setBusy(false))
+        ) as string;
+
         const shareOptions = {
             title: translate("ShareProfileWithTitle"),
             subject: translate("ShareProfileEmailSubject"),
@@ -243,8 +250,10 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     }
 
     async function handleBackupAll() {
-        //todo busy
-        const zipPath = await exportAll() as string;
+        setBusy(true)
+        const zipPath = (await exportAll()
+            .finally(() => setBusy(false))
+        ) as string;
         const shareOptions = {
             title: translate("ShareBackupWithTitle"),
             subject: translate("ShareBackupEmailSubject"),
@@ -262,6 +271,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
     return <View style={styles.container}>
+        {busy && <ActivityIndicator size={"large"} style={styles.busy}/>}
+
         {/** Profile Picker */}
         <ProfilePicker
             folder={Folders.Profiles}
@@ -484,4 +495,9 @@ const styles = StyleSheet.create({
         marginHorizontal: 40,
         height: "auto"
     },
+    busy: {
+        position:"absolute",
+        left: "45%", height: "45%",
+        zIndex: 1000
+    }
 });

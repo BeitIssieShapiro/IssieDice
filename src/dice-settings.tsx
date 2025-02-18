@@ -33,7 +33,7 @@ export function DiceSettings({ sectionStyle, dice, isBusy, onSetActive,
     return <View style={{ width: "100%", flexDirection: "column" }}>
         <View style={styles.section}>
             <View style={{ flexDirection: "row" }}>
-                <Text style={styles.sectionTitle}>{translate("CubeName")}:</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("CubeName")}:</Text>
                 <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" }]}>
                     {templ ? templ.name : dice.template}
                 </Text>

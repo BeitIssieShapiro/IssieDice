@@ -5,9 +5,13 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { FaceType, FaceTypePicker } from "./profile-picker";
 import { copyFileToFolder, SelectFromGallery } from "./image-select";
-import { existsFolder, Folders, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, } from "./profile";
+import { existsFolder, Folders, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import prompt from "react-native-prompt-android";
+import path from "path";
+import { readFile, unlink } from "react-native-fs";
+import { ensureAndroidCompatible } from "./utils";
+import { EditImage } from "./edit-image";
 
 const blankImg = require("../assets/blank.png");
 interface EditDiceProps {
@@ -17,34 +21,79 @@ interface EditDiceProps {
 
 export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
 
-
+const emptyFacesArray = ["", "", "", "", "", ""]
 export function EditDice({ onClose, name }: EditDiceProps) {
     const [addFace, setAddFace] = useState<number>(-1);
     const [editedName, setEditedName] = useState<string>(name);
     const [lastSaveddName, setLastSavedName] = useState<string>(name);
-    const [faces, setFaces] = useState<string[]>(["", "", "", "", "", ""]);
+    const [faces, setFaces] = useState<string[]>(emptyFacesArray);
+    const [facesText, setFacesText] = useState<string[]>(emptyFacesArray);
     const diceLayoutRef = useRef<any>(null);
+    const [editImage, setEditImage] = useState<{ uri: string, index: number } | undefined>();
 
     useEffect(() => {
         if (name.length > 0) {
             //fetch the existing faces
-            loadFaceImages(name).then((images) => setFaces(images));
+            const newFacesText = emptyFacesArray;
+            loadFaceImages(name).then(async (faceFiles) => {
+                for (let i = 0; i < faceFiles.length; i++) {
+                    if (faceFiles[i].endsWith(".json")) {
+                        // is a text
+                        const textInfo = JSON.parse(await readFile(faceFiles[i]));
+                        newFacesText[i] = textInfo.text;
+                    }
+                }
+
+                setFaces(faceFiles);
+                setFacesText(newFacesText);
+            });
         }
-    }, [editedName])
+    }, [])
 
     async function handleAddFace(index: number, type: FaceType, editedName: string) {
         if (type == FaceType.Image) {
             const filePath = await SelectFromGallery(`${Folders.CustomDice}/${editedName}`, `face_${index}$$${Math.floor(Math.random() * 1000000)}.jpg`, `face_${index}$$`);
-            console.log("added Face", filePath)
-            setFaces(curr => {
-                curr[index] = filePath;
-                return [...curr];
-            })
+
+            setEditImage({ uri: filePath, index });
+            // console.log("added Face", filePath)
+            // setFaces(curr => {
+            //     curr[index] = filePath;
+            //     return [...curr];
+            // })
+        } else if (type == FaceType.Text) {
+            prompt(translate("SetFaceText"), undefined, [
+                { text: translate("Cancel"), style: "cancel" },
+                {
+                    text: translate("OK"),
+                    onPress: (faceText) => {
+                        if (faceText && faceText.length > 0) {
+                            // Save it as a json file
+                            const faceData = {
+                                text: faceText,
+                            }
+                            const basePath = getCustomTypePath(editedName);
+                            const faceName = `face_${index}$$${Math.floor(Math.random() * 1000000)}.json`
+                            const content = JSON.stringify(faceData, undefined, " ");
+                            const faceFilePath = path.join(basePath, faceName);
+                            writeFile(faceFilePath, content).then(() => {
+                                setFaces(curr => {
+                                    curr[index] = faceFilePath;
+                                    return [...curr];
+                                })
+                                setFacesText(curr => {
+                                    curr[index] = faceText;
+                                    return [...curr];
+                                })
+                            });
+                        }
+                    }
+                },
+            ], { type: 'plain-text', defaultValue: facesText[index] });
         }
     }
 
     const handleEditName = (editedName: string) => {
-        prompt(translate("SetDicenName"), undefined, [
+        prompt(translate("SetDiceName"), undefined, [
             { text: translate("Cancel"), style: "cancel" },
             {
                 text: translate("OK"),
@@ -63,6 +112,7 @@ export function EditDice({ onClose, name }: EditDiceProps) {
     }
 
     async function handleSave(editedName: string, lastSavedName: string) {
+        // todo delete old unused faces
         if (editedName.length == 0) {
             Alert.alert(translate("DiceMissingName"), "", [{ text: translate("OK") }]);
             return;
@@ -94,6 +144,17 @@ export function EditDice({ onClose, name }: EditDiceProps) {
     }
 
     console.log("faces", faces)
+
+    if (editImage) {
+        return <EditImage uri={editImage.uri} onClose={() => setEditImage(undefined)} onDone={(url) => {
+            setFaces(curr => {
+                curr[editImage.index] = url;
+                return [...curr];
+            })
+            setEditImage(undefined);
+        }} />
+    }
+
 
     return <View style={styles.container}>
         <View style={styles.settingTitle}>
@@ -129,16 +190,18 @@ export function EditDice({ onClose, name }: EditDiceProps) {
                         }
                         setAddFace(index)
                     }}>
-                    {faces[index]?.length > 0 ?
+                    {faces[index]?.length > 0 && !faces[index].endsWith(".json") ?
                         <Image source={{ uri: faces[index] }} style={{ width: 75, height: 75 }} /> :
-                        <Icon name="plus" size={35} />
+                        (facesText[index].length > 0 ?
+                            <TextFace style={[]} text={facesText[index]} size={75} /> :
+                            <Icon name="plus" size={35} />)
                     }
                 </TouchableOpacity>
             })}
         </View>
         <View style={{ flexDirection: "row" }}>
-            <DicePreview faces={faces} size={150} />
-            <DiceLayout faces={faces} size={200} ref={diceLayoutRef} />
+            <DicePreview faces={faces} size={150} facesText={facesText} />
+            <DiceLayout faces={faces} facesText={facesText} size={200} ref={diceLayoutRef} />
         </View>
         <Button title={translate("Save")} onPress={() => handleSave(editedName, lastSaveddName)} />
     </View>
@@ -146,10 +209,11 @@ export function EditDice({ onClose, name }: EditDiceProps) {
 
 interface DicePreviewProps {
     faces: string[];
+    facesText: string[]
     size: number;
 
 }
-export function DicePreview({ faces, size }: DicePreviewProps) {
+export function DicePreview({ faces, size, facesText }: DicePreviewProps) {
 
     const usedFaces = faces.filter(f => f.length > 0);
     if (usedFaces.length < 3) {
@@ -183,60 +247,63 @@ export function DicePreview({ faces, size }: DicePreviewProps) {
 }
 
 
-function DiceLayoutImpl({ faces, size }: DicePreviewProps, ref: any) {
+function DiceLayoutImpl({ faces, size, facesText }: DicePreviewProps, ref: any) {
     const viewShotRef = useRef(null);
-    const usedFaces = faces.filter(f => f.length > 0).map(f => ({ uri: f }));
+    const usedFaces = faces.map(f => ({ uri: f }));
     if (usedFaces.length < 6) {
         for (let i = 0; i < 6; i++) {
             usedFaces.push(blankImg)
         }
     }
 
+    const usedFacesText = facesText;
+    if (usedFacesText.length < 6) {
+        for (let i = 0; i < 6; i++) {
+            usedFacesText.push("")
+        }
+    }
+
     useImperativeHandle(ref, () => ({
         toImage: () => {
-            return captureRef(viewShotRef, { format: "jpg", quality: 1,  width: 3 * faceSize, height: 4 * faceSize  });
+            return captureRef(viewShotRef, { format: "jpg", quality: 1, width: 3 * faceSize, height: 4 * faceSize });
         }
     }));
 
     const faceSize = size / 4;
     const faceSizeStyle = { width: faceSize, height: faceSize }
     console.log("usedFaces", usedFaces)
+    const facesStyles = [
+        [styles.previewFace, , faceSizeStyle, { left: faceSize + faceSize / 2, top: 0 }], // Right
+        [styles.previewFace, , faceSizeStyle, { left: faceSize / 2, top: faceSize }], // Bottom
+        [styles.previewFace, , faceSizeStyle, { left: faceSize + faceSize / 2, top: faceSize }], // Back
+        [styles.previewFace, , faceSizeStyle, { left: 2 * faceSize + faceSize / 2, top: faceSize }], // Top
+        [styles.previewFace, , faceSizeStyle, { left: faceSize + faceSize / 2, top: 2 * faceSize }], // Left
+        [styles.previewFace, , faceSizeStyle, { left: faceSize + faceSize / 2, top: 3 * faceSize }], // Front
+    ]
+
+
     return (
-        <View style={[styles.previewContainer, { width: 3 * faceSize, height: 4 * faceSize }]} collapsable={false} ref={viewShotRef}>
-            {/* Right Face */}
-            <Image
-                source={usedFaces[0]}
-                style={[styles.previewFace, , faceSizeStyle, { left: faceSize, top: 0 }]}
-            />
-            {/* Right Bottom */}
-            <Image
-                source={usedFaces[1]}
-                style={[styles.previewFace, , faceSizeStyle, { left: 0, top: faceSize }]}
-            />
-            {/* Back Face */}
-            <Image
-                source={usedFaces[2]}
-                style={[styles.previewFace, , faceSizeStyle, { left: faceSize, top: faceSize }]}
-            />
-            {/* Back Top */}
-            <Image
-                source={usedFaces[3]}
-                style={[styles.previewFace, , faceSizeStyle, { left: 2 * faceSize, top: faceSize }]}
-            />
-            {/* Back Left */}
-            <Image
-                source={usedFaces[4]}
-                style={[styles.previewFace, , faceSizeStyle, { left: faceSize, top: 2 * faceSize }]}
-            />
-            {/* Back Front */}
-            <Image
-                source={usedFaces[5]}
-                style={[styles.previewFace, , faceSizeStyle, { left: faceSize, top: 3 * faceSize }]}
-            />
+        <View style={[styles.previewContainer, { width: 4 * faceSize, height: 4 * faceSize }]} collapsable={false} ref={viewShotRef}>
+            {
+                [0, 1, 2, 3, 4, 5].map(i => (
+                    usedFaces[i] && usedFaces[i].uri && usedFaces[i].uri.length > 0 && !usedFaces[i].uri.endsWith(".json") ?
+                        <Image key={i} source={usedFaces[i]} style={facesStyles[i]} /> :
+                        usedFacesText[i] && usedFacesText[i].length > 0 &&
+                        <TextFace key={i} style={facesStyles[i]} text={usedFacesText[i]} size={faceSize} />
+
+                ))
+            }
         </View>
     );
 
 }
+
+function TextFace({ text, style, size }: { text: string, style: any, size: number }) {
+    return <View style={[...style, styles.textFaceContainer, { width: size, height: size }]}>
+        <Text style={styles.textFace}>{text}</Text>
+    </View>
+}
+
 
 export const DiceLayout = forwardRef(DiceLayoutImpl);
 
@@ -246,7 +313,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 0, left: 0,
         width: "100%", height: "100%",
-        backgroundColor: "gray",
+        backgroundColor: "lightgray",
         zIndex: 1100
     },
     settingTitle: {
@@ -325,5 +392,16 @@ const styles = StyleSheet.create({
             { skewX: "-30deg" },
             { scaleY: 0.864 }
         ],
+    },
+    textFaceContainer: {
+        backgroundColor: "white",
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    textFace: {
+        fontSize: 25,
+        textAlign: "center",
+        flexWrap: "wrap",
     }
+
 })

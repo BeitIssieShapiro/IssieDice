@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert } from "react-native";
+import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert, Text } from "react-native";
 import {
   Viro3DSceneNavigator,
   ViroCamera,
@@ -11,8 +11,10 @@ import {
 import { DiceScene, DiceSceneMethods } from "./diceScene";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { SettingsUI } from "./settings";
-import { Profile, readCurrentProfile } from "./profile";
+import { importPackage, Profile, readCurrentProfile } from "./profile";
 import { GlobalContext } from "./global-context";
+import * as Progress from 'react-native-progress';
+import { fTranslate, isRTL, translate } from "./lang";
 
 
 // 1) Define a dice material up front
@@ -45,6 +47,10 @@ export default function App() {
   const [revision, setRevision] = useState<number>(0);
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
   const [inRecovery, setInRecovery] = useState<boolean>(false);
+  const [importInProgress, setImportInProgress] = useState<{
+    message: string;
+    precent: number;
+  } | undefined>();
   const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const context = useContext(GlobalContext);
@@ -54,7 +60,7 @@ export default function App() {
     Linking.addEventListener("url", handleImport);
 
     if (context && context.url) {
-        setTimeout(() => handleImport({ url: context.url }));
+      setTimeout(() => handleImport({ url: context.url }));
     }
 
     return () => {
@@ -62,13 +68,23 @@ export default function App() {
     }
   }, [])
 
-  async function handleImport (event:any) {
+  async function handleImport(event: any) {
     console.log("handleImport event:", JSON.stringify(event));
     let url = event.url
     url = decodeURI(url);
     //url = await FileSystem.contentUriToFilePath(url);
-    Alert.alert("Import: " + url);
-}
+
+    //Alert.alert("Import: " + url);
+    setImportInProgress({
+      message: translate("ImportInProgress"),
+      precent: 0,
+    })
+    
+    importPackage(url)
+      .then(() => Alert.alert("SuccessfulImport"))
+      .finally(() => setImportInProgress(undefined))
+
+  }
 
 
   useEffect(() => {
@@ -135,6 +151,11 @@ export default function App() {
         >
           {/** indicator to a lock */}
           {inRecovery && <View style={styles.lockIndicator} />}
+          {/** Progress */}
+          {importInProgress && <View style={styles.progressBarHost}>
+            <Text style={{ fontSize: 28, marginBottom: 5 }}>{importInProgress.message}</Text>
+            <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
+          </View>}
         </TouchableOpacity>}
         {profile && <Viro3DSceneNavigator
           style={styles.viroContainer}
@@ -192,5 +213,16 @@ const styles = StyleSheet.create({
   viroContainer: {
     backgroundColor: "red",
   },
-  settingsButton: { position: "absolute", top: 35, right: 15, zIndex: 600 }
+  settingsButton: { position: "absolute", top: 35, right: 15, zIndex: 600 },
+  progressBarHost: {
+    position: 'absolute',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 3.84,
+    borderRadius: 10,
+    padding: 10,
+    top: '25%', left: '15%', width: '70%', zIndex: 1000,
+    backgroundColor: 'white', alignItems: 'center'
+  },
 });

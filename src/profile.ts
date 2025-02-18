@@ -531,7 +531,7 @@ function loadFile(path: string) {
     return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
 }
 
-function writeFile(path: string, content: string) {
+export function writeFile(path: string, content: string) {
     return RNFS.writeFile(ensureAndroidCompatible(path), content);
 }
 

@@ -125,7 +125,7 @@ interface FaceTypePickerProps {
 export function FaceTypePicker(props: FaceTypePickerProps) {
     return <ProfilePicker
         open={props.open}
-        height={300}
+        height={400}
         onSelect={props.onSelect}
         onClose={props.onClose}
         folder={Folders.FaceType}
