@@ -45,7 +45,6 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             console.log("reload settings", p.dice.map(b => b.template))
 
             onChange()
-
         });
     }, [revision]);
 

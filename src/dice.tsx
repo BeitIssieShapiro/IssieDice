@@ -5,10 +5,11 @@ import {
     ViroMaterials,
 } from "@reactvision/react-viro";
 import { Viro3DPoint, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
-import { getCustomTypePath, Templates } from "./profile";
+import { getCustomTypePath, getRandomFile, Templates } from "./profile";
 
 interface DiceProps {
     cubeKey: string;
+    cubeInfoKey: string;
     index: number;
     initialPosition: Viro3DPoint;
     scale: Viro3DPoint;
@@ -17,104 +18,100 @@ interface DiceProps {
     template: Templates;
 }
 
-export default function DiceObject({ cubeKey, index, template, initialPosition, scale, initialImpulse, initialTourqe }: DiceProps) {
+export default function DiceObject({ cubeKey, cubeInfoKey, index, template, initialPosition, scale, initialImpulse, initialTourqe }: DiceProps) {
     const cube = useRef<Viro3DObject | null>(undefined);
     const [hideDice, setHideDice] = useState<boolean>(false);
 
     const scaleRef = useRef<ViroScale>(scale);
 
-    useEffect(()=>{
+    useEffect(() => {
         scaleRef.current = scale;
-    },[scale])
+    }, [scale])
 
     useEffect(() => {
         console.log("reset cube", cubeKey, cube.current, template)
 
-        let texture: string | { uri: string } = "";
-        switch (template) {
-            case Templates.Numbers:
-                texture = require("../assets/numbers.png");
-                break;
-            case Templates.Colors:
-                texture = require("../assets/colors.png");
-                break;
-            case Templates.Dots:
-                texture = require("../assets/dots.png");
-                break;
-            case undefined:
-                texture = require("../assets/dots.png");
-                break;
-            default:
-                texture = { uri: getCustomTypePath(template) + "/dice.jpg" };
-                break;
-        }
+        setTimeout(async ()=>{
+            let texture: string | { uri: string } = "";
+            switch (template) {
+                case Templates.Numbers:
+                    texture = require("../assets/numbers.png");
+                    break;
+                case Templates.Colors:
+                    texture = require("../assets/colors.png");
+                    break;
+                case Templates.Dots:
+                    texture = require("../assets/dots.png");
+                    break;
+                case undefined:
+                    texture = require("../assets/dots.png");
+                    break;
+                default:
+                    console.log("Loading custom template's texture", template, cubeKey)
+                    texture = { uri: 
+                        await getRandomFile(getCustomTypePath(template) + "/dice.jpg", "jpg") };
+                    break;
+            }
+    
+            const suffix = `_${index}`;
+            // Define the Material
+            ViroMaterials.createMaterials({
+                ["front" + suffix]: {
+                    diffuseTexture: texture,
+                    //diffuseColor: "0xFFFFFF",
+                    lightingModel: "Lambert",
+                },
+                ["back" + suffix]: {
+                    diffuseTexture: texture,
+                    //diffuseColor: "0xffffff",
+                    lightingModel: "Lambert",
+                },
+                ["left" + suffix]: {
+                    diffuseTexture: texture,
+                    //diffuseColor: "0xffffff",
+                    lightingModel: "Lambert",
+                },
+                ["right" + suffix]: {
+                    diffuseTexture: texture,
+                    //diffuseColor: "0xffffff",
+                    lightingModel: "Lambert",
+                },
+                ["top" + suffix]: {
+                    diffuseTexture: texture,
+                    //diffuseColor: "0xffffff",
+                    lightingModel: "Lambert",
+    
+                },
+                ["bottom" + suffix]: {
+                    diffuseTexture: texture,
+                    //diffuseColor: "0xffffff",
+                    lightingModel: "Lambert",
+    
+                },
+            });
+            shootDice();
+        })
+    }, [cubeInfoKey])
 
-        const suffix = `_${index}`;
-        // Define the Material
-        ViroMaterials.createMaterials({
-            ["front" + suffix]: {
-                diffuseTexture: texture,
-                //diffuseColor: "0xFFFFFF",
-                lightingModel: "Lambert",
-            },
-            ["back" + suffix]: {
-                diffuseTexture: texture,
-                //diffuseColor: "0xffffff",
-                lightingModel: "Lambert",
-            },
-            ["left" + suffix]: {
-                diffuseTexture: texture,
-                //diffuseColor: "0xffffff",
-                lightingModel: "Lambert",
-            },
-            ["right" + suffix]: {
-                diffuseTexture: texture,
-                //diffuseColor: "0xffffff",
-                lightingModel: "Lambert",
-            },
-            ["top" + suffix]: {
-                diffuseTexture: texture,
-                //diffuseColor: "0xffffff",
-                lightingModel: "Lambert",
-
-            },
-            ["bottom" + suffix]: {
-                diffuseTexture: texture,
-                //diffuseColor: "0xffffff",
-                lightingModel: "Lambert",
-
-            },
-        });
-
-        setHideDice(true);
-        setTimeout(() => {
-            // cube.current?.setNativeProps({
-            //     scale: scale as ViroScale,
-            // });
-            //     materials: [
-            //         `front_${index}`,  // Front face
-            //         `back_${index}`,   // Back face
-            //         `left_${index}`,   // Left face
-            //         `right_${index}`,  // Right face
-            //         `top_${index}`,    // Top face
-            //         `bottom_${index}`, // Bottom face
-            //     ]
-            // })
-            console.log("scale", scaleRef.current)
-            cube.current?.setNativeProps({scale: scaleRef.current})
-            setHideDice(false)
-            setTimeout(() => shootDice(), 50);
-        }, 500)
-
+    useEffect(()=>{
+        shootDice();
     }, [cubeKey])
 
 
     const shootDice = () => {
-        // Apply a one-time impulse to "kick" the dice into motion.
-        //cube.current?.setNativeProps({position: initialPosition})
-        cube.current?.applyImpulse(initialImpulse, [0, 0, 0]);
-        //cube.current?.applyImpulse(initialImpulse ?? [0, -.5, .5], [0, 0, 0]);
-        cube.current?.applyTorqueImpulse(initialTourqe);
+        setHideDice(true);
+        setTimeout(() => {
+            console.log("scale", scaleRef.current)
+            cube.current?.setNativeProps({ scale: scaleRef.current })
+            setHideDice(false)
+            setTimeout(() => {
+                // Apply a one-time impulse to "kick" the dice into motion.
+                //cube.current?.setNativeProps({position: initialPosition})
+                cube.current?.applyImpulse(initialImpulse, [0, 0, 0]);
+                //cube.current?.applyImpulse(initialImpulse ?? [0, -.5, .5], [0, 0, 0]);
+                cube.current?.applyTorqueImpulse(initialTourqe);
+            }, 50);
+        }, 500)
     }
 
     const onDiceLoadEnd = () => {

@@ -32,6 +32,7 @@ const wallHeight = 2
 
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }: DiceSceneProps, ref: any) => {
     const [sceneKey, setSceneKey] = useState<number>(0);
+    const [cubeInfoKey, setCubeInfoKey] = useState<number>(0);
     const [impulse, setImpulse] = useState<Viro3DPoint>(initialImpulse);
     const [torque, setTorque] = useState<Viro3DPoint>(initialTorque);
     const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
@@ -70,7 +71,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
                 },
             });
             // setSceneRevision(prev => prev + 1);
-            tableRef.current?.setNativeProps({materials: ["tableSurface_" + profile.tableColor]})
+            tableRef.current?.setNativeProps({ materials: ["tableSurface_" + profile.tableColor] })
+            setCubeInfoKey(prev => prev + 1);
         }
     }));
 
@@ -157,6 +159,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
                         <DiceObject
                             key={i}//`dice${i}-${sceneKey}`}
                             index={i}
+                            cubeInfoKey={cubeInfoKey}
                             cubeKey={`dice${i}-${sceneKey}`}
                             initialPosition={[i < profile.dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
                             template={d.template}

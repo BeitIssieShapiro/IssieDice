@@ -52,6 +52,8 @@
 	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Uses photos as dice faces</string>
+  <key>NSAppleMusicUsageDescription</key>
+  <string>Use music to attach to a face of a dice</string>
   <key>NSMicrophoneUsageDescription</key>
   <string>Uses microphone to recod short voice message to attach to a dice faces</string>
 	<key>NSCameraUsageDescription</key>

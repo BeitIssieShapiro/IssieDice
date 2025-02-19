@@ -148,10 +148,10 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         if (facesTouched) {
             setSavedFaces(faces);
             // save the dice.jpg after it renders
-            setTimeout(() =>
+            requestAnimationFrame(() => {
                 diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e))
-                    .then((filePath: string) => copyFileToFolder(filePath, `${Folders.CustomDice}/${editedName}`, "dice.jpg", true)),
-                1000);
+                    .then((filePath: string) => copyFileToFolder(filePath, `${Folders.CustomDice}/${editedName}`, "dice.jpg", true))
+            });
         }
     }, [faces, savedFaces])
 
@@ -197,8 +197,8 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             onDone={(faceText) => {
                 handleFaceTextChange(editedFaceText, faceText);
                 setEditedFaceText(-1);
-            }} width={width} 
-            />}
+            }} width={width}
+        />}
 
         <FaceTypePicker
             open={addFace >= 0}
@@ -299,7 +299,8 @@ function DiceLayoutImpl({ faces, size, facesText }: DiceLayoutProps, ref: any) {
 
 
     return (
-        <View style={[styles.previewContainer, { width: 4 * faceSize, height: 4 * faceSize }, { position: "absolute", left: -1000 }]} collapsable={false} ref={viewShotRef}>
+        <View style={[styles.previewContainer, { width: 4 * faceSize, height: 4 * faceSize }, { position: "absolute", left: -1000 }]}
+            collapsable={false} ref={viewShotRef}>
             {
                 [0, 1, 2, 3, 4, 5].map(i => (
                     usedFaces[i] && usedFaces[i].uri && usedFaces[i].uri.length > 0 && !usedFaces[i].uri.endsWith(".json") ?

@@ -552,3 +552,9 @@ function getTempFileName(ext: string) {
 
     return path.join(RNFS.TemporaryDirectoryPath, fn + "." + ext);
 }
+
+export async function getRandomFile(filePath: string, ext: string): Promise<string> {
+    const tempFileTime = getTempFileName(ext)
+    await RNFS.copyFile(filePath, tempFileTime);
+    return tempFileTime;
+}
