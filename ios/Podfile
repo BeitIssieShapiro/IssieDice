@@ -5,8 +5,39 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+  require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native-permissions/scripts/setup.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+  
+
 platform :ios, '16'
 prepare_react_native_project!
+
+setup_permissions([
+  # 'AppTrackingTransparency',
+  # 'Bluetooth',
+  # 'Calendars',
+  # 'CalendarsWriteOnly',
+   'Camera',
+  # 'Contacts',
+  # 'FaceID',
+  # 'LocationAccuracy',
+  # 'LocationAlways',
+  # 'LocationWhenInUse',
+   'MediaLibrary',
+   'Microphone',
+  # 'Motion',
+  # 'Notifications',
+   'PhotoLibrary',
+  # 'PhotoLibraryAddOnly',
+  # 'Reminders',
+  # 'Siri',
+  # 'SpeechRecognition',
+  # 'StoreKit',
+])
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil

@@ -39,7 +39,7 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
     }, [])
 
     let colorButtonSize = (width) / ((availableColorPicker.length + 1) * 1.4);
-    if (isScreenNarrow) {
+    if (!isScreenNarrow) {
         colorButtonSize *= 2;
     }
     const actHeight = open ? height : 0;

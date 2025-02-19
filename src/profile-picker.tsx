@@ -81,7 +81,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                         }}>
                             <View style={styles.listItem} key={item.key} >
                                 {item && item.icon && <Image source={item.icon} style={styles.pickerImage} />}
-                                {item && !item.icon && isDicePicker && <DicePreview size={45} faces={item.faces} />}
+                                {item && !item.icon && isDicePicker && <DicePreview size={45} faces={item.faces!} />}
                                 <Text
                                     allowFontScaling={false}
                                     numberOfLines={1}

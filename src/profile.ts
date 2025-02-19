@@ -8,6 +8,7 @@ import Dice from './dice';
 import { fTranslate, translate } from './lang';
 import { FaceType } from './profile-picker';
 import { unzip, zip } from 'react-native-zip-archive';
+import { FaceText } from './edit-text';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -49,7 +50,7 @@ export interface List {
     key: string | Templates,
     name: string;
     icon?: string;
-    faces?: string[];
+    faces?: FaceInfo[];
     readOnly?: boolean;
 }
 
@@ -97,7 +98,7 @@ export const faceTypes = [
 export interface Dice {
     template: Templates;
     active: boolean;
-    faces?: string[] | undefined;
+    faces?: FaceInfo[] | undefined;
 }
 
 export interface Profile {
@@ -263,7 +264,7 @@ export async function readCurrentProfile(): Promise<Profile> {
     const dice = [] as Dice[];
 
     for (let i = 0; i < numOfDice; i++) {
-        let faces: string[] = []
+        let faces: FaceInfo[] = []
         if (diceTemplateType.length > i && !diceTemplateType[i].startsWith(Templates.prefix)) {
             faces = await loadFaceImages(diceTemplateType[i]);
         }
@@ -329,19 +330,29 @@ async function loadCustomDice(ommitFaces = false): Promise<List[]> {
     });
 }
 
-export async function loadFaceImages(name: string) {
+export interface FaceInfo {
+    uri: string;
+    text?: FaceText;
+}
+
+export async function loadFaceImages(name: string): Promise<FaceInfo[]> {
     const customDicePath = getCustomTypePath(name);
 
-    return RNFS.readDir(customDicePath).then(files => {
-        const list = ["", "", "", "", "", ""];
-        for (const elem of files) {
-            if (elem.name.startsWith("face")) {
-                const index = parseInt(elem.name.substring(5, 6));
-                list[index] = elem.path
+    const files = await RNFS.readDir(customDicePath);
+    const list: FaceInfo[] = [{ uri: "" }, { uri: "" }, { uri: "" }, { uri: "" }, { uri: "" }, { uri: "" }];
+    for (const elem of files) {
+        if (elem.name.startsWith("face")) {
+            const index = parseInt(elem.name.substring(5, 6));
+            list[index].uri = elem.path;
+            if (elem.path.endsWith(".json")) {
+                // is a text
+                const textInfo = JSON.parse(await loadFile(elem.path));
+                list[index].text = textInfo;
             }
         }
-        return list;
-    });
+    }
+
+    return list;
 }
 
 export async function saveDataUrlAs(dataUrl: string, filePath: string) {
@@ -387,7 +398,7 @@ export async function exportDice(name: string): Promise<string> {
         type: "dice",
         name
     }
-    const files = (await loadFaceImages(name)).filter(f => f.length > 0).map(f => ensureAndroidCompatible(f));
+    const files = (await loadFaceImages(name)).filter(f => f.uri.length > 0).map(f => ensureAndroidCompatible(f.uri));
 
     const diceMaterialUri = path.join(getCustomTypePath(name), "dice.jpg");
     files.push(diceMaterialUri);

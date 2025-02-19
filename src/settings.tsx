@@ -3,7 +3,7 @@ import { fTranslate, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { IconButton, NumberSelector, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { AlreadyExists, deleteProfile, Dice, exportAll, exportDice, exportProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, deleteProfile, Dice, EmptyProfile, exportAll, exportDice, exportProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { ProfilePicker } from "./profile-picker";
@@ -36,7 +36,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
 
     const [profileName, setProfileName] = useState<string>("");
-    const [profile, setProfile] = useState<Profile>({ dice: [] });
+    const [profile, setProfile] = useState<Profile>(EmptyProfile);
 
     useEffect(() => {
         readCurrentProfile().then(p => {
@@ -271,7 +271,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
     return <View style={styles.container}>
-        {busy && <ActivityIndicator size={"large"} style={styles.busy}/>}
+        {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
         <ProfilePicker
@@ -333,7 +333,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
         {editOrCreateDice != undefined && <EditDice
             name={editOrCreateDice}
-            onClose={() => setEditOrCreateDice(undefined)} />}
+            width={windowSize.width}
+            onClose={() => {
+                setEditOrCreateDice(undefined)
+                setRevision(prev => prev + 1)
+            }} />}
 
         {/** Title */}
         <View style={styles.settingTitle}>
@@ -372,15 +376,16 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             {/* Dice Size */}
             <NumberSelector style={sectionStyle} title={translate("DiceSize")} min={1} max={7} value={profile.size}
-                onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} />
+                onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} titleStyle={styles.sectionTitle} />
 
             {/* Number of Dice */}
             <NumberSelector style={sectionStyle} title={translate("NumberOfDice")} min={1} max={4} value={profile.dice.length}
-                onUp={() => changeNumOfButton(1)} onDown={() => changeNumOfButton(-1)} />
+                onUp={() => changeNumOfButton(1)} onDown={() => changeNumOfButton(-1)} titleStyle={styles.sectionTitle} />
 
             {/* Number of Dice */}
             <NumberSelector style={sectionStyle} title={translate("RecoveryTime")} min={1} max={7} value={profile.recoveryTime}
-                onUp={() => handleSetRecoveryTime(profile.recoveryTime + 1)} onDown={() => handleSetRecoveryTime(profile.recoveryTime - 1)} />
+                onUp={() => handleSetRecoveryTime(profile.recoveryTime + 1)} onDown={() => handleSetRecoveryTime(profile.recoveryTime - 1)}
+                titleStyle={styles.sectionTitle} />
 
 
             {/* Table Color */}
@@ -399,7 +404,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                         <DiceSettings
                             sectionStyle={sectionStyle}
                             key={i}
-                            dice={profile.dice[i]}
+                            dice={revision >= 0 ? profile.dice[i] : undefined}
                             isBusy={diceBusy == i}
                             onSetActive={(newVal) => setDiceActive(i, newVal)}
                             onOpenLoadDice={() => setOpenSelectTemplate(i)
@@ -416,7 +421,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 }
             </View>
 
-            {/* Table Color */}
+            {/* Backup Color */}
             <View style={sectionStyle}>
                 <View style={{ flexDirection: "row" }}>
                     <IconButton text={translate("BackupAll")} onPress={handleBackupAll} />
@@ -496,7 +501,7 @@ const styles = StyleSheet.create({
         height: "auto"
     },
     busy: {
-        position:"absolute",
+        position: "absolute",
         left: "45%", height: "45%",
         zIndex: 1000
     }

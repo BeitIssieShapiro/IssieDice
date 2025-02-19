@@ -8,6 +8,7 @@ import App from './src/main';
 import { Init } from './src/profile';
 import React  from "react";
 import { GlobalContext } from './src/global-context';
+import { EditText } from './src/edit-text';
 
 
 Init();
@@ -17,6 +18,8 @@ const AppWithCtx = (props) => (
         url: props.url
     }}>
         <App />
+        {/* <EditText label={"my label"} initialText={"abc"} onClose={() => {}}
+            onDone={(text, style) => {}} width={400}/> */}
     </GlobalContext.Provider>
 )
 

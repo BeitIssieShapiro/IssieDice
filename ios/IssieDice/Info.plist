@@ -6,7 +6,7 @@
 	<array>
 	<dict>
 		<key>CFBundleTypeName</key>
-		<string>My Supported Documents</string>
+		<string>IssieDice dice and profiles zip packages</string>
 		<key>LSItemContentTypes</key>
 		<array>
 			<string>public.zip-archive</string>
@@ -17,6 +17,8 @@
     	<string>Alternate</string>
 	</dict>
 	</array>
+  <key>LSSupportsOpeningDocumentsInPlace</key>
+  <true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>

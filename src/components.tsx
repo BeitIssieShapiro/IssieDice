@@ -9,13 +9,14 @@ import { useEffect, useState } from "react";
 import { BTN_COLOR } from "./settings";
 
 
-export function IconButton({ icon, onPress, text, type }: { icon?: string, text: string, onPress: () => void, type?: undefined | "Ionicon" }) {
+export function IconButton({ icon, onPress, text, type, backgroundColor, width }:
+     { icon?: string, text: string, width?:number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" }) {
     const IconElem = type == "Ionicon" ? IconIonicons : IconAnt;
 
-    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }]} onPress={onPress} >
-        {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5 }}>{text}</Text>}
+    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }, backgroundColor && { backgroundColor }]} onPress={onPress} >
+        {!!text && <Text allowFontScaling={false} style={{ width, fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign:icon?"left":"center" }}>{text}</Text>}
 
-        <IconElem name={icon} style={styles.icon} />
+        {icon && <IconElem name={icon} style={styles.icon} />}
     </TouchableOpacity>
 }
 
@@ -71,8 +72,9 @@ export interface NumberSelectorProps {
     value: number;
     onUp: () => void;
     onDown: () => void;
+    titleStyle: any;
 }
-export function NumberSelector({ style, title, min, max, value, onUp, onDown }: NumberSelectorProps) {
+export function NumberSelector({ style, title, min, max, value, onUp, onDown, titleStyle }: NumberSelectorProps) {
     return (
         <View style={style}>
             <View style={styles.numberSelector}>
@@ -80,7 +82,7 @@ export function NumberSelector({ style, title, min, max, value, onUp, onDown }: 
                 <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{value}</Text>
                 <IconAnt name="pluscircleo" color={value == max ? "lightgray" : BTN_COLOR} size={35} onPress={value < max ? onUp : undefined} />
             </View>
-            <Text allowFontScaling={false} style={styles.sectionTitle}>{title}</Text>
+            <Text allowFontScaling={false} style={titleStyle}>{title}</Text>
         </View>
     )
 }
@@ -145,9 +147,4 @@ const styles = StyleSheet.create({
         alignItems: "center",
         height: "100%"
     },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#0D3D63",
-    }
 });
