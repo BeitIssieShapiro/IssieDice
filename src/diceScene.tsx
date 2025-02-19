@@ -106,7 +106,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             <ViroAmbientLight color="#FFFFFF" intensity={500} />
             <ViroSpotLight color="#FFFFFF" direction={[0, -1, 0]} castsShadow={true} />
             {/* <ViroText text={"w" + w + ",h:" + h} /> */}
-            <ViroCamera active position={[0, 6, 2 - (cameraTilt * 2)]} rotation={[-60 - (cameraTilt * 30), 0, 0]} />
+            <ViroCamera active position={[0, 6, 2 - (cameraTilt * 4)]} rotation={[-60 - (cameraTilt * 30), 0, 0]} />
 
 
             <ViroNode position={[0, 0, 0]}>

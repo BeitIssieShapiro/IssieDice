@@ -1,18 +1,20 @@
-import { Alert, Button, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
-import { fTranslate, translate } from "./lang";
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
+import IconIonic from 'react-native-vector-icons/Ionicons';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { FaceType, FaceTypePicker } from "./profile-picker";
+import { FaceType } from "./profile-picker";
 import { copyFileToFolder, SelectFromGallery } from "./image-select";
 import { existsFolder, FaceInfo, Folders, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, } from "./profile";
 import { captureRef } from "react-native-view-shot";
-import prompt from "react-native-prompt-android";
 import path from "path";
-import { readFile, unlink } from "react-native-fs";
+import { unlink } from "react-native-fs";
 import { EditImage } from "./edit-image";
 import { CameraOverlay } from "./CameraOverlay";
-import { EditText, FaceText, TextStyle } from "./edit-text";
+import { EditText, FaceText } from "./edit-text";
+import { Menu, MenuItem } from "react-native-material-menu";
+import { SearchImage } from "./search-image";
 
 const blankImg = require("../assets/blank.png");
 interface EditDiceProps {
@@ -33,7 +35,6 @@ const emptyFaceText: FaceText = {
 const emptyFacesArray = ["", "", "", "", "", ""]
 const emptyFacesText = [emptyFaceText, emptyFaceText, emptyFaceText, emptyFaceText, emptyFaceText, emptyFaceText,]
 export function EditDice({ onClose, name, width }: EditDiceProps) {
-    const [addFace, setAddFace] = useState<number>(-1);
     const [editedName, setEditedName] = useState<string>(name);
     const [openNameEditor, setOpenNameEditor] = useState<boolean>(false);
     const [editedFaceText, setEditedFaceText] = useState<number>(-1);
@@ -43,6 +44,8 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     const diceLayoutRef = useRef<any>(null);
     const [editImage, setEditImage] = useState<{ uri: string, index: number } | undefined>();
     const [openCamera, setOpenCamera] = useState<number>(-1);
+    const [openSearch, setOpenSearch] = useState<number>(-1);
+    const [showAddTypesMenu, setShowAddTypesMenu] = useState<number>(-1);
 
     useEffect(() => {
         if (name.length > 0) {
@@ -56,15 +59,20 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     }, [])
 
     async function handleAddFace(index: number, type: FaceType, editedName: string) {
+        console.log("handleAddFace", index)
         if (type == FaceType.Image) {
             const filePath = await SelectFromGallery(`${Folders.CustomDice}/${editedName}`, `face_${index}$$${Math.floor(Math.random() * 1000000)}.jpg`, `face_${index}$$`);
-
-            setEditImage({ uri: filePath, index });
+            if (filePath.length > 0) {
+                setEditImage({ uri: filePath, index });
+            }
         } else if (type == FaceType.Camera) {
             setOpenCamera(index);
         } else if (type == FaceType.Text) {
             setEditedFaceText(index);
+        } else if (type == FaceType.Search) {
+            setOpenSearch(index);
         }
+        setShowAddTypesMenu(-1);
     }
 
     function handleFaceTextChange(index: number, faceText: FaceText) {
@@ -144,7 +152,11 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                     .then((filePath: string) => copyFileToFolder(filePath, `${Folders.CustomDice}/${editedName}`, "dice.jpg", true))
             });
         }
-    }, [faces, savedFaces])
+    }, [faces, savedFaces]);
+
+    function hideMenu() {
+        setShowAddTypesMenu(-1)
+    }
 
     if (editImage) {
         return <EditImage uri={editImage.uri} onClose={() => setEditImage(undefined)} onDone={(url) => {
@@ -207,34 +219,47 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
 
         />}
 
-
-        <FaceTypePicker
-            open={addFace >= 0}
-            onClose={() => setAddFace(-1)}
-            onSelect={(type) => {
-                handleAddFace(addFace, type as FaceType, editedName);
-                setAddFace(-1);
-            }}
-        />
+        {openSearch >= 0 && <SearchImage onSelectImage={(uri) => {
+            setFaces(curr => {
+                curr[openSearch] = uri;
+                return [...curr];
+            })
+            setOpenSearch(-1);
+        }} onClose={() => setOpenSearch(-1)} width={width}
+            targetFile={path.join(getCustomTypePath(editedName), `face_${openSearch}$$${Math.floor(Math.random() * 1000000)}.jpg`)}
+        />}
 
         <View style={styles.addFacesHost}>
 
             {[0, 1, 2, 3, 4, 5].map(index => {
-                return <TouchableOpacity key={index} style={styles.addFace}
-                    onPress={() => {
-                        if (editedName.length == 0) {
-                            Alert.alert(translate("MustHaveDiceNameBeforeAddFace"))
-                            return;
-                        }
-                        setAddFace(index)
-                    }}>
-                    {faces[index]?.length > 0 && !faces[index].endsWith(".json") ?
-                        <Image source={{ uri: faces[index] }} style={{ width: 75, height: 75 }} /> :
-                        (facesText[index].text.length > 0 ?
-                            <TextFace style={[]} faceText={facesText[index]} size={75} /> :
-                            <Icon name="plus" size={35} />)
-                    }
-                </TouchableOpacity>
+                return (
+                    <Menu
+                        style={{ margin: 60 }}
+                        key={index}
+                        visible={showAddTypesMenu == index}
+                        onRequestClose={hideMenu}
+                        anchor={<TouchableOpacity key={index} style={styles.addFace}
+                            onPress={() => {
+                                if (editedName.length == 0) {
+                                    Alert.alert(translate("MustHaveDiceNameBeforeAddFace"))
+                                    return;
+                                }
+                                setShowAddTypesMenu(index);
+                            }}
+                        >
+                            {faces[index]?.length > 0 && !faces[index].endsWith(".json") ?
+                                <Image source={{ uri: faces[index] }} style={{ width: 75, height: 75, backgroundColor: "white" }} /> :
+                                (facesText[index].text.length > 0 ?
+                                    <TextFace style={[]} faceText={facesText[index]} size={75} /> :
+                                    <Icon name="plus" size={35} />)
+                            }
+                        </TouchableOpacity>} >
+                        <FaceTypeMenuItem label={translate("Text")} icon="text" onPress={() => handleAddFace(index, FaceType.Text, editedName)} />
+                        <FaceTypeMenuItem label={translate("Camera")} icon="camera-outline" onPress={() => handleAddFace(index, FaceType.Camera, editedName)} />
+                        <FaceTypeMenuItem label={translate("Image")} icon="image-outline" onPress={() => handleAddFace(index, FaceType.Image, editedName)} />
+                        <FaceTypeMenuItem label={translate("Search")} icon="search-outline" onPress={() => handleAddFace(index, FaceType.Search, editedName)} />
+
+                    </Menu>)
             })}
         </View>
         <View style={{ flexDirection: "row", width: "100%", justifyContent: "center" }}>
@@ -335,6 +360,16 @@ function TextFace({ faceText, style, size }: { faceText: FaceText, style: any, s
     </View >
 }
 
+function FaceTypeMenuItem({ label, icon, onPress }: { label: string, icon: string, onPress: () => void }) {
+    return <MenuItem onPress={onPress}>
+        <View style={styles.menuItem}  >
+            <IconIonic name={icon} color="blue" size={22} />
+            <Spacer w={10} />
+            <Text style={{ fontSize: 22 }}>{label}</Text>
+        </View>
+    </MenuItem>
+}
+
 
 export const DiceLayout = forwardRef(DiceLayoutImpl);
 
@@ -402,6 +437,7 @@ const styles = StyleSheet.create({
     previewFace: {
         position: 'absolute',
         transformOrigin: "0.0",
+        backgroundColor: "white",
     },
     faceBorder: {
         borderWidth: 1,
@@ -441,6 +477,10 @@ const styles = StyleSheet.create({
         fontSize: 25,
         textAlign: "center",
         flexWrap: "wrap",
+    },
+    menuItem: {
+        flexDirection: "row",
+        alignItems: "center",
     }
 
 })

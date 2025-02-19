@@ -116,23 +116,6 @@ export enum FaceType {
     Text = "text",
 }
 
-interface FaceTypePickerProps {
-    open: boolean;
-    onSelect: (item: string) => void;
-    onClose: () => void;
-}
-
-export function FaceTypePicker(props: FaceTypePickerProps) {
-    return <ProfilePicker
-        open={props.open}
-        height={400}
-        onSelect={props.onSelect}
-        onClose={props.onClose}
-        folder={Folders.FaceType}
-        loadButton={{name:translate("Select")}}
-    />
-}
-
 
 const styles = StyleSheet.create({
     closeButton: {

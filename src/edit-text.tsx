@@ -9,7 +9,7 @@ import {
     FlatList,
 } from "react-native";
 import { translate } from "./lang";
-import { IconButton, NumberSelector } from "./components";
+import { FadeInView, IconButton, NumberSelector } from "./components";
 import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BTN_COLOR } from "./settings";
@@ -34,8 +34,8 @@ interface EditTextProps {
     onDone: (faceText: FaceText) => void;
     onClose: () => void;
     width: number;
-    textWidth:number;
-    textHeight:number;
+    textWidth: number;
+    textHeight: number;
 
 }
 
@@ -48,7 +48,7 @@ interface ColorPickerProps {
 }
 
 export const EditText: React.FC<EditTextProps> = ({
-    label, initialText, textOnly, initialFontSize, initialFontBold, initialColor, initialBGColor, 
+    label, initialText, textOnly, initialFontSize, initialFontBold, initialColor, initialBGColor,
     onDone, onClose, width, textWidth, textHeight,
 }) => {
     const [text, setText] = useState(initialText);
@@ -58,101 +58,103 @@ export const EditText: React.FC<EditTextProps> = ({
     const [backgroundColor, setBackgroundColor] = useState(initialBGColor || "white");
     const [openColorPicker, setOpenColorPicker] = useState<ColorPickerProps | undefined>();
 
-    return (
-        <Modal transparent={true} animationType="slide" visible={true}>
-            <View style={styles.overlay}>
-                <View style={[styles.container, {width:width || "90%"}]}>
 
-                    <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={openColorPicker ? openColorPicker.color : "white"}
-                        height={300} width={width} isScreenNarrow={true} onClose={() => setOpenColorPicker(undefined)}
-                        onSelect={(color) => {
-                            openColorPicker && openColorPicker.onSelect(color);
-                            setOpenColorPicker(undefined);
-                        }} open={openColorPicker != undefined}
+    console.log("Render edit-text", text)
+    return (
+        <View style={[StyleSheet.absoluteFill, styles.overlay]}>
+            <View style={[styles.container, { width: width || "90%" }]}>
+
+                <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={openColorPicker ? openColorPicker.color : "white"}
+                    height={300} width={width} isScreenNarrow={true} onClose={() => setOpenColorPicker(undefined)}
+                    onSelect={(color) => {
+                        openColorPicker && openColorPicker.onSelect(color);
+                        setOpenColorPicker(undefined);
+                    }} open={openColorPicker != undefined}
+                />
+
+                {/* Editable Text Input */}
+                <View style={{ flexDirection: "column", alignItems: "center", }}>
+                    <Text allowFontScaling={false} style={styles.label}>{label}</Text>
+
+                    <TextInput
+                        style={[
+                            styles.input,
+                            { width: textWidth, height: textHeight },
+
+                            { fontSize: fontSize, color, fontWeight: isBold ? "bold" : "normal", backgroundColor },
+                        ]}
+                        placeholderTextColor="gray"
+                        value={text}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+
+                        onChangeText={(newText) => {
+                            setText(newText);
+                        }}
+                        autoFocus
+                        allowFontScaling={false}
+                    />
+                </View>
+                {!textOnly && <View style={styles.stylesHost}>
+                    {/* Font Size Selection */}
+                    <NumberSelector min={10} max={60} title={translate("FontSize")} value={fontSize} style={styles.fontSelector}
+                        onDown={() => setFoneSize(fontSize - 2)}
+                        onUp={() => setFoneSize(fontSize + 2)}
+                        titleStyle={styles.styleLabel}
                     />
 
-                    {/* Editable Text Input */}
-                    <View style={{ flexDirection: "column", alignItems: "center", }}>
-                        <Text allowFontScaling={false} style={styles.label}>{label}</Text>
+                    <TouchableOpacity style={styles.colorSelectHost}
+                        onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} >
+                        <Text allowFontScaling={false} style={styles.styleLabel}>{translate("TextColor")}</Text>
+                        <View style={[styles.colorCircle, { backgroundColor: color }]} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.colorSelectHost}
+                        onPress={() => setOpenColorPicker(({ color: backgroundColor, onSelect: c => setBackgroundColor(c) }))} >
+                        <Text allowFontScaling={false} style={styles.styleLabel}>{translate("BGColor")}</Text>
+                        <View style={[styles.colorCircle, { backgroundColor: backgroundColor }]} />
+                    </TouchableOpacity>
 
-                        <TextInput
-                            style={[
-                                styles.input,
-                                {width: textWidth, height: textHeight},
-
-                                { fontSize: fontSize, color, fontWeight: isBold ? "bold" : "normal", backgroundColor },
-                            ]}
-                            placeholderTextColor="gray"
-                            value={text}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-
-                            onChangeText={(newText) => {
-                                setText(newText);
-                            }}
-                            autoFocus
-                            allowFontScaling={false}
-                        />
-                    </View>
-                    {!textOnly && <View style={styles.stylesHost}>
-                        {/* Font Size Selection */}
-                        <NumberSelector min={10} max={60} title={translate("FontSize")} value={fontSize} style={styles.fontSelector}
-                            onDown={() => setFoneSize(fontSize - 2)}
-                            onUp={() => setFoneSize(fontSize + 2)}
-                            titleStyle={styles.styleLabel}
-                        />
-
-                        <TouchableOpacity style={styles.colorSelectHost}
-                            onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} >
-                            <Text allowFontScaling={false} style={styles.styleLabel}>{translate("TextColor")}</Text>
-                            <View style={[styles.colorCircle, { backgroundColor: color }]} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.colorSelectHost}
-                            onPress={() => setOpenColorPicker(({ color: backgroundColor, onSelect: c => setBackgroundColor(c) }))} >
-                            <Text allowFontScaling={false} style={styles.styleLabel}>{translate("BGColor")}</Text>
-                            <View style={[styles.colorCircle, { backgroundColor: backgroundColor }]} />
-                        </TouchableOpacity>
+                    <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}
+                        onPress={() => setIsBold(!isBold)}>
+                        {isBold ?
+                            <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
+                            <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                        }
+                        <Text allowFontScaling={false} style={styles.styleLabel} >{translate("Bold")}</Text>
+                    </TouchableOpacity>
+                </View>}
 
 
-
-                        <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}
-                            onPress={() => setIsBold(!isBold)}>
-                            {isBold ?
-                                <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                                <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
-                            }
-                            <Text allowFontScaling={false} style={styles.styleLabel} >{translate("Bold")}</Text>
-                        </TouchableOpacity>
-                    </View>}
-
-
-                    <View style={styles.buttonRow}>
-                        <IconButton width={80} text={translate("OK")} onPress={() => {
-                            onDone({
-                                text,
-                                backgroundColor,
-                                color,
-                                fontBold: isBold,
-                                //fontName: "",
-                                fontSize,
-                            })
-                        }} />
-                        <IconButton width={80} text={translate("Cancel")} onPress={onClose} />
-                    </View>
+                <View style={styles.buttonRow}>
+                    <IconButton width={80} text={translate("OK")} onPress={() => {
+                        onDone({
+                            text,
+                            backgroundColor,
+                            color,
+                            fontBold: isBold,
+                            //fontName: "",
+                            fontSize,
+                        })
+                    }} />
+                    <IconButton width={80} text={translate("Cancel")} onPress={onClose} />
                 </View>
             </View>
-        </Modal>
+        </View>
     );
 };
 
 // Styles
 const styles = StyleSheet.create({
     overlay: {
-        flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        zIndex: 1200,
+        shadowColor: '#171717',
+        shadowOffset: {width: 3, height: 6},
+        shadowOpacity: 0.4,
+        shadowRadius: 7,
     },
+    
     container: {
         padding: 20,
         borderRadius: 10,
