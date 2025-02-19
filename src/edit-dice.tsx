@@ -35,6 +35,7 @@ const emptyFacesText = [emptyFaceText, emptyFaceText, emptyFaceText, emptyFaceTe
 export function EditDice({ onClose, name, width }: EditDiceProps) {
     const [addFace, setAddFace] = useState<number>(-1);
     const [editedName, setEditedName] = useState<string>(name);
+    const [openNameEditor, setOpenNameEditor] = useState<boolean>(false);
     const [editedFaceText, setEditedFaceText] = useState<number>(-1);
     const [faces, setFaces] = useState<string[]>(emptyFacesArray);
     const [savedFaces, setSavedFaces] = useState<string[]>(emptyFacesArray);
@@ -97,39 +98,29 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     }
 
 
-    const handleEditName = (editedName: string) => {
-        prompt(translate("SetDiceName"), undefined, [
-            { text: translate("Cancel"), style: "cancel" },
-            {
-                text: translate("OK"),
-                onPress: async (newName) => {
-                    console.log("OK pressed", newName)
+    const handleEditName = async (newName: string, editedName: string) => {
+        if (!newName || newName.length == 0) {
+            Alert.alert(translate("DiceMissingName"), "", [{ text: translate("OK") }]);
+            return;
+        }
 
-                    if (!newName || newName.length == 0) {
-                        Alert.alert(translate("DiceMissingName"), "", [{ text: translate("OK") }]);
-                        return;
-                    }
+        if (newName != editedName) {
+            if (!isValidFilename(newName)) {
+                Alert.alert(translate("InvalideDiceName"), "", [{ text: translate("OK") }]);
+                return;
+            }
 
-                    if (newName != editedName) {
-                        if (!isValidFilename(newName)) {
-                            Alert.alert(translate("InvalideDiceName"), "", [{ text: translate("OK") }]);
-                            return;
-                        }
-
-                        if (await existsFolder(getCustomTypePath(newName))) {
-                            Alert.alert(translate("AlreadyExistsDice"), "", [{ text: translate("OK") }]);
-                            return;
-                            //todo - allow overwrite
-                        }
-                        if (editedName.length > 0) {
-                            await renameDiceFolder(editedName, newName);
-                        }
-                        // else this is a new Dice, folder will be created
-                    }
-                    setEditedName(newName);
-                }
-            },
-        ], { type: 'plain-text', defaultValue: editedName });
+            if (await existsFolder(getCustomTypePath(newName))) {
+                Alert.alert(translate("AlreadyExistsDice"), "", [{ text: translate("OK") }]);
+                return;
+                //todo - allow overwrite
+            }
+            if (editedName.length > 0) {
+                await renameDiceFolder(editedName, newName);
+            }
+            // else this is a new Dice, folder will be created
+        }
+        setEditedName(newName);
     }
 
 
@@ -182,7 +173,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         <View style={[styles.section]} >
             <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
             <Text style={styles.sectionValue}>{editedName}</Text>
-            <Icon name="edit" size={35} onPress={() => handleEditName(editedName)} />
+            <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
 
         </View>
 
@@ -198,7 +189,24 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                 handleFaceTextChange(editedFaceText, faceText);
                 setEditedFaceText(-1);
             }} width={width}
+            textWidth={70}
+            textHeight={70}
         />}
+
+        {openNameEditor && <EditText label={translate("EditNameTitle")}
+            initialText={editedName}
+            textOnly={true}
+            width={400}
+            onClose={() => setOpenNameEditor(false)}
+            onDone={(newName) => {
+                handleEditName(newName.text, editedName);
+                setOpenNameEditor(false);
+            }}
+            textWidth={300}
+            textHeight={80}
+
+        />}
+
 
         <FaceTypePicker
             open={addFace >= 0}

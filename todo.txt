@@ -21,24 +21,23 @@ V -Dice Size
   more sizes - how many?
 
 Click to roll
- - recovery time 0,5,10,20
+ V- recovery time 0,5,10,20
 
 - Dice templates
 - predefined: dots, numbers, shapes, colors
 
 Manage templates
-- colors?
-- text
+V- colors?
+V- text
 - image from web
-- image from cameralroll
-- image from camera
+V- image from cameralroll
+V- image from camera
 - audio?
 
-Share and import Dice
+V -Share and import Dice
 
-Backup all?
+V -Backup all
 
-floor color
 
 About
 
@@ -49,3 +48,4 @@ Ideas:
 
 Bugs:
 - no need to load model on every throw
+- rename dice - must update all profiles

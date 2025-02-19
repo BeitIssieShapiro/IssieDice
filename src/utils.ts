@@ -14,6 +14,10 @@ export function ensureAndroidCompatible(path: string, forceFilePrefix?: boolean)
   return path
 }
 
+export interface WinSize {
+  width: number;
+  height: number;
+}
 
 export async function requestAudioPermission() {
   if (Platform.OS === 'android') {

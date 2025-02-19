@@ -26,6 +26,7 @@ export interface FaceText {
 interface EditTextProps {
     label: string;
     initialText: string;
+    textOnly?: boolean;
     initialFontSize?: number;
     initialFontBold?: boolean;
     initialColor?: string;
@@ -33,6 +34,9 @@ interface EditTextProps {
     onDone: (faceText: FaceText) => void;
     onClose: () => void;
     width: number;
+    textWidth:number;
+    textHeight:number;
+
 }
 
 const FONT_SIZES = [12, 14, 16, 18, 20, 24, 30, 36, 42];
@@ -44,7 +48,8 @@ interface ColorPickerProps {
 }
 
 export const EditText: React.FC<EditTextProps> = ({
-    label, initialText, initialFontSize, initialFontBold, initialColor, initialBGColor, onDone, onClose, width
+    label, initialText, textOnly, initialFontSize, initialFontBold, initialColor, initialBGColor, 
+    onDone, onClose, width, textWidth, textHeight,
 }) => {
     const [text, setText] = useState(initialText);
     const [fontSize, setFoneSize] = useState(initialFontSize || 20);
@@ -56,7 +61,7 @@ export const EditText: React.FC<EditTextProps> = ({
     return (
         <Modal transparent={true} animationType="slide" visible={true}>
             <View style={styles.overlay}>
-                <View style={[styles.container]}>
+                <View style={[styles.container, {width:width || "90%"}]}>
 
                     <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={openColorPicker ? openColorPicker.color : "white"}
                         height={300} width={width} isScreenNarrow={true} onClose={() => setOpenColorPicker(undefined)}
@@ -73,10 +78,10 @@ export const EditText: React.FC<EditTextProps> = ({
                         <TextInput
                             style={[
                                 styles.input,
+                                {width: textWidth, height: textHeight},
 
                                 { fontSize: fontSize, color, fontWeight: isBold ? "bold" : "normal", backgroundColor },
                             ]}
-                            placeholder={label}
                             placeholderTextColor="gray"
                             value={text}
                             autoCapitalize="none"
@@ -89,7 +94,7 @@ export const EditText: React.FC<EditTextProps> = ({
                             allowFontScaling={false}
                         />
                     </View>
-                    <View style={styles.stylesHost}>
+                    {!textOnly && <View style={styles.stylesHost}>
                         {/* Font Size Selection */}
                         <NumberSelector min={10} max={60} title={translate("FontSize")} value={fontSize} style={styles.fontSelector}
                             onDown={() => setFoneSize(fontSize - 2)}
@@ -118,7 +123,7 @@ export const EditText: React.FC<EditTextProps> = ({
                             }
                             <Text allowFontScaling={false} style={styles.styleLabel} >{translate("Bold")}</Text>
                         </TouchableOpacity>
-                    </View>
+                    </View>}
 
 
                     <View style={styles.buttonRow}>
@@ -149,7 +154,6 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
     container: {
-        width: "90%",
         padding: 20,
         borderRadius: 10,
         alignItems: "center",
@@ -161,8 +165,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     input: {
-        width: 70,
-        height: 70,
         padding: 10,
         borderWidth: 1,
         borderRadius: 5,

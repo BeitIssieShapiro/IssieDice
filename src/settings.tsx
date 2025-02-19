@@ -323,7 +323,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         />
 
         <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={profile.tableColor}
-            height={300} width={windowSize.width} isScreenNarrow={isScreenNarrow} onClose={() => setOpenColorPicker(false)}
+            height={300} width={windowSize.width} isScreenNarrow={true} onClose={() => setOpenColorPicker(false)}
             onSelect={(color) => {
                 handleSetTableColor(color);
                 setOpenColorPicker(false);
@@ -334,6 +334,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             name={editOrCreateDice}
             width={windowSize.width}
             onClose={() => {
+                // todo rename cube
                 setEditOrCreateDice(undefined)
                 setRevision(prev => prev + 1)
             }} />}

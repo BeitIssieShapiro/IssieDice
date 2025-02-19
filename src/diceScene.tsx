@@ -11,26 +11,35 @@ import {
     ViroOrbitCamera,
     ViroSpotLight,
     ViroMaterials,
+    ViroText,
 } from "@reactvision/react-viro";
 import { Axes } from "./axes";
 import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import DiceObject from "./dice";
 import { Dice, Profile } from "./profile";
+import { Dimensions, ScaledSize } from "react-native";
+import { WinSize } from "./utils";
 
 interface DiceSceneProps {
     initialImpulse: Viro3DPoint;
     initialTorque: Viro3DPoint;
     profile: Profile;
+    windowSize: WinSize;
 }
 export interface DiceSceneMethods {
     rollDice: (impolse: Viro3DPoint, torque: Viro3DPoint) => void;
     update: (profile: Profile) => void;
-
+    updateWindowSize: (winSize: WinSize) => void;
+    updateCamera: (tilt: number) => void;
 }
 
-const wallHeight = 2
+export const cameraPos: { p: Viro3DPoint, r: Viro3DPoint }[] = [
+    { p: [0, 6, 2], r: [-60, 0, 0] },
+    { p: [0, 6, 1], r: [-75, 0, 0] },
+    { p: [0, 6, 0], r: [-90, 0, 0] },
+]
 
-export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }: DiceSceneProps, ref: any) => {
+export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize }: DiceSceneProps, ref: any) => {
     const [sceneKey, setSceneKey] = useState<number>(0);
     const [cubeInfoKey, setCubeInfoKey] = useState<number>(0);
     const [impulse, setImpulse] = useState<Viro3DPoint>(initialImpulse);
@@ -38,7 +47,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
     const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
     const [diceSize, setDiceSize] = useState<number>(profile.size);
     const [sceneRevision, setSceneRevision] = useState<number>(0);
-
+    const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
+    const [cameraTilt, setCameraTilt] = useState<number>(0);
     const tableRef = useRef<any>(undefined);
 
     useEffect(() => ViroMaterials.createMaterials({
@@ -73,20 +83,33 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
             // setSceneRevision(prev => prev + 1);
             tableRef.current?.setNativeProps({ materials: ["tableSurface_" + profile.tableColor] })
             setCubeInfoKey(prev => prev + 1);
+        },
+        updateWindowSize: (winSize: WinSize) => {
+            setCurrWindowSize(winSize);
+        },
+        updateCamera: (tilt) => {
+            if (tilt >= 0 && tilt < cameraPos.length) {
+                console.log("update camera tilt", tilt)
+                setCameraTilt(tilt);
+            }
         }
     }));
-
-
-    console.log("render scene", sceneRevision)
+    const w0 = currWindowSize.width
+    const h0 = currWindowSize.height;
+    const w = w0 > h0 ? 10 : 6;
+    const h = w0 > h0 ? 12 : 20;
+    const wallH = 2;
+    const scaledDiceSize = diceSize * .3 / 2;
+    console.log("render scene", sceneRevision, currWindowSize)
     return (
         <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
             <ViroAmbientLight color="#FFFFFF" intensity={500} />
             <ViroSpotLight color="#FFFFFF" direction={[0, -1, 0]} castsShadow={true} />
+            {/* <ViroText text={"w" + w + ",h:" + h} /> */}
+            <ViroCamera active position={[0, 6, 2 - (cameraTilt * 2)]} rotation={[-60 - (cameraTilt * 30), 0, 0]} />
 
-            <ViroCamera active position={[0, 5, 2]} rotation={[-60, 0, 0]} />
 
-
-            <ViroNode position={[0, 0, 0]} >
+            <ViroNode position={[0, 0, 0]}>
 
                 {/* <ViroAmbientLight color="#ffffff" intensity={100}  />  */}
                 {/* <ViroSpotLight color="#ffffff" intensity={300} position={[0, 5, 2]} direction={[0, 0, 0]} castsShadow={true} /> */}
@@ -114,10 +137,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
                 }
                 < ViroQuad
                     ref={tableRef}
-                    position={[0, 0, -2]}
+                    position={[0, 0, 0]}
                     rotation={[-90, 0, 0]}
-                    width={6}
-                    height={15}
+                    width={w}
+                    height={h}
                     materials={[sceneRevision == 0 ? "tableSurface_0" : "tableSurface_" + profile.tableColor]}
                     physicsBody={{
                         type: "Static",
@@ -130,25 +153,22 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
                 {// Back Wall 
                 }
                 <ViroBox
-                    // This wall is placed behind the dice so that it acts as a barrier
-                    // without breaking the line of sight from the camera.
-                    position={[0, 0, -10]}
-                    scale={[6, wallHeight, 0.1]}
+                    position={[0, wallH / 2, -h / 2]}
+                    scale={[w, wallH, 0.1]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
-
                 />
 
 
                 <ViroBox
-                    position={[-3, 0, -3]}
-                    scale={[0.1, wallHeight, 14]}
+                    position={[-w / 2, wallH / 2, 0]}
+                    scale={[0.1, wallH, h]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
                 />
                 <ViroBox
-                    position={[3, 0, -3]}
-                    scale={[0.1, wallHeight, 14]}
+                    position={[w / 2, wallH / 2, 0]}
+                    scale={[0.1, wallH, h]}
                     materials={["wallMaterial"]}
                     physicsBody={{ type: "Static" }}
                 />
@@ -159,11 +179,13 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile }:
                         <DiceObject
                             key={i}//`dice${i}-${sceneKey}`}
                             index={i}
-                            cubeInfoKey={cubeInfoKey}
+                            cubeInfoKey={cubeInfoKey + ""}
                             cubeKey={`dice${i}-${sceneKey}`}
-                            initialPosition={[i < profile.dice.length / 2 ? -(i + 1) * .1 : (i + 1) * .1, 3, 2]}
+                            initialPosition={[i < profile.dice.length / 2 ?
+                                -(i + 1) * .1 :
+                                (i + 1) * .1, 3, 2]}
                             template={d.template}
-                            scale={[0.3 * diceSize / 2, 0.3 * diceSize / 2, 0.3 * diceSize / 2]}
+                            scale={[scaledDiceSize, scaledDiceSize, scaledDiceSize]}
                             initialImpulse={impulse}
                             initialTourqe={torque}
 
