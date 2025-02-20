@@ -28,26 +28,26 @@ export function DiceSettings({ sectionStyle, dice, isBusy, onSetActive,
     onOpenLoadDice, onSaveDice, onImageSearchOpen, onSelectTemplate, isLast, isScreenNarrow }: DiceSettingsProps) {
 
     const templ = templatesList.find(t => t.key == dice.template);
-    const dirStyle: any = { flexDirection: (isRTL() ? "row" : "row-reverse") }
+    const dirStyle: any = { flexDirection: (isRTL() ? "row-reverse" : "row") }
 
-    return <View style={{ width: "100%", flexDirection: "column" }}>
-        <View style={styles.section}>
-            <View style={{ flexDirection: "row" }}>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("CubeName")}:</Text>
+    return <View style={[{ width: "100%", flexDirection: "column" }]}>
+        <View style={[styles.section, dirStyle]}>
+            <View style={dirStyle}>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("DiceName")}:</Text>
                 <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" }]}>
                     {templ ? templ.name : dice.template}
                 </Text>
             </View>
             <IconButton icon="cube-outline" text={translate("List")} onPress={() => onOpenLoadDice()} type="Ionicon" />
         </View>
-        <View style={styles.section} >
-            <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}
+        <View style={[styles.section, dirStyle]} >
+            <TouchableOpacity style={[{  alignItems: "center", marginEnd: 15, width: "33%" }, dirStyle]}
                 onPress={() => onSetActive(!dice.active)}>
                 {dice.active ?
                     <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
                     <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
                 }
-                <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("Active")}</Text>
+                <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("ActiveDice")}</Text>
             </TouchableOpacity>
 
 

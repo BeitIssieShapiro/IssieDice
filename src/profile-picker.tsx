@@ -54,6 +54,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
         }
     }, [open, exclude, revision]);
 
+    const dirStyle: any = { flexDirection: isRTL() ? "row-reverse" : "row" };
 
     return <FadeInView height={open ? height : 0}
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
@@ -61,7 +62,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             {onCreate && <Icon name="pluscircleo" size={50} onPress={() => onCreate()} />}
             <Text allowFontScaling={false} style={{ fontSize: 28, margin: 25 }}>{
                 folder == Folders.Profiles ?
-                    translate("SelectProfileTitle") : translate("SelectButtonTitle")
+                    translate("SelectProfileTitle") : translate("SelectDiceTitle")
             }</Text>
         </View>
         <Seperator width="90%" />
@@ -70,16 +71,11 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
         </View>
         {!list || list.length == 0 ?
             <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
-            <ScrollView style={styles.listHost}>
+            <ScrollView style={[styles.listScroll, { direction: isRTL() ? "rtl" : "ltr" }]}>
                 {list.map(item => (
-                    <Fragment key={item.key}>
-                        <View style={{
-                            flexDirection: isRTL() ? "row-reverse" : "row",
-                            width: "95%",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                        }}>
-                            <View style={styles.listItem} key={item.key} >
+                    <View key={item.key} style={styles.itemHost}>
+                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row", backgroundColor:"yellow" }]}>
+                            <View style={[styles.listItem, isRTL()?{ direction: "rtl"}:{}]} key={item.key} >
                                 {item && item.icon && <Image source={item.icon} style={styles.pickerImage} />}
                                 {item && !item.icon && isDicePicker && <DicePreview size={45} faces={item.faces!} />}
                                 <Text
@@ -92,16 +88,16 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                         paddingTop: 10, paddingBottom: 10,
                                     }}>{item.name}</Text>
                             </View>
-                            <View style={{ flexDirection: "row" }}>
+                            <View style={{ flexDirection: "row-reverse", width: "40%" }}>
                                 <IconButton icon={loadButton?.icon} onPress={() => onSelect(item.key)} text={loadButton.name} />
                                 {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
-                                {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} text={isNarrow && editButton?.icon ? "" :editButton?.name!} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon} text={isNarrow && exportButton?.icon ? "" :exportButton?.name!} onPress={() => onExport(item.key)} />}
+                                {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} text={isNarrow && editButton?.icon ? "" : editButton?.name!} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon} text={isNarrow && exportButton?.icon ? "" : exportButton?.name!} onPress={() => onExport(item.key)} />}
 
                             </View>
                         </View>
                         <Seperator width="100%" />
-                    </Fragment>
+                    </View>
 
                 ))}
             </ScrollView>
@@ -143,13 +139,24 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.35,
         shadowRadius: 3.84,
     },
+    itemHost: {
+        width: "95%",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    itemRow: {
+        width: "95%",
+        justifyContent: "flex-end",
+        alignItems: "center",
+    },
     listItem: {
+        width: "60%",
         flexDirection: "row",
         paddingLeft: "10%",
         paddingRight: "10%",
         flex: 1,
     },
-    listHost: {
+    listScroll: {
         padding: 20,
         width: "100%",
     },

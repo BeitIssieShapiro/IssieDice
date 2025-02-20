@@ -254,10 +254,10 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                                     <Icon name="plus" size={35} />)
                             }
                         </TouchableOpacity>} >
-                        <FaceTypeMenuItem label={translate("Text")} icon="text" onPress={() => handleAddFace(index, FaceType.Text, editedName)} />
-                        <FaceTypeMenuItem label={translate("Camera")} icon="camera-outline" onPress={() => handleAddFace(index, FaceType.Camera, editedName)} />
-                        <FaceTypeMenuItem label={translate("Image")} icon="image-outline" onPress={() => handleAddFace(index, FaceType.Image, editedName)} />
-                        <FaceTypeMenuItem label={translate("Search")} icon="search-outline" onPress={() => handleAddFace(index, FaceType.Search, editedName)} />
+                        <FaceTypeMenuItem label={translate("FaceTypeText")} icon="text" onPress={() => handleAddFace(index, FaceType.Text, editedName)} />
+                        <FaceTypeMenuItem label={translate("FaceTypeCamera")} icon="camera-outline" onPress={() => handleAddFace(index, FaceType.Camera, editedName)} />
+                        <FaceTypeMenuItem label={translate("FaceTypeImage")} icon="image-outline" onPress={() => handleAddFace(index, FaceType.Image, editedName)} />
+                        <FaceTypeMenuItem label={translate("FaceTypeSearch")} icon="search-outline" onPress={() => handleAddFace(index, FaceType.Search, editedName)} />
 
                     </Menu>)
             })}

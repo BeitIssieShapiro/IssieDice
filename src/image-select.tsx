@@ -1,9 +1,4 @@
-import { useEffect, useRef, useState } from "react"
-import ImageLibrary from "./image-library"
-import { isRTL, translate } from "./lang";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, View } from "react-native";
-import { TextInput } from "react-native";
-import Icon from 'react-native-vector-icons/AntDesign';
+import { StyleSheet } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFS from 'react-native-fs';
 
