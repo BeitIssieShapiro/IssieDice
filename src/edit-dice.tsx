@@ -1,4 +1,4 @@
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { ActivityIndicator, Alert, Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -46,6 +46,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     const [openCamera, setOpenCamera] = useState<number>(-1);
     const [openSearch, setOpenSearch] = useState<number>(-1);
     const [showAddTypesMenu, setShowAddTypesMenu] = useState<number>(-1);
+    const [busy, setBusy] = useState<boolean>(false);
 
     useEffect(() => {
         if (name.length > 0) {
@@ -106,51 +107,60 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     }
 
 
-    const handleEditName = async (newName: string, editedName: string) => {
+    const handleEditName = async (newName: string, editedName: string): Promise<boolean> => {
         if (!newName || newName.length == 0) {
             Alert.alert(translate("DiceMissingName"), "", [{ text: translate("OK") }]);
-            return;
+            return false;
         }
 
         if (newName != editedName) {
             if (!isValidFilename(newName)) {
                 Alert.alert(translate("InvalideDiceName"), "", [{ text: translate("OK") }]);
-                return;
+                return false;
             }
 
             if (await existsFolder(getCustomTypePath(newName))) {
                 Alert.alert(translate("AlreadyExistsDice"), "", [{ text: translate("OK") }]);
-                return;
+                return false;
                 //todo - allow overwrite
             }
+            setOpenNameEditor(false);
             if (editedName.length > 0) {
-                await renameDiceFolder(editedName, newName);
+                setBusy(true);
+                await renameDiceFolder(editedName, newName)
+                    .finally(() => setBusy(false));
             }
-            // else this is a new Dice, folder will be created
         }
+        setOpenNameEditor(false);
         setEditedName(newName);
+        return true;
     }
 
 
     useEffect(() => {
         let facesTouched = false;
-        // Auto dave upon changes
-        for (let i = 0; i < faces.length; i++) {
-            if (faces[i] != savedFaces[i]) {
-                if (savedFaces[i].length > 0) {
-                    // remove previos face (async)
-                    unlink(savedFaces[i]);
+        setBusy(true);
+        try {
+            // Auto dave upon changes
+            for (let i = 0; i < faces.length; i++) {
+                if (faces[i] != savedFaces[i]) {
+                    if (savedFaces[i].length > 0) {
+                        // remove previos face (async)
+                        unlink(savedFaces[i]);
+                    }
+                    facesTouched = true;
                 }
-                facesTouched = true;
             }
-        }
-        if (facesTouched) {
-            setSavedFaces(faces);
-            // save the dice.jpg after it renders
-            requestAnimationFrame(() => {
-                diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e))
-                    .then((filePath: string) => copyFileToFolder(filePath, `${Folders.CustomDice}/${editedName}`, "dice.jpg", true))
-            });
+            if (facesTouched) {
+                setSavedFaces(faces);
+                // save the dice.jpg after it renders
+                requestAnimationFrame(() => {
+                    diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e))
+                        .then((filePath: string) => copyFileToFolder(filePath, `${Folders.CustomDice}/${editedName}`, "dice.jpg", true))
+                });
+            }
+        } finally {
+            setBusy(false);
         }
     }, [faces, savedFaces]);
 
@@ -179,8 +189,10 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         <View style={styles.settingTitle}>
             <Spacer w={35} />
             <Text allowFontScaling={false} style={styles.settingTitleText}>{translate(name.length > 0 ? "EditDice" : "CreateDice")}</Text>
-            <Icon name={"close"} color={"black"} size={35} onPress={onClose} />
+            <Icon disabled={busy} name={"close"} color={"black"} size={35} onPress={onClose} />
         </View>
+
+        {!busy && <ActivityIndicator />}
 
         <View style={[styles.section]} >
             <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
@@ -211,8 +223,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             width={400}
             onClose={() => setOpenNameEditor(false)}
             onDone={(newName) => {
-                handleEditName(newName.text, editedName);
-                setOpenNameEditor(false);
+                handleEditName(newName.text, editedName)
             }}
             textWidth={300}
             textHeight={80}
@@ -277,12 +288,12 @@ interface DiceLayoutProps {
 
 }
 interface DicePreviewProps {
-    faces: FaceInfo[];
+    faces: FaceInfo[] | ImageSourcePropType;
     size: number;
 }
 
 export function DicePreview({ faces, size }: DicePreviewProps) {
-    if (!faces || faces.length != 6) return null
+    if (!faces) return null
     const faceSize = { width: size / 2, height: size / 2, left: size / 2, top: size / 2 }
     const facesStyles = [
         [styles.previewFace, styles.faceBorder, styles.previewFaceTop, faceSize, { bottom: size * 2 / 3 }], // Top
@@ -290,13 +301,31 @@ export function DicePreview({ faces, size }: DicePreviewProps) {
         [styles.previewFace, styles.faceBorder, styles.previewFaceLeft, faceSize], // Left
     ];
 
+    const halfSize = size / 4;
+
+    const presetDice = [
+        { left: - 3 * halfSize },
+        { left: - halfSize, top: -2 * halfSize },
+        { left: - 3 * halfSize, top: -2 * halfSize },
+    ]
+
     return (
         <View style={[styles.previewContainer, { width: size, height: size }]}>
-            {[0, 1, 2].map(index => (
-                faces[index].uri.length > 0 && !faces[index].uri.endsWith(".json") ?
-                    <Image key={index} source={{ uri: faces[index].uri }} style={facesStyles[index]} /> :
-                    <TextFace key={index} faceText={faces[index].text ?? emptyFaceText} style={facesStyles[index]} size={size / 2} />
-            ))}
+            {[0, 1, 2].map(index => {
+                if (!Array.isArray(faces)) {
+                    return <View key={index} style={[{ overflow: 'hidden' }, facesStyles[index]]}>
+                        <Image key={index} source={faces} style={[{
+                            width: size * 2, height: size * 2,
+                            position: "absolute",
+                        }, presetDice[index]]} />
+                    </View>
+                }
+
+                const face = faces[index] as FaceInfo;
+                return face.uri.length > 0 && !face.uri.endsWith(".json") ?
+                    <Image key={index} source={{ uri: face.uri }} style={facesStyles[index]} /> :
+                    <TextFace key={index} faceText={face.text ?? emptyFaceText} style={facesStyles[index]} size={size / 2} />
+            })}
         </View>
     );
 

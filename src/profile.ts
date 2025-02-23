@@ -9,6 +9,7 @@ import { fTranslate, translate } from './lang';
 import { FaceType } from './profile-picker';
 import { unzip, zip } from 'react-native-zip-archive';
 import { FaceText } from './edit-text';
+import { ImageSourcePropType } from 'react-native';
 
 export const enum Folders {
     Profiles = "profiles",
@@ -49,7 +50,7 @@ export enum Templates {
 export interface List {
     key: string | Templates,
     name: string;
-    icon?: string;
+    image?: ImageSourcePropType;
     faces?: FaceInfo[];
     readOnly?: boolean;
 }
@@ -58,19 +59,19 @@ export const templatesList = [
     {
         key: Templates.Numbers,
         name: translate("Numbers"),
-        icon: require("../assets/numbers-preview.png"),
+        image: require("../assets/numbers.png"),
         readOnly: true,
     },
     {
         key: Templates.Colors,
         name: translate("Colors"),
-        icon: require("../assets/colors-preview.png"),
+        image: require("../assets/colors.png"),
         readOnly: true,
     },
     {
         key: Templates.Dots,
         name: translate("Dots"),
-        icon: require("../assets/dots-preview.png"),
+        image: require("../assets/dots.png"),
         readOnly: true,
     }
 ]
@@ -384,10 +385,34 @@ export function existsFolder(name: string): Promise<boolean> {
     return RNFS.exists(`${RNFS.DocumentDirectoryPath}/${name}`);
 }
 
-export function renameDiceFolder(currName: string, newName: string) {
+export async function renameDiceFolder(currName: string, newName: string) {
     const srcPath = getCustomTypePath(currName);
     const destPath = getCustomTypePath(newName);
-    return RNFS.moveFile(srcPath, destPath);
+    await RNFS.moveFile(srcPath, destPath);
+
+    // change saved settings and profiles including old dice name
+    const diceTemplateTypes = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
+    const newList = diceTemplateTypes.map(template => template == currName ? newName : template);
+    Settings.setArray(SettingsKeys.DiceTemplates, newList);
+
+    // Check all profile and change dice name if includes the old dice name
+    const allProfiles = await loadProfiles();
+    for (const profileListItem of allProfiles) {
+        const profileString = await loadFile(getProfilePath(profileListItem.key));
+        const profile: Profile = JSON.parse(profileString);
+        let modified = false;
+        for (const die of profile.dice) {
+            if (die.template == currName) {
+                modified = true;
+                die.template = newName as Templates;
+            }
+        }
+        if (modified) {
+            //overwrite Profile after being modified
+            const newProfileString = JSON.stringify(profile, undefined, " ");
+            await writeFile(getProfilePath(profileListItem.key), newProfileString);
+        }
+    }
 }
 
 

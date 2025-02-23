@@ -52,8 +52,11 @@ export function DiceSettings({ sectionStyle, dice, isBusy, onSetActive,
 
 
 
-            {templ?.icon && <Image source={templ.icon} style={styles.previewIcon} />}
-            {dice.faces && dice.faces.length > 0 && <DicePreview faces={dice.faces} size={styles.previewIcon.width} />}
+            {/* {templ?.icon && <Image source={templ.icon} style={styles.previewIcon} />} */}
+            {dice.faces && dice.faces.length > 0 ?
+                 <DicePreview faces={dice.faces} size={styles.previewIcon.width} />:
+                 <DicePreview faces={templ?.image} size={styles.previewIcon.width} />
+            }
             <View style={{ height: 10, width: styles.previewIcon.width }} />
         </View>
         {!isLast && <View style={styles.horizontalSeperator} />}

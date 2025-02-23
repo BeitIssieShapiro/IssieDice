@@ -23,29 +23,26 @@ V -Dice Size
 Click to roll
  V- recovery time 0,5,10,20
 
-- Dice templates
+V- Dice templates
 - predefined: dots, numbers, shapes, colors
+- modedled nice cubes
 
-Manage templates
+V-Manage templates
 V- colors?
 V- text
 - image from web
 V- image from cameralroll
 V- image from camera
 - audio?
-
 V -Share and import Dice
-
 V -Backup all
-
-
 About
 
 Ideas:
 - Augmented Reality?
 - throw by swipe
-
-
-Bugs:
 - no need to load model on every throw
+
+
+Tests:
 - rename dice - must update all profiles

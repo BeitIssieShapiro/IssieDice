@@ -76,8 +76,8 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                     <View key={item.key} style={styles.itemHost}>
                         <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row", backgroundColor:"yellow" }]}>
                             <View style={[styles.listItem, isRTL()?{ direction: "rtl"}:{}]} key={item.key} >
-                                {item && item.icon && <Image source={item.icon} style={styles.pickerImage} />}
-                                {item && !item.icon && isDicePicker && <DicePreview size={45} faces={item.faces!} />}
+                                {item && item.image && <DicePreview size={45} faces={item.image} />}
+                                {item && !item.image && isDicePicker && <DicePreview size={45} faces={item.faces!} />}
                                 <Text
                                     allowFontScaling={false}
                                     numberOfLines={1}

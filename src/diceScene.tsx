@@ -13,11 +13,9 @@ import {
     ViroMaterials,
     ViroText,
 } from "@reactvision/react-viro";
-import { Axes } from "./axes";
 import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import DiceObject from "./dice";
 import { Dice, Profile } from "./profile";
-import { Dimensions, ScaledSize } from "react-native";
 import { WinSize } from "./utils";
 
 interface DiceSceneProps {
