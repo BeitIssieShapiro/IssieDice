@@ -105,7 +105,6 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
 
             rotation={[0, 0, 0]}
             scale={hideDice ? [.1, .1, .1] : scale}
-            materials={hideDice || isDots ? undefined : [`Material_${index}`]}
             type="OBJ"
             physicsBody={hideDice ?
                 {
