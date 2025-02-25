@@ -52,10 +52,10 @@ export const EditText: React.FC<EditTextProps> = ({
     onDone, onClose, width, textWidth, textHeight,
 }) => {
     const [text, setText] = useState(initialText);
-    const [fontSize, setFoneSize] = useState(initialFontSize || 20);
+    const [fontSize, setFoneSize] = useState(initialFontSize || 30);
     const [isBold, setIsBold] = useState(initialFontBold !== undefined ? initialFontBold : false);
     const [color, setColor] = useState(initialColor || "black");
-    const [backgroundColor, setBackgroundColor] = useState(initialBGColor || "white");
+    const [backgroundColor, setBackgroundColor] = useState(initialBGColor || "#E7E7E7");
     const [openColorPicker, setOpenColorPicker] = useState<ColorPickerProps | undefined>();
 
 

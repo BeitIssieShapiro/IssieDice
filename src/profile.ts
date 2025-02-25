@@ -567,8 +567,14 @@ function loadFile(path: string) {
     return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
 }
 
-export function writeFile(path: string, content: string) {
-    return RNFS.writeFile(ensureAndroidCompatible(path), content);
+export async  function writeFile(path: string, content: string, verifyFolderExists?:string) {
+    if (verifyFolderExists) {
+        if (!await RNFS.exists(verifyFolderExists)) {
+            await RNFS.mkdir(verifyFolderExists);
+        }
+    }
+    return RNFS.writeFile(ensureAndroidCompatible(path), content)
+   
 }
 
 function getTempFileName(ext: string) {

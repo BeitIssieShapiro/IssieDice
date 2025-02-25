@@ -47,6 +47,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const [sceneRevision, setSceneRevision] = useState<number>(0);
     const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
     const [cameraTilt, setCameraTilt] = useState<number>(0);
+    const [faceSettled, setFaceSettled] = useState<number[]>([-1, -1, -1, -1])
     const tableRef = useRef<any>(undefined);
 
     useEffect(() => ViroMaterials.createMaterials({
@@ -56,6 +57,13 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         },
     }), []);
 
+    function handleFaceSettled(index:number, faceIndex:number) {
+        setFaceSettled(prev=>{
+            const newFaces = [...prev];
+            newFaces[index] = faceIndex;
+            return newFaces;
+        })
+    }
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: (i, t) => {
@@ -103,7 +111,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
             <ViroAmbientLight color="#FFFFFF" intensity={500} />
             <ViroSpotLight color="#FFFFFF" direction={[0, -1, 0]} castsShadow={true} />
-            {/* <ViroText text={"w" + w + ",h:" + h} /> */}
+            {/*  <ViroText text={faceSettled.join(",")} scale={[4,4,4]}/>  */}
             <ViroCamera active position={[0, 6, 2 - (cameraTilt * 4)]} rotation={[-60 - (cameraTilt * 30), 0, 0]} />
 
 
@@ -186,7 +194,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                             scale={[scaledDiceSize, scaledDiceSize, scaledDiceSize]}
                             initialImpulse={impulse}
                             initialTourqe={torque}
-
+                            onFaceSettled={(faceIndex: number) => handleFaceSettled(i, faceIndex)}
                         />
                     )
                     )}

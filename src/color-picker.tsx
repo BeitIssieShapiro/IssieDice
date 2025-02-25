@@ -7,7 +7,7 @@ import { SettingsKeys } from "./profile";
 import { ColorButton, FadeInView } from "./components";
 
 export const availableColorPicker = [
-    '#000000', '#fee100', '#20ad57', '#5db7dd', '#2958af', '#d62796', '#65309c', '#da3242'
+    '#000000', '#fee100', 'green', '#5db7dd', '#2958af', '#d62796', '#E7E7E7', '#da3242'
 ]
 
 
@@ -71,7 +71,7 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
 
     //trace("last colors", lastColors)
     //trace("color", props.color, "composed", composedColor)
-    return <FadeInView height={actHeight + (openMore ? 250 : 0)}
+    return <FadeInView height={actHeight + (openMore ? 270 : 0)}
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
         <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{title}</Text>
         <View style={styles.closeButton}>
@@ -162,13 +162,12 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
                         }
                     }}
 
-                    sliderSize={0}
+                    sliderSize={20}
                     noSnap={true}
                     row={false}
                     gapSize={10}
                     thumbSize={25}
                     autoResetSlider={true}
-
                     swatches={false}
                 />
             </View>

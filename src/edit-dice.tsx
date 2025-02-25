@@ -28,7 +28,7 @@ const emptyFaceText: FaceText = {
     text: "",
     fontSize: 0,
     fontBold: false,
-    backgroundColor: "white",
+    backgroundColor: "#E7E7E7",
     color: "black"
 
 }
@@ -77,14 +77,14 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     }
 
     function handleFaceTextChange(index: number, faceText: FaceText) {
+        console.log("save face text", faceText)
         if (faceText.text.length > 0) {
             // Save it as a json file
-
             const basePath = getCustomTypePath(editedName);
-            const faceName = `face_${index}$$${Math.floor(Math.random() * 1000000)}.json`
+            const faceName = `face_${index}$$_.json`
             const content = JSON.stringify(faceText, undefined, " ");
             const faceFilePath = path.join(basePath, faceName);
-            writeFile(faceFilePath, content).then(() => {
+            writeFile(faceFilePath, content, basePath).then(() => {
                 setFaces(curr => {
                     curr[index] = faceFilePath;
                     return [...curr];
@@ -259,7 +259,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                             }}
                         >
                             {faces[index]?.length > 0 && !faces[index].endsWith(".json") ?
-                                <Image source={{ uri: faces[index] }} style={{ width: 75, height: 75, backgroundColor: "white" }} /> :
+                                <Image source={{ uri: faces[index] }} style={{ width: 75, height: 75, backgroundColor: "#E7E7E7" }} /> :
                                 (facesText[index].text.length > 0 ?
                                     <TextFace style={[]} faceText={facesText[index]} size={75} /> :
                                     <Icon name="plus" size={35} />)
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     previewFace: {
         position: 'absolute',
         transformOrigin: "0.0",
-        backgroundColor: "white",
+        backgroundColor: "#E7E7E7",
     },
     faceBorder: {
         borderWidth: 1,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
         ],
     },
     textFaceContainer: {
-        backgroundColor: "white",
+        backgroundColor: "#E7E7E7",
         alignItems: "center",
         justifyContent: "center"
     },

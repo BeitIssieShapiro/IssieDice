@@ -3,9 +3,11 @@ import React, { useEffect, useRef, useState } from "react";
 import {
     Viro3DObject,
     ViroMaterials,
+    ViroText,
 } from "@reactvision/react-viro";
 import { Viro3DPoint, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import { getCustomTypePath, getRandomFile, Templates, templatesList } from "./profile";
+import { getFaceIndex, getRotationCorrectionForTopFace, isSamePoint } from "./utils";
 
 interface DiceProps {
     cubeKey: string;
@@ -16,12 +18,15 @@ interface DiceProps {
     initialImpulse: Viro3DPoint;
     initialTourqe: Viro3DPoint;
     template: Templates;
+    onFaceSettled: (face: number) => void;
 }
 
 const cubeDots = require("../assets/dot-dice.obj");
 const cubeEmpty = require("../assets/dice-empty.obj");
 
-export default function DiceObject({ cubeKey, cubeInfoKey, index, template, initialPosition, scale, initialImpulse, initialTourqe }: DiceProps) {
+
+export default function DiceObject({ cubeKey, cubeInfoKey, index, template, initialPosition, scale,
+    initialImpulse, initialTourqe, onFaceSettled }: DiceProps) {
     const cube = useRef<Viro3DObject | null>(undefined);
     const [hideDice, setHideDice] = useState<boolean>(false);
 
@@ -75,6 +80,7 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
         setHideDice(true);
         setTimeout(() => {
             console.log("scale", scaleRef.current)
+            onFaceSettled(-1)
             cube.current?.setNativeProps({ scale: scaleRef.current })
             setHideDice(false)
             setTimeout(() => {
@@ -94,12 +100,78 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
         }
     };
 
+
+    function animateRotation(
+        current: [number, number, number],
+        target: [number, number, number],
+        duration: number = 500
+      ) {
+        const startTime = Date.now();
+      
+        function step() {
+          const elapsed = Date.now() - startTime;
+          const t = Math.min(elapsed / duration, 1); // t in [0, 1]
+          const interpolated: [number, number, number] = [
+            current[0] + (target[0] - current[0]) * t,
+            current[1] + (target[1] - current[1]) * t,
+            current[2] + (target[2] - current[2]) * t,
+          ];
+          cube.current?.setNativeProps({ rotation: interpolated });
+          if (t < 1) {
+            requestAnimationFrame(step);
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+    useEffect(() => {
+        let prevProps: any = undefined;
+        let interval: NodeJS.Timeout | undefined = setInterval(() => {
+            if (cube.current) {
+                cube.current.getTransformAsync().then((props: any) => {
+                    console.log(props);
+
+                    if (prevProps && isSamePoint(prevProps.position, props.position) &&
+                        isSamePoint(prevProps.rotation, props.rotation)) {
+                        // object at rest
+                        const faceUp = getFaceIndex(props.rotation);
+                        onFaceSettled(faceUp);
+
+                        const fixRotation = getRotationCorrectionForTopFace(faceUp, props.rotation);
+                        console.log("Dice", index, "At Rest", prevProps.rotation);
+                        //cube.current?.setNativeProps({rotation:fixRotation})
+                        animateRotation(props.rotation, fixRotation, 1000);
+
+                        clearInterval(interval);
+                        interval = undefined;
+                    }
+
+                    prevProps = props;
+
+                });
+            }
+        }, 500); // Check every second
+
+        return () => {
+            if (interval != undefined) clearInterval(interval)
+        }
+    }, [cubeKey]);
+
     const isDots = template == Templates.Dots
     return (isDots ?
         <Viro3DObject
             key={"dots"}
             ref={r => cube.current = r}
             onLoadEnd={!hideDice ? onDiceLoadEnd : undefined}
+
+            // onTransformUpdate={pos=>{
+            //     console.log("on transform", pos)
+            // }}
+            // onRotate={(state)=>{
+            //     console.log("on rotate", state)
+            // }}
+            // highAccuracyEvents={true}
+
             source={cubeDots}
             position={hideDice ? [5, 5, 5] : initialPosition}
 
