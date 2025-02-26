@@ -33,7 +33,9 @@ V- text
 - image from web
 V- image from cameralroll
 V- image from camera
-- audio?
+- audio
+- text & image for faces
+- voice of dice hit the floor
 V -Share and import Dice
 V -Backup all
 About

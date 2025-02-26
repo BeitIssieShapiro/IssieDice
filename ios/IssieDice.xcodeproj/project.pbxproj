@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0514CFA41CAB1E7F02C7442E /* libPods-IssieDice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D270910BF32892C9F753F9B /* libPods-IssieDice.a */; };
+		06DBE279806E463EADF2FA62 /* Gveret Levin AlefAlefAlef-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4C7D05C6B5ED4FB98AD95890 /* Gveret Levin AlefAlefAlef-Regular.ttf */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		6C2FA963210F2AE05B97F262 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
@@ -19,6 +20,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = IssieDice/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = IssieDice/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = IssieDice/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4C7D05C6B5ED4FB98AD95890 /* Gveret Levin AlefAlefAlef-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Gveret Levin AlefAlefAlef-Regular.ttf"; path = "../assets/fonts/Gveret Levin AlefAlefAlef-Regular.ttf"; sourceTree = "<group>"; };
 		4D270910BF32892C9F753F9B /* libPods-IssieDice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IssieDice.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		60288534F25D83F91FFB8138 /* Pods-IssieDice.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IssieDice.debug.xcconfig"; path = "Target Support Files/Pods-IssieDice/Pods-IssieDice.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = IssieDice/AppDelegate.swift; sourceTree = "<group>"; };
@@ -75,6 +77,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				B534501DF302422EACB8AEAD /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -87,6 +90,14 @@
 				13B07F961A680F5B00A75B9A /* IssieDice.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B534501DF302422EACB8AEAD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4C7D05C6B5ED4FB98AD95890 /* Gveret Levin AlefAlefAlef-Regular.ttf */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
@@ -161,6 +172,7 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				6C2FA963210F2AE05B97F262 /* PrivacyInfo.xcprivacy in Resources */,
+				06DBE279806E463EADF2FA62 /* Gveret Levin AlefAlefAlef-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -259,7 +271,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = IssieDice/Info.plist;
@@ -295,7 +307,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				INFOPLIST_FILE = IssieDice/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IssieDice;

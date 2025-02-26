@@ -16,3 +16,8 @@ https://xd.adobe.com/view/2787b739-50b8-4610-b19a-fcadc5c5f1ff-72d4/
 
 //text input crash
 https://github.com/facebook/react-native/pull/49320/files
+
+
+fonts:
+add in assets/fonts
+`npx react-native-asset`

@@ -13,11 +13,12 @@ import { FadeInView, IconButton, NumberSelector } from "./components";
 import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BTN_COLOR } from "./settings";
+import { Dropdown } from "react-native-element-dropdown";
 
 export interface FaceText {
     text: string;
     fontSize: number;
-    //fontName: string;
+    fontName?: string;
     fontBold: boolean;
     backgroundColor: string;
     color: string;
@@ -27,6 +28,7 @@ interface EditTextProps {
     label: string;
     initialText: string;
     textOnly?: boolean;
+    initialFontName?: string;
     initialFontSize?: number;
     initialFontBold?: boolean;
     initialColor?: string;
@@ -40,7 +42,10 @@ interface EditTextProps {
 }
 
 const FONT_SIZES = [12, 14, 16, 18, 20, 24, 30, 36, 42];
-const FONTS = ["Arial", "Courier", "Georgia", "Times New Roman", "Verdana"];
+const FONTS = [
+    { label: "default", value: undefined },
+    { label: "גברת לוין", value: "Gveret Levin AlefAlefAlef" }
+];
 
 interface ColorPickerProps {
     color: string;
@@ -48,7 +53,7 @@ interface ColorPickerProps {
 }
 
 export const EditText: React.FC<EditTextProps> = ({
-    label, initialText, textOnly, initialFontSize, initialFontBold, initialColor, initialBGColor,
+    label, initialText, textOnly, initialFontSize, initialFontBold, initialColor, initialBGColor, initialFontName,
     onDone, onClose, width, textWidth, textHeight,
 }) => {
     const [text, setText] = useState(initialText);
@@ -57,9 +62,9 @@ export const EditText: React.FC<EditTextProps> = ({
     const [color, setColor] = useState(initialColor || "black");
     const [backgroundColor, setBackgroundColor] = useState(initialBGColor || "#E7E7E7");
     const [openColorPicker, setOpenColorPicker] = useState<ColorPickerProps | undefined>();
+    const [fontName, setFontName] = useState<string | undefined>(initialFontName || undefined);
 
-
-    console.log("Render edit-text", text)
+    console.log("Render edit-text", text, fontName)
     return (
         <View style={[StyleSheet.absoluteFill, styles.overlay]}>
             <View style={[styles.container, { width: width || "90%" }]}>
@@ -81,7 +86,8 @@ export const EditText: React.FC<EditTextProps> = ({
                             styles.input,
                             { width: textWidth, height: textHeight },
 
-                            { fontSize: fontSize, color, fontWeight: isBold ? "bold" : "normal", backgroundColor },
+                            { fontSize, color, fontWeight: isBold ? "bold" : "normal", backgroundColor },
+                            { fontFamily: fontName }
                         ]}
                         placeholderTextColor="gray"
                         value={text}
@@ -96,12 +102,32 @@ export const EditText: React.FC<EditTextProps> = ({
                     />
                 </View>
                 {!textOnly && <View style={styles.stylesHost}>
+                    {/* Font Selection */}
+                    <View style={styles.colorSelectHost}>
+                        <Text allowFontScaling={false} style={styles.styleLabel}>{translate("FontName")}</Text>
+
+                        <Dropdown
+                            style={{ width: 150, justifyContent: "flex-start", marginStart: 10 }}
+                            itemTextStyle={{ fontSize: 20 }}
+                            selectedTextStyle={{ fontSize: 20 }}
+                            data={FONTS}
+                            maxHeight={300}
+                            labelField="label"
+                            valueField="value"
+                            value={fontName}
+                            onChange={item => {
+                                setFontName(item.value);
+                            }}
+                        />
+                    </View>
+
                     {/* Font Size Selection */}
                     <NumberSelector min={10} max={60} title={translate("FontSize")} value={fontSize} style={styles.fontSelector}
                         onDown={() => setFoneSize(fontSize - 2)}
                         onUp={() => setFoneSize(fontSize + 2)}
                         titleStyle={styles.styleLabel}
                     />
+
 
                     <TouchableOpacity style={styles.colorSelectHost}
                         onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} >
@@ -132,7 +158,7 @@ export const EditText: React.FC<EditTextProps> = ({
                             backgroundColor,
                             color,
                             fontBold: isBold,
-                            //fontName: "",
+                            fontName,
                             fontSize,
                         })
                     }} />
@@ -150,11 +176,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         zIndex: 1200,
         shadowColor: '#171717',
-        shadowOffset: {width: 3, height: 6},
+        shadowOffset: { width: 3, height: 6 },
         shadowOpacity: 0.4,
         shadowRadius: 7,
     },
-    
+
     container: {
         padding: 20,
         borderRadius: 10,
@@ -233,8 +259,8 @@ const styles = StyleSheet.create({
     },
     colorSelectHost: {
         flexDirection: "row",
-        marginTop: 5,
-        marginBottom: 5,
+        marginTop: 7,
+        marginBottom: 7,
         alignItems: "center",
         fontSize: 25
     },
@@ -242,5 +268,11 @@ const styles = StyleSheet.create({
         fontSize: 20,
         width: 100,
         fontWeight: "bold",
-    }
+    },
+    picker: {
+        height: 50,
+        // backgroundColor: "green",
+        width: '100%',
+        zIndex: 1900
+    },
 });

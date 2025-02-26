@@ -77,11 +77,10 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     }
 
     function handleFaceTextChange(index: number, faceText: FaceText) {
-        console.log("save face text", faceText)
         if (faceText.text.length > 0) {
             // Save it as a json file
             const basePath = getCustomTypePath(editedName);
-            const faceName = `face_${index}$$_.json`
+            const faceName = `face_${index}$$${Math.floor(Math.random() * 1000000)}.json`
             const content = JSON.stringify(faceText, undefined, " ");
             const faceFilePath = path.join(basePath, faceName);
             writeFile(faceFilePath, content, basePath).then(() => {
@@ -192,7 +191,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             <Icon disabled={busy} name={"close"} color={"black"} size={35} onPress={onClose} />
         </View>
 
-        {!busy && <ActivityIndicator />}
+        {busy && <ActivityIndicator />}
 
         <View style={[styles.section]} >
             <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
@@ -207,7 +206,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             initialFontSize={facesText[editedFaceText].fontSize}
             initialColor={facesText[editedFaceText].color}
             initialBGColor={facesText[editedFaceText].backgroundColor}
-
+            initialFontName={facesText[editedFaceText].fontName}
             onClose={() => setEditedFaceText(-1)}
             onDone={(faceText) => {
                 handleFaceTextChange(editedFaceText, faceText);
@@ -384,6 +383,7 @@ function TextFace({ faceText, style, size }: { faceText: FaceText, style: any, s
                 color: faceText.color,
                 fontWeight: faceText.fontBold ? "bold" : undefined,
                 fontSize: faceText.fontSize,
+                fontFamily: faceText.fontName ?? undefined
             }]}>{faceText.text}</Text>
         </View>
     </View >
