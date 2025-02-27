@@ -374,6 +374,21 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             </View>
 
 
+            {/* Recovery time */}
+            <NumberSelector style={sectionStyle} title={translate("RecoveryTime")} min={0} max={45} value={profile.recoveryTime}
+                onUp={() => handleSetRecoveryTime(profile.recoveryTime + 5)} onDown={() => handleSetRecoveryTime(profile.recoveryTime - 5)}
+                titleStyle={styles.sectionTitle} />
+
+
+            {/* Table Color */}
+            <View style={sectionStyle}>
+                <View style={{ flexDirection: "row" }}>
+                    <View style={[styles.colorCircle, { backgroundColor: profile.tableColor }]} onTouchEnd={() => setOpenColorPicker(true)} />
+                    {/* <IconButton text={translate("Change")} onPress={() => setOpenColorPicker(true)} /> */}
+                </View>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("TableColor")}:</Text>
+            </View>
+
             {/* Dice Size */}
             <NumberSelector style={sectionStyle} title={translate("DiceSize")} min={1} max={7} value={profile.size}
                 onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} titleStyle={styles.sectionTitle} />
@@ -381,22 +396,6 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             {/* Number of Dice */}
             <NumberSelector style={sectionStyle} title={translate("NumberOfDice")} min={1} max={4} value={profile.dice.length}
                 onUp={() => changeNumOfButton(1)} onDown={() => changeNumOfButton(-1)} titleStyle={styles.sectionTitle} />
-
-            {/* Number of Dice */}
-            <NumberSelector style={sectionStyle} title={translate("RecoveryTime")} min={1} max={7} value={profile.recoveryTime}
-                onUp={() => handleSetRecoveryTime(profile.recoveryTime + 1)} onDown={() => handleSetRecoveryTime(profile.recoveryTime - 1)}
-                titleStyle={styles.sectionTitle} />
-
-
-            {/* Table Color */}
-            <View style={sectionStyle}>
-                <View style={{ flexDirection: "row" }}>
-                    <View style={[styles.colorCircle, { backgroundColor: profile.tableColor }]} />
-                    <IconButton text={translate("Change")} onPress={() => setOpenColorPicker(true)} />
-                </View>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("TableColor")}:</Text>
-            </View>
-
 
             <View style={[styles.cubes, marginHorizontal]}>
                 {

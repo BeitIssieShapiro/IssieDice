@@ -117,7 +117,7 @@ export const EmptyProfile = {
         }
     ],
     size: 2,
-    recoveryTime: 3,
+    recoveryTime: 15,
     tableColor: "green"
 } as Profile;
 

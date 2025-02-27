@@ -51,37 +51,11 @@ export async function requestAudioPermission() {
 
 export const ignore = () => { };
 
-export const isSamePoint = (p1: Viro3DPoint, p2: Viro3DPoint) => p1[0] == p2[0] && p1[1] == p2[1] && p1[1] == p2[1];
-const normalizeRotation = (n: number) => {
-  const approx = (targetNum: number): boolean => n <= targetNum + .01 && n >= targetNum - .01;
+export const isSamePoint = (p1: Viro3DPoint, p2: Viro3DPoint, precision: number) =>
+  Math.abs(p1[0] - p2[0]) <= precision &&
+  Math.abs(p1[1] - p2[1]) <= precision &&
+  Math.abs(p1[2] - p2[2]) <= precision;
 
-
-  if (approx(-180) || approx(0)) {
-    return "0";
-  }
-  if (approx(-90)) return "-90";
-  if (approx(90)) return "90";
-  if (approx(180)) return "180"
-  return "X";
-}
-
-
-const faceMap: { [key: string]: number } = {
-  "X|0|-90": 0,
-  "0|X|0": 1,
-  "-90|X|0": 2,
-  "90|X|0": 3,
-  "0|X|180": 4,
-  "X|0|90": 5
-}
-// export const getFaceIndex = (r: Viro3DPoint): number => {
-//   const key = normalizeRotation(r[0]) + "|" + normalizeRotation(r[1]) + "|" + normalizeRotation(r[2]);
-//   console.log("getFaceIndex", key)
-//   return faceMap[key] as number;
-// }
-
-// Determines which face is facing upwards based on the rotation values
-//export const getFaceIndex = (rotation: [number, number, number]): number => {
 /**
  * Given Euler angles [rx, ry, rz] in degrees (using an "XYZ" rotation order),
  * this function computes the effective "up" vector (the result of rotating [0,1,0])
@@ -133,7 +107,7 @@ export function getRotationCorrectionForTopFace(topFace: "Top" | "Bottom" | "Fro
 ): [number, number, number] {
   switch (topFace) {
     case "Top": //4
-      return [origRotation[0], 0, origRotation[2]];
+      return [origRotation[0], -180, origRotation[2]];
     case "Bottom": //2
       return [origRotation[0], 180, origRotation[2]];
     case "Front": //5
@@ -146,6 +120,7 @@ export function getRotationCorrectionForTopFace(topFace: "Top" | "Bottom" | "Fro
       return [-180, origRotation[1], origRotation[2]];
 
     default:
+      console.log("did not identify face up!")
       return [0, 0, 0];
   }
 }

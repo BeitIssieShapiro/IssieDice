@@ -37,10 +37,13 @@ ViroMaterials.createMaterials({
     diffuseColor: "lightgray", // Dark walls
     lightingModel: "Lambert"
   },
+  transparentWallMaterial: {
+    diffuseColor: "transparent"
+  },
 });
 
 const initialImpulse = [0, -.3, -.3];
-const initialTorque = [.01, .08, -.08];
+const initialTorque = [.15, .08, -.08];
 
 export default function App() {
   const [windowSize, setWindowSize] = useState<WinSize>({ width: 500, height: 500 });
@@ -128,15 +131,8 @@ export default function App() {
       setInRecovery(true);
     }
 
-    const fz = -(Math.random() / 6 + .2);
-    const fy = -(Math.random() / 6 + .5);
-
-    // Random angular velocity
-    const avx = Math.random() / 7;
-    const avy = Math.random() / 7;
-    const avz = Math.random() / 7;
-
-    sceneRef.current?.rollDice([0, fy, fz], [avx, avy, avz]);
+    
+    sceneRef.current?.rollDice();
   };
 
   const updateDiceScene = (profile: Profile) => {
@@ -171,7 +167,7 @@ export default function App() {
             <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
           </View>}
 
-          <View style={ styles.slider }>
+          {/* <View style={ styles.slider }>
             <Slider
               vertical={true}
               style={{ width: 200, height: 40 }}
@@ -182,7 +178,7 @@ export default function App() {
               onValueChange={(val) => setCameraTilt(val)}
               value={cameraTilt}
             />
-          </View>
+          </View> */}
 
         </TouchableOpacity>}
         {profile && <Viro3DSceneNavigator

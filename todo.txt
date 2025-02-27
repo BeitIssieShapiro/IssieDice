@@ -12,6 +12,10 @@ App General:
 
 Features:
 --------
+- audio
+- text & image for faces
+- voice of dice hit the floor
+
 
 V- Number of cubes (up to 4?)
 V-  - calculate position
@@ -20,22 +24,21 @@ V -Dice Size
   Q: all cubes are same size always, or can it be one cube small and another large?
   more sizes - how many?
 
-Click to roll
+V-Click to roll
+- top View only
+
  V- recovery time 0,5,10,20
 
 V- Dice templates
-- predefined: dots, numbers, shapes, colors
-- modedled nice cubes
+V- predefined: dots, numbers, colors
+V- modedled nice cubes
 
 V-Manage templates
 V- colors?
 V- text
-- image from web
+V- image from web
 V- image from cameralroll
 V- image from camera
-- audio
-- text & image for faces
-- voice of dice hit the floor
 V -Share and import Dice
 V -Backup all
 About
