@@ -2,14 +2,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
     Viro3DObject,
+    ViroAnimations,
     ViroMaterials,
     ViroSound,
     ViroText,
 } from "@reactvision/react-viro";
 import { Viro3DPoint, ViroPhysicsBody, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import { getCustomTypePath, getRandomFile, Templates, templatesList } from "./profile";
-import { getFaceIndex, getRotationCorrectionForTopFace, isSamePoint } from "./utils";
-import { audioRecorderPlayer } from "./global-context";
+import { getFaceAndQuaternionDelta, isSamePoint } from "./utils";
 const dieSound = require("../assets/dice-sound.mp3");
 
 interface DiceProps {
@@ -34,6 +34,7 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
     const cube = useRef<Viro3DObject>(null);
     const soundRef = useRef<ViroSound>(null);
     const [hideDice, setHideDice] = useState<boolean>(false);
+    const [rotateAnimation, setRotateAnimation] = useState<string | undefined>();
     const [playDiceSound, setPlayDiceSound] = useState<boolean>(false);
     const [collisionSoundVolume, setCollisionSoundVolume] = useState<number>(1.0);
     const currentVelocity = useRef<Viro3DPoint>([0, 0, 0])
@@ -134,24 +135,47 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
 
     function animateRotation(
         current: [number, number, number],
-        target: [number, number, number],
+        delta: [number, number, number],
         duration: number = 500
     ) {
+        if (duration == 0) {
+            cube.current?.setNativeProps({ rotation: current.map((n,i)=>n+delta[i]) });
+        }
+
+        function easeInOutCubic(t: number): number {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
         const startTime = Date.now();
 
         function step() {
             const elapsed = Date.now() - startTime;
-            const t = Math.min(elapsed / duration, 1); // t in [0, 1]
+            const t = Math.min(elapsed / duration, 1);
+            const tEased = easeInOutCubic(t);
+
+            // Compute the interpolated rotation using the eased time.
             const interpolated: [number, number, number] = [
-                current[0] + (target[0] - current[0]) * t,
-                current[1] + (target[1] - current[1]) * t,
-                current[2] + (target[2] - current[2]) * t,
+                current[0] + delta[0] * tEased,
+                current[1] + delta[1] * tEased,
+                current[2] + delta[2] * tEased,
             ];
+
             cube.current?.setNativeProps({ rotation: interpolated });
+
             if (t < 1) {
                 requestAnimationFrame(step);
+            } else {
+                // Final correction: set exactly to current+delta
+                cube.current?.setNativeProps({
+                    rotation: [
+                        current[0] + delta[0],
+                        current[1] + delta[1],
+                        current[2] + delta[2]
+                    ]
+                });
             }
         }
+
         requestAnimationFrame(step);
     }
 
@@ -173,13 +197,12 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
                         sameCount++;
                         if (sameCount > 10) {
                             // object at rest
-                            const faceUp = getFaceIndex(props.rotation);
-                            onFaceSettled(faceUp);
+                            const { face, delta } = getFaceAndQuaternionDelta(props.rotation)
+                            onFaceSettled(face);
 
-                            const fixRotation = getRotationCorrectionForTopFace(faceUp, props.rotation);
-                            console.log("Dice", index, "At Rest",faceUp, prevProps.rotation, fixRotation    );
-                            //cube.current?.setNativeProps({rotation:fixRotation})
-                            animateRotation(props.rotation, fixRotation, 1000);
+                            console.log("Dice", index, "At Rest", face, prevProps.rotation, delta);
+                            animateRotation(props.rotation, delta, face == "Bottom" ? 0 : 1000);
+                            setRotateAnimation("fixTop")
 
                             clearInterval(interval);
                             interval = undefined;
@@ -192,7 +215,7 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
 
                 });
             }
-        }, 50); 
+        }, 50);
         return () => {
             if (interval != undefined) clearInterval(interval)
         }
@@ -213,15 +236,15 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
             useGravity: true,
             enabled: true,
         }
-
+    
     return (
-         <>
-         <ViroSound //ref={soundRef}
-            source={dieSound}
-            paused={!playDiceSound}
-            onFinish={onSoundFinished}
-            volume={1.0}
-            loop={false} />
+        <>
+            <ViroSound //ref={soundRef}
+                source={dieSound}
+                paused={!playDiceSound}
+                onFinish={onSoundFinished}
+                volume={1.0}
+                loop={false} />
             {isDots ?
                 <Viro3DObject
                     key={"dots"}

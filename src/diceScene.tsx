@@ -12,6 +12,7 @@ import {
     ViroSpotLight,
     ViroMaterials,
     ViroText,
+    ViroAnimations,
 } from "@reactvision/react-viro";
 import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import DiceObject from "./dice";
@@ -68,7 +69,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         rollDice: () => {
 
             const fz = -(Math.random() / 5 + .3);
-            const fy = -(Math.random() / 5 + .2);
+            const fy = -(Math.random() / 5 + .3);
 
             // Random angular velocity for all dice
             const avx = Math.random() / 6;
@@ -81,6 +82,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             const rot = [0, 1, 2, 3].map(index => {
                 return [randomRotation(), randomRotation(), randomRotation()] as Viro3DPoint;
             })
+            console.log("random rotate", rot[0])
 
             setImpulse(imp);
             setTorque(trq);

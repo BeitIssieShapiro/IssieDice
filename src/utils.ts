@@ -1,6 +1,6 @@
 import { Platform, PermissionsAndroid } from "react-native";
-import { useEffect, useState } from "react";
 import { Viro3DPoint } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
+import Quaternion from "quaternion";
 
 export function joinPaths(...segments: string[]) {
   return segments
@@ -56,71 +56,101 @@ export const isSamePoint = (p1: Viro3DPoint, p2: Viro3DPoint, precision: number)
   Math.abs(p1[1] - p2[1]) <= precision &&
   Math.abs(p1[2] - p2[2]) <= precision;
 
+
 /**
- * Given Euler angles [rx, ry, rz] in degrees (using an "XYZ" rotation order),
- * this function computes the effective "up" vector (the result of rotating [0,1,0])
- * and returns which face is most aligned with up.
- *
- * It assumes that when no rotation is applied the "Top" face is up.
+ * Returns the minimal difference between two angles (in degrees) in the range [-180, 180].
  */
-export function getFaceIndex(euler: [number, number, number]): string {
-  // Convert degrees to radians.
-  const [rx, ry, rz] = euler.map(deg => (deg * Math.PI) / 180);
+function minimalAngleDiff(current: number, target: number): number {
+  let diff = target - current;
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  return diff;
+}
 
-  // Compute sine and cosine values.
-  const cosX = Math.cos(rx), sinX = Math.sin(rx);
-  const cosY = Math.cos(ry), sinY = Math.sin(ry);
-  const cosZ = Math.cos(rz), sinZ = Math.sin(rz);
+/**
+ * Given Euler angles in degrees [rx, ry, rz] (using "XYZ" order),
+ * returns an object with:
+ *   - face: one of "Top", "Bottom", "Front", "Back", "Right", or "Left",
+ *   - delta: a Quaternion representing the minimal rotation that, when applied to the current orientation,
+ *            yields the canonical orientation for that face.
+ */
+export function getFaceAndQuaternionDelta(
+  euler: [number, number, number]
+): { face: "Top" | "Bottom" | "Front" | "Back" | "Right" | "Left"; delta: Quaternion } {
+  const toRad = Math.PI / 180;
 
-  // For an "XYZ" rotation, the combined rotation matrix R = Rz * Ry * Rx,
-  // and the rotated up vector v' = R * [0, 1, 0] is given by the second column of R.
-  // The formula for that (derived from Three.js's Euler conversion) is:
-  //    up_x = -cosY * sinZ
-  //    up_y = cosX * cosZ - sinX * sinY * sinZ
-  //    up_z = sinX * cosZ + cosX * sinY * sinZ
-  const upX = -cosY * sinZ;
-  const upY = cosX * cosZ - sinX * sinY * sinZ;
-  const upZ = sinX * cosZ + cosX * sinY * sinZ;
+  // Create the current orientation quaternion from Euler angles.
+  // Using "XYZ" order (adjust if your model uses a different order).
+  const currentQuat = Quaternion.fromEuler(euler[0] * toRad, euler[1] * toRad, euler[2] * toRad, "XYZ");
 
-  // Determine which component (X, Y, or Z) has the greatest absolute value.
-  const absX = Math.abs(upX);
-  const absY = Math.abs(upY);
-  const absZ = Math.abs(upZ);
+  // Compute the "up" vector by rotating the world up vector [0,1,0] with currentQuat.
+  const up = currentQuat.rotateVector([0, 1, 0]); // returns an array [x, y, z]
 
+  // Determine which axis is most aligned with up.
+  const absX = Math.abs(up[0]);
+  const absY = Math.abs(up[1]);
+  const absZ = Math.abs(up[2]);
+  let face: "Top" | "Bottom" | "Front" | "Back" | "Right" | "Left";
   if (absY >= absX && absY >= absZ) {
-    return upY >= 0 ? "Top" : "Bottom";
+    face = up[1] >= 0 ? "Top" : "Bottom";
   } else if (absX >= absZ) {
-    return upX >= 0 ? "Right" : "Left";
+    face = up[0] >= 0 ? "Right" : "Left";
   } else {
-    return upZ >= 0 ? "Front" : "Back";
+    face = up[2] >= 0 ? "Front" : "Back";
   }
+  return { face, delta: getRotationDeltaForTopFace(face, euler) }
 }
-
 /**
- * Returns a rotation correction (as an [x, y, z] Euler in degrees) so that the face that’s up
- * will be oriented similarly to the default “Top” orientation.
+ * Given the dice’s original Euler rotation (in degrees) and the detected top face,
+ * returns a delta rotation vector [Δx, Δy, Δz] (in degrees) that adjusts only the one axis
+ * associated with that face.
  *
- * These correction values are heuristic and depend on the dice’s model.
+ * The targets are defined as follows:
+ * - Top: change only roll (Z) to 0°.
+ * - Bottom: change only roll to ±180° (whichever is closer).
+ * - Front: change only pitch (X) to 90°.
+ * - Back: change only pitch to -90°.
+ * - Right: change only yaw (Y) to 90°.
+ * - Left: change only yaw to -90°.
  */
-export function getRotationCorrectionForTopFace(topFace: "Top" | "Bottom" | "Front" | "Back" | "Right" | "Left",
-  origRotation: [number, number, number]
+export function getRotationDeltaForTopFace(
+  face: "Top" | "Bottom" | "Front" | "Back" | "Right" | "Left",
+  orig: [number, number, number]
 ): [number, number, number] {
-  switch (topFace) {
-    case "Top": //4
-      return [origRotation[0], -180, origRotation[2]];
-    case "Bottom": //2
-      return [origRotation[0], 180, origRotation[2]];
-    case "Front": //5
-      return [origRotation[0], 90, origRotation[2]];
-    case "Back": //1
-      return [origRotation[0], -90, origRotation[2]];
-    case "Right": //6
-      return [0, origRotation[1], origRotation[2]];
-    case "Left": //3
-      return [-180, origRotation[1], origRotation[2]];
-
+  const [rx, ry, rz] = orig;
+  let target: [number, number, number] = [rx, ry, rz];
+  switch (face) {
+    case "Top": // 4
+      // Correct only the roll (Z) to 0°.
+      target = [rx, rz > 0 ? rz - 180 : rz + 180, rz];//y should be same as z axis
+      break;
+    case "Bottom": // 2
+      // Correct roll to ±180° (choose the one with minimal difference)
+      target = [rx, rz, rz]; //y should be same as z axis
+      break;
+    case "Front": // 5
+      // Correct pitch (X) to 90°.
+      target = [rx, 90, rz];
+      break;
+    case "Back": // 1
+      // Correct pitch to -90°.
+      target = [rx, -90, rz];
+      break;
+    case "Right": // 6
+      // Correct yaw (Y) to 90°.
+      target = [0, ry, rz];
+      break;
+    case "Left": // 3
+      // Correct yaw (Y) to -90°.
+      target = [180, ry, rz];
+      break;
     default:
-      console.log("did not identify face up!")
-      return [0, 0, 0];
+      target = [rx, ry, rz];
   }
+  return [
+    minimalAngleDiff(rx, target[0]),
+    minimalAngleDiff(ry, target[1]),
+    minimalAngleDiff(rz, target[2])
+  ];
 }
+
