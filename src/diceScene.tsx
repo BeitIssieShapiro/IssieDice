@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { LogBox, View } from "react-native";
 import {
     FilamentView,
@@ -11,6 +11,13 @@ import {
     ModelRenderer,
     getAssetFromModel,
     FrameInfo,
+    BoxShape,
+    Skybox,
+    useBuffer,
+    useDisposableResource,
+    useWorkletCallback,
+    useWorkletMemo,
+    useEntityInScene
 } from "react-native-filament";
 
 import * as CANNON from "cannon-es";
@@ -20,6 +27,8 @@ import { WinSize } from "./utils";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
+const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
+
 LogBox.ignoreLogs(["has already"]);
 
 
@@ -50,6 +59,35 @@ export interface DiceSceneMethods {
 }
 
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize }: DiceSceneProps, ref: any) => {
+    const { engine, renderableManager, scene } = useFilamentContext()
+
+    //#region Setup shadow plane
+    const shadowMaterialBuffer = useBuffer({ source: TransparentShadowMaterial })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const shadowMaterial = useDisposableResource(
+        useWorkletCallback(() => {
+            'worklet'
+            if (shadowMaterialBuffer == null) return undefined
+
+            const material = engine.createMaterial(shadowMaterialBuffer)
+            material.setDefaultFloatParameter('strength', 0.2)
+            return material
+        }),
+        [engine, shadowMaterialBuffer]
+    )
+
+    // Create Shadow plane
+    const shadowPlane = useWorkletMemo(() => {
+        'worklet'
+        if (shadowMaterial == null) return undefined
+
+        const entity = renderableManager.createPlane(shadowMaterial, 10, 0.0001, 10)
+        renderableManager.setReceiveShadow(entity, true)
+        return entity
+    }, [renderableManager, shadowMaterial])
+
+    useEntityInScene(scene, shadowPlane)
+
 
     const worldRef = useRef<CANNON.World | null>(null);
     if (!worldRef.current) {
@@ -64,7 +102,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         world.defaultContactMaterial = new CANNON.ContactMaterial(
             defaultMat,
             defaultMat,
-            { friction: 0.3, restitution: 0.0 }
+            { friction: 0.9, restitution: 0.7 }
         );
         worldRef.current = world;
     }
@@ -74,7 +112,61 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         body: CANNON.Body,
     } | undefined>()
 
-    const numberOfDice = 1
+
+    useImperativeHandle(ref, (): DiceSceneMethods => ({
+        rollDice: () => {
+            if (dice) {
+                // Reset any existing velocities
+                dice.body.velocity.setZero();
+                dice.body.angularVelocity.setZero();
+
+                // Optionally, reset position if desired.
+                dice.body.position.set(0, 15, 0);
+
+
+                const fz = -(Math.random() / 5 + .3);
+                const fy = -(Math.random() / 5 + .3);
+
+                // Random angular velocity for all dice
+                const avx = Math.random() * 5;
+                const avy = Math.random() * 5;
+                const avz = Math.random() * 5;
+                const imp = [0, fy, fz];
+                const trq = [avx, avy, avz];
+                const randomRotation = () => Math.floor(360 * Math.random()) - 180;
+                // diffrect rotation for each dice:
+                const rot = [0, 1, 2, 3].map(index => {
+                    return [randomRotation(), randomRotation(), randomRotation()];
+                })
+
+                // Apply the linear impulse.
+                // initialImpulse is a number array, e.g. [x, y, z]
+                const impulse = new CANNON.Vec3(...imp);
+
+                // Applying the impulse at the center of mass:
+                dice.body.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
+
+                // For an angular impulse, you can simply set the angularVelocity.
+                // initialTorque is a number array, e.g. [x, y, z].
+                dice.body.angularVelocity.set(trq[0], trq[1], trq[2]);
+            }
+        },
+        update: (profile) => {
+
+        },
+        updateWindowSize: (winSize: WinSize) => {
+            //setCurrWindowSize(winSize);
+        },
+        updateCamera: (tilt) => {
+            // if (tilt >= 0 && tilt < cameraPos.length) {
+            //     console.log("update camera tilt", tilt)
+            //     setCameraTilt(tilt);
+            // }
+        }
+    }));
+
+
+
     useEffect(() => {
         // Create a dynamic dice body (a 1x1x1 box)
         const body = new CANNON.Body({
@@ -82,7 +174,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
         });
         // Initial position above ground.
-        body.position.set(0, 15, 0);
+        body.position.set(0, 1, 0);
 
         // Set an initial random rotation.
         const randomAngle = Math.random() * Math.PI * 2;
@@ -107,11 +199,22 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         ground.position.set(0, -1, 0);
         world.addBody(ground);
 
+
+        const backWall = new CANNON.Body({
+            mass: 0,
+            shape: new CANNON.Box(new CANNON.Vec3(50, 1, 50)),
+        });
+
+        // Position so that the top surface is at y = 0.
+        backWall.position.set(0, -1, 0);
+        world.addBody(backWall);
+
         return () => {
             dice?.body && world.removeBody(dice.body);
             world.removeBody(ground);
+            world.removeBody(backWall);
         };
-    }, [numberOfDice, world]);
+    }, [world]);
 
     const dicePosition = useSharedValue<Float3>([0, 15, 0]);
     const diceRotation = useSharedValue<{ angle: number; axis: Float3 }>({
@@ -174,9 +277,12 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     return (
 
         <FilamentView style={{ flex: 1 }} renderCallback={renderCallback} >
-            <DefaultLight  />
+            <DefaultLight />
+            <Skybox colorInHex="#00FF00" />
+
             <ModelRenderer
                 model={diceModel}
+                castShadow={true} receiveShadow={true}
             />
 
             <Camera cameraPosition={[0, 20, 0]} cameraTarget={[0, 0, 0]} />
