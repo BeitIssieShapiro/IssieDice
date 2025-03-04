@@ -467,6 +467,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         transformOrigin: "0.0",
         backgroundColor: "#E7E7E7",
+        borderRadius: 5,
     },
     faceBorder: {
         borderWidth: 1,

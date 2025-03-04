@@ -5,12 +5,13 @@ import {
     ViroAnimations,
     ViroMaterials,
     ViroSound,
+    ViroSpatialSound,
     ViroText,
 } from "@reactvision/react-viro";
 import { Viro3DPoint, ViroPhysicsBody, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import { getCustomTypePath, getRandomFile, Templates, templatesList } from "./profile";
 import { getFaceAndQuaternionDelta, isSamePoint } from "./utils";
-const dieSound = require("../assets/dice-sound.mp3");
+const dieSound = require("../assets/output.mp3");
 
 interface DiceProps {
     cubeKey: string;
@@ -33,6 +34,8 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
     initialImpulse, initialTourqe, onFaceSettled }: DiceProps) {
     const cube = useRef<Viro3DObject>(null);
     const soundRef = useRef<ViroSound>(null);
+    const positionRef = useRef<Viro3DPoint | undefined>();
+    const rotationRef = useRef<Viro3DPoint | undefined>();
     const [hideDice, setHideDice] = useState<boolean>(false);
     const [rotateAnimation, setRotateAnimation] = useState<string | undefined>();
     const [playDiceSound, setPlayDiceSound] = useState<boolean>(false);
@@ -99,7 +102,7 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
                     lightingModel: "Lambert",
                 },
             });
-            shootDice();
+            //shootDice();
         })
     }, [cubeInfoKey])
 
@@ -139,7 +142,7 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
         duration: number = 500
     ) {
         if (duration == 0) {
-            cube.current?.setNativeProps({ rotation: current.map((n,i)=>n+delta[i]) });
+            cube.current?.setNativeProps({ rotation: current.map((n, i) => n + delta[i]) });
         }
 
         function easeInOutCubic(t: number): number {
@@ -180,27 +183,28 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
     }
 
     useEffect(() => {
-        let prevProps: any = undefined;
+        positionRef.current = undefined;
+        rotationRef.current = undefined;
         let sameCount = 0;
         let interval: NodeJS.Timeout | undefined = setInterval(() => {
             if (cube.current) {
                 cube.current.getTransformAsync().then((props: any) => {
                     //console.log("props", props)
-                    if (prevProps) {
-                        const { position: pos } = props, { position: prevPos } = prevProps;
+                    const { position, rotation } = props;
+                    if (positionRef.current) {
 
-                        currentVelocity.current = prevPos.map((pp: number, i: number) => (pp - pos[i]) / (50 / 1000))
+                        currentVelocity.current = position.map((pp: number, i: number) => (pp - positionRef.current![i]) / (50 / 1000)) as Viro3DPoint;
                     }
 
-                    if (prevProps && isSamePoint(prevProps.position, props.position, 0.1) &&
-                        isSamePoint(prevProps.rotation, props.rotation, 0.1)) {
+                    if (positionRef.current && isSamePoint(positionRef.current, props.position, 0.1) &&
+                        rotationRef.current && isSamePoint(rotationRef.current, props.rotation, 0.1)) {
                         sameCount++;
                         if (sameCount > 10) {
                             // object at rest
                             const { face, delta } = getFaceAndQuaternionDelta(props.rotation)
                             onFaceSettled(face);
 
-                            console.log("Dice", index, "At Rest", face, prevProps.rotation, delta);
+                            console.log("Dice", index, "At Rest", face, rotationRef.current, delta);
                             animateRotation(props.rotation, delta, face == "Bottom" ? 0 : 1000);
                             setRotateAnimation("fixTop")
 
@@ -211,8 +215,8 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
                         sameCount = 0;
                     }
 
-                    prevProps = props;
-
+                    positionRef.current = position;
+                    rotationRef.current = rotation;
                 });
             }
         }, 50);
@@ -236,14 +240,23 @@ export default function DiceObject({ cubeKey, cubeInfoKey, index, template, init
             useGravity: true,
             enabled: true,
         }
-    
+    console.log("dieSound", dieSound)
     return (
         <>
+            {/* <ViroSpatialSound //ref={soundRef}
+                source={dieSound}
+                position={[0,0,-3]}//playDiceSound && positionRef.current ? positionRef.current : [0, 0, 0]}
+                paused={!playDiceSound}
+                onFinish={onSoundFinished}
+                 volume={1.0}
+                //  minDistance={1.0}
+                //  maxDistance={20.0}
+                loop={false} />  */}
             <ViroSound //ref={soundRef}
                 source={dieSound}
                 paused={!playDiceSound}
                 onFinish={onSoundFinished}
-                volume={1.0}
+                volume={collisionSoundVolume}
                 loop={false} />
             {isDots ?
                 <Viro3DObject

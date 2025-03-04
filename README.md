@@ -21,3 +21,5 @@ https://github.com/facebook/react-native/pull/49320/files
 fonts:
 add in assets/fonts
 `npx react-native-asset`
+
+https://github.com/software-mansion/react-native-screens/issues/2652    

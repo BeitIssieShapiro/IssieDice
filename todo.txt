@@ -14,7 +14,7 @@ Features:
 --------
 - audio
 - text & image for faces
-- voice of dice hit the floor
+V- voice of dice hit the floor
 
 
 V- Number of cubes (up to 4?)

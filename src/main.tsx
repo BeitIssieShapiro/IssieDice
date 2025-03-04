@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert, Text, Dimensions } from "react-native";
 import {
   Viro3DSceneNavigator,
+  ViroARSceneNavigator,
   ViroCamera,
   ViroMaterials,
   ViroScene,
@@ -181,7 +182,7 @@ export default function App() {
           </View> */}
 
         </TouchableOpacity>}
-        {profile && <Viro3DSceneNavigator
+        {profile && <ViroARSceneNavigator
           style={styles.viroContainer}
           onTouchEnd={handleThrowDice}
           debug={true}

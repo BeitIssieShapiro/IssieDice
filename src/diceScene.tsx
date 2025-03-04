@@ -13,6 +13,7 @@ import {
     ViroMaterials,
     ViroText,
     ViroAnimations,
+    ViroARScene,
 } from "@reactvision/react-viro";
 import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import DiceObject from "./dice";
@@ -130,13 +131,13 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const floorMaterial = sceneRevision == 0 ? "tableSurface_0" : "tableSurface_" + profile.tableColor;
     console.log("render scene", sceneRevision, currWindowSize)
     return (
-        <ViroScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
+        <ViroARScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
             <ViroAmbientLight color="#FFFFFF" intensity={500} />
             <ViroSpotLight color="#FFFFFF" direction={[0, -1, 0]} castsShadow={true} />
             {/*  <ViroText text={faceSettled.join(",")} scale={[4,4,4]}/>  */}
             {/* <ViroText text={ratio.toFixed(2) + "|" +
                 windowSize.width + "," + windowSize.height + "|" + w + "," + h} scale={[4, 4, 4]} rotation={[-90, 0, 0]} /> */}
-            <ViroCamera active position={[0, 5, 0]} rotation={[-90, 0, 0]} />
+            {/* <ViroCamera active position={[0, 5, 0]} rotation={[-90, 0, 0]} /> */}
             {/* <ViroCamera active position={[0, 6, 2 - (cameraTilt * 4)]} rotation={[-60 - (cameraTilt * 30), 0, 0]} /> */}
 
 
@@ -250,6 +251,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
 
             </ViroNode>
-        </ViroScene>
+        </ViroARScene>
     );
 });
