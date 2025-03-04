@@ -1,28 +1,44 @@
-// DiceScene.tsx
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { LogBox, View } from "react-native";
 import {
-    ViroScene,
-    ViroBox,
-    ViroAmbientLight,
-    ViroNode,
-    Viro3DObject,
-    ViroQuad,
-    ViroCamera,
-    ViroOrbitCamera,
-    ViroSpotLight,
-    ViroMaterials,
-    ViroText,
-    ViroAnimations,
-    ViroARScene,
-} from "@reactvision/react-viro";
-import { Viro3DPoint, ViroForce, ViroScale } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
-import DiceObject from "./dice";
-import { Dice, Profile } from "./profile";
+    FilamentView,
+    DefaultLight,
+    Camera,
+    Float3,
+    RenderCallback,
+    useFilamentContext,
+    useModel,
+    ModelRenderer,
+    getAssetFromModel,
+    FrameInfo,
+} from "react-native-filament";
+
+import * as CANNON from "cannon-es";
+import { useSharedValue } from "react-native-worklets-core"
+import { Profile } from "./profile";
 import { WinSize } from "./utils";
 
+
+const DiceModel = require("../assets/dice-empty.glb");
+LogBox.ignoreLogs(["has already"]);
+
+
+function quaternionToAngleAxis(q: CANNON.Quaternion): { angle: number; axis: [number, number, number] } {
+    const angle = 2 * Math.acos(q.w);
+    const s = Math.sqrt(1 - q.w * q.w);
+    let axis: [number, number, number];
+    if (s < 0.001) {
+        // If s is close to zero, use a default axis (here, the X axis)
+        axis = [1, 0, 0];
+    } else {
+        axis = [q.x / s, q.y / s, q.z / s];
+    }
+    return { angle, axis };
+}
+
 interface DiceSceneProps {
-    initialImpulse: Viro3DPoint;
-    initialTorque: Viro3DPoint;
+    initialImpulse: number[];
+    initialTorque: number[];
     profile: Profile;
     windowSize: WinSize;
 }
@@ -33,224 +49,138 @@ export interface DiceSceneMethods {
     updateCamera: (tilt: number) => void;
 }
 
-const noRotation: Viro3DPoint = [0, 0, 0];
-
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize }: DiceSceneProps, ref: any) => {
-    const [sceneKey, setSceneKey] = useState<number>(0);
-    const [cubeInfoKey, setCubeInfoKey] = useState<number>(0);
-    const [impulse, setImpulse] = useState<Viro3DPoint>(initialImpulse);
-    const [torque, setTorque] = useState<Viro3DPoint>(initialTorque);
-    const [rotation, setRotation] = useState<Viro3DPoint[]>([
-        noRotation, noRotation, noRotation, noRotation,
-    ]);
-    const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
-    const [diceSize, setDiceSize] = useState<number>(profile.size);
-    const [sceneRevision, setSceneRevision] = useState<number>(0);
-    const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
-    const [cameraTilt, setCameraTilt] = useState<number>(0);
-    const [faceSettled, setFaceSettled] = useState<number[]>([-1, -1, -1, -1])
-    const tableRef = useRef<any>(undefined);
 
-    useEffect(() => ViroMaterials.createMaterials({
-        ["tableSurface_" + profile.tableColor]: {
-            diffuseColor: profile.tableColor,
-            lightingModel: "Lambert"
-        },
-    }), []);
-
-    function handleFaceSettled(index: number, faceIndex: number) {
-        setFaceSettled(prev => {
-            const newFaces = [...prev];
-            newFaces[index] = faceIndex;
-            return newFaces;
-        })
+    const worldRef = useRef<CANNON.World | null>(null);
+    if (!worldRef.current) {
+        const world = new CANNON.World({
+            gravity: new CANNON.Vec3(0, -9.82, 0),
+        });
+        // Optional: set broadphase and solver iterations
+        world.broadphase = new CANNON.NaiveBroadphase();
+        world.solver.iterations = 20;
+        // Create a default material/contact material for better collisions.
+        const defaultMat = new CANNON.Material("default");
+        world.defaultContactMaterial = new CANNON.ContactMaterial(
+            defaultMat,
+            defaultMat,
+            { friction: 0.3, restitution: 0.0 }
+        );
+        worldRef.current = world;
     }
+    const world = worldRef.current!;
 
-    useImperativeHandle(ref, (): DiceSceneMethods => ({
-        rollDice: () => {
+    const [dice, setDice] = useState<{
+        body: CANNON.Body,
+    } | undefined>()
 
-            const fz = -(Math.random() / 5 + .3);
-            const fy = -(Math.random() / 5 + .3);
+    const numberOfDice = 1
+    useEffect(() => {
+        // Create a dynamic dice body (a 1x1x1 box)
+        const body = new CANNON.Body({
+            mass: 1,
+            shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+        });
+        // Initial position above ground.
+        body.position.set(0, 15, 0);
 
-            // Random angular velocity for all dice
-            const avx = Math.random() / 6;
-            const avy = Math.random() / 6;
-            const avz = Math.random() / 6;
-            const imp = [0, fy, fz] as Viro3DPoint;
-            const trq = [avx, avy, avz] as Viro3DPoint;
-            const randomRotation = () => Math.floor(360 * Math.random()) - 180;
-            // diffrect rotation for each dice:
-            const rot = [0, 1, 2, 3].map(index => {
-                return [randomRotation(), randomRotation(), randomRotation()] as Viro3DPoint;
-            })
-            console.log("random rotate", rot[0])
+        // Set an initial random rotation.
+        const randomAngle = Math.random() * Math.PI * 2;
+        const randomAxis = new CANNON.Vec3(Math.random(), Math.random(), Math.random()).unit();
+        body.quaternion.setFromAxisAngle(randomAxis, randomAngle);
 
-            setImpulse(imp);
-            setTorque(trq);
-            setRotation(rot);
-            setSceneKey(prev => prev + 1);
-        },
-        update: (profile) => {
-            setDiceSize(profile.size);
-            ViroMaterials.createMaterials({
-                tableSurface: {
-                    diffuseColor: profile.tableColor,
-                    lightingModel: "Lambert"
-                },
-            });
-            setDiceInfo(profile.dice);
-            ViroMaterials.createMaterials({
-                ["tableSurface_" + profile.tableColor]: {
-                    diffuseColor: profile.tableColor,
-                    lightingModel: "Lambert"
-                },
-            });
-            // setSceneRevision(prev => prev + 1);
-            tableRef.current?.setNativeProps({ materials: ["tableSurface_" + profile.tableColor] })
-            setCubeInfoKey(prev => prev + 1);
-        },
-        updateWindowSize: (winSize: WinSize) => {
-            setCurrWindowSize(winSize);
-        },
-        updateCamera: (tilt) => {
-            if (tilt >= 0 && tilt < cameraPos.length) {
-                console.log("update camera tilt", tilt)
-                setCameraTilt(tilt);
+        // For demonstration, when a dice "sleeps" (i.e. comes to rest),
+        // assign a random roll result.
+        body.addEventListener("sleep", () => {
+            // todo
+        });
+        world.addBody(body);
+        setDice({ body });
+
+        // Create a ground as a large static box.
+        const ground = new CANNON.Body({
+            mass: 0,
+            shape: new CANNON.Box(new CANNON.Vec3(50, 1, 50)),
+        });
+
+        // Position so that the top surface is at y = 0.
+        ground.position.set(0, -1, 0);
+        world.addBody(ground);
+
+        return () => {
+            dice?.body && world.removeBody(dice.body);
+            world.removeBody(ground);
+        };
+    }, [numberOfDice, world]);
+
+    const dicePosition = useSharedValue<Float3>([0, 15, 0]);
+    const diceRotation = useSharedValue<{ angle: number; axis: Float3 }>({
+        angle: 0,
+        axis: [1, 0, 0],
+    });
+
+    useEffect(() => {
+        let lastTime = performance.now();
+        let frameId: number;
+
+        function animate(currentTime: number) {
+            const dt = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            const dtClamped = Math.min(dt, 1 / 30);
+            world.step(1 / 60, dtClamped, 3);
+
+            if (dice) {
+                const { x, y, z } = dice.body.position;
+                const { angle, axis } = quaternionToAngleAxis(dice.body.quaternion);
+
+                //console.log("World step", [x,y,z])
+
+                dicePosition.value = [x, y, z];
+                diceRotation.value = {
+                    angle,
+                    axis
+                };
             }
+
+            frameId = requestAnimationFrame(animate);
         }
-    }));
-    const w0 = currWindowSize.width
-    const h0 = currWindowSize.height;
-    const baseSize = h0 / 110;
-    const ratio = w0 / h0;
-    const w = Math.floor(baseSize * ratio);// w0 > h0 ? 10 : 7;
-    const h = baseSize;// w0 > h0 ? 12 : 8;
+        frameId = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(frameId);
+    }, [world, dice]);
 
-    const wallH = 5;
-    const scaledDiceSize = diceSize * .3 / 2;
-    const floorMaterial = sceneRevision == 0 ? "tableSurface_0" : "tableSurface_" + profile.tableColor;
-    console.log("render scene", sceneRevision, currWindowSize)
+    const diceModel = useModel(DiceModel);
+
+    const { transformManager } = useFilamentContext()
+    const diceAsset = getAssetFromModel(diceModel)
+    const diceEntity = diceAsset?.getRenderableEntities()[0];
+    const renderCallback: RenderCallback = useCallback(() => {
+        "worklet"
+
+        if (diceEntity && dicePosition.value) {
+            const pos = [dicePosition.value[0], dicePosition.value[1], dicePosition.value[2]] as Float3
+            const angle = diceRotation.value.angle;
+            const axis = [diceRotation.value.axis[0], diceRotation.value.axis[1], diceRotation.value.axis[2]] as Float3;
+            //console.log("transform", pos,  angle, axis)
+
+
+            let transform = transformManager.createIdentityMatrix();
+            transform = transform.rotate(angle, axis);
+            transform = transform.translate(pos);
+
+            transformManager.setTransform(diceEntity, transform)
+        }
+    }, [dicePosition, diceRotation, diceEntity, transformManager])
+
     return (
-        <ViroARScene physicsWorld={{ gravity: [0, -9.8, 0], drawBounds: false }}>
-            <ViroAmbientLight color="#FFFFFF" intensity={500} />
-            <ViroSpotLight color="#FFFFFF" direction={[0, -1, 0]} castsShadow={true} />
-            {/*  <ViroText text={faceSettled.join(",")} scale={[4,4,4]}/>  */}
-            {/* <ViroText text={ratio.toFixed(2) + "|" +
-                windowSize.width + "," + windowSize.height + "|" + w + "," + h} scale={[4, 4, 4]} rotation={[-90, 0, 0]} /> */}
-            {/* <ViroCamera active position={[0, 5, 0]} rotation={[-90, 0, 0]} /> */}
-            {/* <ViroCamera active position={[0, 6, 2 - (cameraTilt * 4)]} rotation={[-60 - (cameraTilt * 30), 0, 0]} /> */}
 
+        <FilamentView style={{ flex: 1 }} renderCallback={renderCallback} >
+            <DefaultLight  />
+            <ModelRenderer
+                model={diceModel}
+            />
 
-            <ViroNode position={[0, 0, 0]}>
+            <Camera cameraPosition={[0, 20, 0]} cameraTarget={[0, 0, 0]} />
+        </FilamentView>
 
-                {/* <ViroAmbientLight color="#ffffff" intensity={100}  />  */}
-                {/* <ViroSpotLight color="#ffffff" intensity={300} position={[0, 5, 2]} direction={[0, 0, 0]} castsShadow={true} /> */}
-                <ViroSpotLight
-                    innerAngle={5}
-                    outerAngle={85}
-                    direction={[-1, -1.5, -.5]}
-                    position={[2, 4, 1]}
-                    color="#ffffff"
-                    castsShadow={true}
-                    shadowMapSize={2048}
-                    shadowNearZ={2}
-                    shadowFarZ={5}
-                    shadowOpacity={1}
-                    intensity={1500}
-                />
-                {// <ViroNode position={[-2.5, 0, -9]}>
-                    //   <Axes />
-                    //</ViroNode> 
-                }
-                {// Walls [red, blue, green]
-                }
-
-                {// Floor (table surface) 
-                }
-                < ViroQuad
-                    ref={tableRef}
-                    position={[0, 0, 0]}
-                    rotation={[-90, 0, 0]}
-                    width={w}
-                    height={h}
-                    materials={[floorMaterial]}
-                    physicsBody={{
-                        type: "Static",
-                        friction: 0.9,
-                        restitution: 0.7,
-                    }}
-                    shadowCastingBitMask={1.5}
-                />
-
-                {// Back Wall 
-                }
-                <ViroBox
-                    position={[0, wallH / 2, -h / 2]}
-                    scale={[w, wallH, 0.1]}
-                    materials={[floorMaterial]}
-                    physicsBody={{
-                        type: "Static",
-                        friction: 0.9,
-                        restitution: 0.7,
-                    }}
-                />
-
-                <ViroBox
-                    position={[0, wallH / 2, h / 2]}
-                    scale={[w, wallH, 0.1]}
-                    materials={[floorMaterial]}
-                    physicsBody={{
-                        type: "Static",
-                        friction: 0.9,
-                        restitution: 0.7,
-                    }}
-                />
-
-
-                <ViroBox
-                    position={[-w / 2, wallH / 2, 0]}
-                    scale={[0.1, wallH, h]}
-                    materials={[floorMaterial]}
-                    physicsBody={{
-                        type: "Static",
-                        friction: 0.9,
-                        restitution: 0.7,
-                    }}
-                />
-                <ViroBox
-                    position={[w / 2, wallH / 2, 0]}
-                    scale={[0.1, wallH, h]}
-                    materials={[floorMaterial]}
-                    physicsBody={{
-                        type: "Static",
-                        friction: 0.9,
-                        restitution: 0.7,
-                    }}
-                />
-
-                {diceInfo
-                    .filter(d => d.active)
-                    .map((d, i) => (
-                        <DiceObject
-                            key={i}//`dice${i}-${sceneKey}`}
-                            index={i}
-                            cubeInfoKey={cubeInfoKey + ""}
-                            cubeKey={`dice${i}-${sceneKey}`}
-                            initialPosition={[i < profile.dice.length / 2 ?
-                                -(i + 1) * .1 :
-                                (i + 1) * .1, 4, 2]}
-                            initialRotation={rotation[i]}
-                            template={d.template}
-                            scale={[scaledDiceSize, scaledDiceSize, scaledDiceSize]}
-                            initialImpulse={impulse}
-                            initialTourqe={torque}
-                            onFaceSettled={(faceIndex: number) => handleFaceSettled(i, faceIndex)}
-                        />
-                    )
-                    )}
-
-
-            </ViroNode>
-        </ViroARScene>
     );
 });

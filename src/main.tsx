@@ -9,15 +9,15 @@ import {
   ViroScene,
   ViroText,
 } from "@reactvision/react-viro";
-import { cameraPos, DiceScene, DiceSceneMethods } from "./diceScene";
+import { DiceScene, DiceSceneMethods } from "./diceScene";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { SettingsUI } from "./settings";
-import { importPackage, Profile, readCurrentProfile } from "./profile";
+import { EmptyProfile, importPackage, Profile, readCurrentProfile } from "./profile";
 import { GlobalContext } from "./global-context";
 import * as Progress from 'react-native-progress';
-import { fTranslate, isRTL, translate } from "./lang";
+import { isRTL, translate } from "./lang";
 import { WinSize } from "./utils";
-import Slider from '@react-native-community/slider';
+import { FilamentScene } from "react-native-filament";
 
 
 // 1) Define a dice material up front
@@ -132,7 +132,7 @@ export default function App() {
       setInRecovery(true);
     }
 
-    
+
     sceneRef.current?.rollDice();
   };
 
@@ -168,49 +168,17 @@ export default function App() {
             <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
           </View>}
 
-          {/* <View style={ styles.slider }>
-            <Slider
-              vertical={true}
-              style={{ width: 200, height: 40 }}
-              minimumValue={0}
-              maximumValue={1}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#000000"
-              onValueChange={(val) => setCameraTilt(val)}
-              value={cameraTilt}
-            />
-          </View> */}
-
         </TouchableOpacity>}
-        {profile && <ViroARSceneNavigator
-          style={styles.viroContainer}
-          onTouchEnd={handleThrowDice}
-          debug={true}
-          // onExitViro={() => {
-          //   console.log("Exiting Viro...");
-          // }}
-
-          initialScene={{
-            scene: DiceScene,
-            passProps: {
-              ref: sceneRef,
-              initialImpulse,
-              initialTorque,
-              profile: revision >= 0 && profile ? profile : { dice: [] },
-              windowSize,
-            }
-          }}
-
-          // optional rendering settings
-          hdrEnabled={false}
-          pbrEnabled={false}
-          bloomEnabled={false}
-          // hdrEnabled={true}
-          // pbrEnabled={true}
-          // bloomEnabled={false}
-          shadowsEnabled={true}
-        // multisamplingEnabled={true}
-        />}
+        {profile && <FilamentScene>
+          <DiceScene
+            ref={sceneRef}
+            initialImpulse={initialImpulse}
+            initialTorque={initialTorque}
+            profile={revision >= 0 && profile ? profile : EmptyProfile}
+            windowSize={windowSize}
+          />
+        </FilamentScene>
+        }
       </>
 
     </SafeAreaView>
@@ -252,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', alignItems: 'center'
   },
   slider: {
-    position:"absolute",
+    position: "absolute",
     top: 20,
     left: 150
   }
