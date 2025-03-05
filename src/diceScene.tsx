@@ -17,13 +17,14 @@ import {
     useDisposableResource,
     useWorkletCallback,
     useWorkletMemo,
-    useEntityInScene
+    useEntityInScene,
+    Model
 } from "react-native-filament";
 
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
-import { Profile } from "./profile";
-import { WinSize } from "./utils";
+import { Dice, Profile } from "./profile";
+import { computeFloorBounds, computeVerticalFov, WinSize } from "./utils";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
@@ -58,7 +59,20 @@ export interface DiceSceneMethods {
     updateCamera: (tilt: number) => void;
 }
 
+const cameraHeight = 20;
+const focalLength = 35;
+const fov = computeVerticalFov(focalLength);
+const wallThickness = 0.01;
+
+
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize }: DiceSceneProps, ref: any) => {
+    const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
+    const [bounds, setBounds] = useState<{ left: number; right: number; bottom: number; top: number }>(
+        computeFloorBounds(windowSize, cameraHeight, fov, 0)
+    );
+    const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
+    const [diceSize, setDiceSize] = useState<number>(profile.size);
+
     const { engine, renderableManager, scene } = useFilamentContext()
 
     //#region Setup shadow plane
@@ -152,10 +166,12 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             }
         },
         update: (profile) => {
-
+            setDiceSize(profile.size);
+            setDiceInfo(profile.dice);
         },
         updateWindowSize: (winSize: WinSize) => {
-            //setCurrWindowSize(winSize);
+            console.log("updateWindowSize", winSize)
+            setCurrWindowSize(winSize);
         },
         updateCamera: (tilt) => {
             // if (tilt >= 0 && tilt < cameraPos.length) {
@@ -165,9 +181,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         }
     }));
 
+    useEffect(() => {
+        const b = computeFloorBounds(currWindowSize, cameraHeight, fov, 0);
+        setBounds(b)
+
+    }, [currWindowSize])
 
 
     useEffect(() => {
+
         // Create a dynamic dice body (a 1x1x1 box)
         const body = new CANNON.Body({
             mass: 1,
@@ -175,11 +197,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         });
         // Initial position above ground.
         body.position.set(0, 1, 0);
-
-        // Set an initial random rotation.
-        const randomAngle = Math.random() * Math.PI * 2;
-        const randomAxis = new CANNON.Vec3(Math.random(), Math.random(), Math.random()).unit();
-        body.quaternion.setFromAxisAngle(randomAxis, randomAngle);
 
         // For demonstration, when a dice "sleeps" (i.e. comes to rest),
         // assign a random roll result.
@@ -202,19 +219,45 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
         const backWall = new CANNON.Body({
             mass: 0,
-            shape: new CANNON.Box(new CANNON.Vec3(50, 1, 50)),
+            shape: new CANNON.Box(new CANNON.Vec3(50, 50, wallThickness)),
         });
 
-        // Position so that the top surface is at y = 0.
-        backWall.position.set(0, -1, 0);
+        backWall.position.set(0, 0, bounds.top);
         world.addBody(backWall);
+
+        const leftWall = new CANNON.Body({
+            mass: 0,
+            shape: new CANNON.Box(new CANNON.Vec3(wallThickness, 50, 50)),
+        });
+
+        leftWall.position.set(bounds.left, 0, 0);
+        world.addBody(leftWall);
+
+        const rightWall = new CANNON.Body({
+            mass: 0,
+            shape: new CANNON.Box(new CANNON.Vec3(wallThickness, 50, 50)),
+        });
+
+        rightWall.position.set(bounds.right, 0, 0);
+        world.addBody(rightWall);
+
+        const frontWall = new CANNON.Body({
+            mass: 0,
+            shape: new CANNON.Box(new CANNON.Vec3(50, 50, wallThickness)),
+        });
+
+        frontWall.position.set(0, 0, bounds.bottom);
+        world.addBody(frontWall);
 
         return () => {
             dice?.body && world.removeBody(dice.body);
             world.removeBody(ground);
             world.removeBody(backWall);
+            world.removeBody(rightWall);
+            world.removeBody(leftWall);
+            world.removeBody(frontWall);
         };
-    }, [world]);
+    }, [world, currWindowSize]);
 
     const dicePosition = useSharedValue<Float3>([0, 15, 0]);
     const diceRotation = useSharedValue<{ angle: number; axis: Float3 }>({
@@ -274,6 +317,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         }
     }, [dicePosition, diceRotation, diceEntity, transformManager])
 
+
+
+    console.log("bounds", bounds)
     return (
 
         <FilamentView style={{ flex: 1 }} renderCallback={renderCallback} >
@@ -285,7 +331,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 castShadow={true} receiveShadow={true}
             />
 
-            <Camera cameraPosition={[0, 20, 0]} cameraTarget={[0, 0, 0]} />
+            {/* <Model source={DiceModel}
+                translate={[bounds.left, 0, bounds.top]}
+
+            />
+            <Model source={DiceModel}
+                translate={[bounds.right, 0, bounds.bottom]}
+
+            /> */}
+            <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
         </FilamentView>
 
     );

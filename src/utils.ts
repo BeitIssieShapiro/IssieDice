@@ -154,3 +154,58 @@ export function getRotationDeltaForTopFace(
   ];
 }
 
+
+
+/**
+ * Computes the axis-aligned visible bounds on the floor given the camera parameters.
+ * 
+ * @param currWindowSize - the screen size in pixels, e.g. { width: number, height: number }
+ * @param cameraHeight - the vertical distance from the camera to the floor (e.g. 20)
+ * @param fov - the camera's vertical field-of-view in radians (e.g. 45° = Math.PI/4)
+ * @param rotation - the camera's rotation around the vertical axis in radians.
+ *                   (If the camera rotates, the visible rectangle rotates; we return the AABB.)
+ * @returns An object with the horizontal boundaries on the floor:
+ *          left/right correspond to X, and bottom/top correspond to Z.
+ */
+export function computeFloorBounds(
+  currWindowSize: { width: number; height: number },
+  cameraHeight: number,
+  fov: number,
+  rotation: number
+): { left: number; right: number; bottom: number; top: number } {
+  // Compute the aspect ratio (width / height)
+  const aspect = currWindowSize.width / currWindowSize.height;
+  
+  // The half-height (in world units) of the visible region on the floor (assuming the camera looks straight down)
+  const halfHeight = cameraHeight * Math.tan(fov / 2);
+  // The half-width in world units
+  const halfWidth = halfHeight * aspect;
+  
+  // Without any rotation, the visible floor region would be:
+  // x in [-halfWidth, halfWidth] and z in [-halfHeight, halfHeight].
+  // If the scene is rotated by 'rotation' (about the vertical axis),
+  // the axis-aligned bounding box of the rotated rectangle becomes:
+  const cosTheta = Math.abs(Math.cos(rotation));
+  const sinTheta = Math.abs(Math.sin(rotation));
+  
+  const boundX = halfWidth * cosTheta + halfHeight * sinTheta;
+  const boundZ = halfWidth * sinTheta + halfHeight * cosTheta;
+  
+  return {
+    left: -boundX,
+    right: boundX,
+    bottom: -boundZ,
+    top: boundZ,
+  };
+}
+
+/**
+ * Computes the vertical field-of-view (in radians) from a focal length and sensor height.
+ *
+ * @param focalLength - Focal length in millimeters.
+ * @param sensorHeight - Sensor height in millimeters (default is 24mm).
+ * @returns vertical FOV in radians.
+ */
+export function computeVerticalFov(focalLength: number, sensorHeight: number = 24): number {
+  return 2 * Math.atan((sensorHeight / 2) / focalLength);
+}
