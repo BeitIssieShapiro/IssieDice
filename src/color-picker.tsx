@@ -7,7 +7,7 @@ import { SettingsKeys } from "./profile";
 import { ColorButton, FadeInView } from "./components";
 
 export const availableColorPicker = [
-    '#000000', '#fee100', 'green', '#5db7dd', '#2958af', '#d62796', '#E7E7E7', '#da3242'
+    '#000000', '#FEE100', '#0F870D', '#5db7dd', '#2958AF', '#D62796', '#E7E7E7', '#DA3242'
 ]
 
 
@@ -50,6 +50,7 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
 
 
     const _handleSelect = useCallback(() => {
+        console.log("Selected color", composedColor)
         onSelect(composedColor)
         if (lastColors.find(lc => lc === composedColor)) {
             return

@@ -81,7 +81,7 @@ export function getFaceAndQuaternionDelta(
 
   // Create the current orientation quaternion from Euler angles.
   // Using "XYZ" order (adjust if your model uses a different order).
-  const currentQuat = Quaternion.fromEuler(euler[0] * toRad, euler[1] * toRad, euler[2] * toRad, "XYZ");
+  const currentQuat = Quaternion.fromEuler(euler[0] , euler[1] , euler[2] , "XYZ");
 
   // Compute the "up" vector by rotating the world up vector [0,1,0] with currentQuat.
   const up = currentQuat.rotateVector([0, 1, 0]); // returns an array [x, y, z]
