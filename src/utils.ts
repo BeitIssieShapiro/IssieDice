@@ -1,5 +1,4 @@
 import { Platform, PermissionsAndroid } from "react-native";
-import { Viro3DPoint } from "@reactvision/react-viro/dist/components/Types/ViroUtils";
 import Quaternion from "quaternion";
 
 export function joinPaths(...segments: string[]) {
@@ -51,10 +50,6 @@ export async function requestAudioPermission() {
 
 export const ignore = () => { };
 
-export const isSamePoint = (p1: Viro3DPoint, p2: Viro3DPoint, precision: number) =>
-  Math.abs(p1[0] - p2[0]) <= precision &&
-  Math.abs(p1[1] - p2[1]) <= precision &&
-  Math.abs(p1[2] - p2[2]) <= precision;
 
 
 /**

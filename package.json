@@ -10,8 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@react-native-community/slider": "^4.5.5",
-    "@reactvision/react-viro": "2.42.0",
+    
+    
     "axios": "^1.7.9",
     "install": "^0.13.0",
     "npm": "^11.1.0",

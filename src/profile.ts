@@ -4,7 +4,6 @@ import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { MMKV } from 'react-native-mmkv';
 import { ensureAndroidCompatible, ignore, joinPaths } from './utils';
-import Dice from './dice';
 import { fTranslate, translate } from './lang';
 import { FaceType } from './profile-picker';
 import { unzip, zip } from 'react-native-zip-archive';

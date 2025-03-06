@@ -1,14 +1,7 @@
 // App.tsx
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert, Text, Dimensions } from "react-native";
-import {
-  Viro3DSceneNavigator,
-  ViroARSceneNavigator,
-  ViroCamera,
-  ViroMaterials,
-  ViroScene,
-  ViroText,
-} from "@reactvision/react-viro";
+
 import { DiceScene, DiceSceneMethods } from "./diceScene";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { SettingsUI } from "./settings";
@@ -19,29 +12,6 @@ import { isRTL, translate } from "./lang";
 import { WinSize } from "./utils";
 import { FilamentScene } from "react-native-filament";
 
-
-// 1) Define a dice material up front
-ViroMaterials.createMaterials({
-  redLine: { diffuseColor: '#FF0000' },
-  greenLine: { diffuseColor: '#00FF00' },
-  blueLine: { diffuseColor: '#0000FF' },
-  tableSurface_0: {
-    diffuseColor: 'green',
-    lightingModel: "Lambert"
-  },
-  default: {
-    diffuseColor: 'white',
-    lightingModel: "Lambert"
-  },
-
-  wallMaterial: {
-    diffuseColor: "lightgray", // Dark walls
-    lightingModel: "Lambert"
-  },
-  transparentWallMaterial: {
-    diffuseColor: "transparent"
-  },
-});
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
