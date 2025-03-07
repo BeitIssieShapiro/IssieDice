@@ -29,15 +29,19 @@ import {
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
 import { Dice, getCustomTypePath, Profile, Templates, templatesList } from "./profile";
-import { computeFloorBounds, computeVerticalFov, getFaceAndQuaternionDelta, WinSize } from "./utils";
+import { computeFloorBounds, computeVerticalFov, getCanonicalQuaternion, getFaceAndQuaternionDelta, getRotationDeltaForTopFace, getTopFace, safeColor, WinSize } from "./utils";
 import { FilamentBuffer } from "react-native-filament/lib/typescript/src/native/FilamentBuffer";
+import { createFloor, createWall } from "./scene-elements";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
 const DotModel = require("../assets/dot-dice.glb");
 const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
 
-LogBox.ignoreLogs(["has already"]);
+LogBox.ignoreLogs([
+    //"has already", 
+    "Failed to load asset"
+]);
 
 
 function quaternionToAngleAxis(q: CANNON.Quaternion): { angle: number; axis: [number, number, number] } {
@@ -151,7 +155,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const worldRef = useRef<CANNON.World | null>(null);
     if (!worldRef.current) {
         const world = new CANNON.World({
-            gravity: new CANNON.Vec3(0, -9.82, 0),
+            gravity: new CANNON.Vec3(0, -50, 0),
         });
         // Optional: set broadphase and solver iterations
         world.broadphase = new CANNON.NaiveBroadphase();
@@ -180,33 +184,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 die.body.angularVelocity.setZero();
 
                 // Optionally, reset position if desired.
-                die.body.position.set(getDieX(i, diceInfo.length, 1), 8, -5);
-                //die.body.position.set(getDieX(i, diceInfo.length, 1), 2, 0);
+                die.body.position.set(getDieX(i, diceInfo.length, 1) + 3, 8, -5);
 
+                const force = 3 + 5 * Math.random();
+                die.body.applyImpulse(
+                    new CANNON.Vec3(-force, force, 0),
+                    new CANNON.Vec3(0, 0, .2)
+                );
 
-                const fz = (Math.random() * 10 + .3);
-                const fy = -(Math.random() * 5 + .3);
-
-                // Random angular velocity for all dice
-                const avx = Math.random() * 5;
-                const avy = Math.random() * 5;
-                const avz = Math.random() * 5;
-                const imp = [0, fy, fz];
-                const trq = [avx, avy, avz];
-                const randomRotation = () => Math.floor(360 * Math.random()) - 180;
-
-                die.body.quaternion.setFromEuler(randomRotation(), randomRotation(), randomRotation());
-
-                // Apply the linear impulse.
-                // initialImpulse is a number array, e.g. [x, y, z]
-                const impulse = new CANNON.Vec3(...imp);
-
-                // Applying the impulse at the center of mass:
-                die.body.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
-
-                // For an angular impulse, you can simply set the angularVelocity.
-                // initialTorque is a number array, e.g. [x, y, z].
-                die.body.angularVelocity.set(trq[0], trq[1], trq[2]);
+                die.body.allowSleep = true;
             })
         },
         update: (profile) => {
@@ -252,83 +238,56 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 body.sleepTimeLimit = 1;
                 body.allowSleep = true;
 
+                body.quaternion.setFromEuler(0, 0, 0)
+                //-Math.PI/2,0,Math.PI/2
 
                 body.addEventListener("sleep", () => {
                     // Compute the face and correction delta
-                    const r = new CANNON.Vec3()
-                    body.quaternion.toEuler(r) // YZX by default
-                    console.log("settled", [r.x * 180 / Math.PI, r.y * 180 / Math.PI, r.z * 180 / Math.PI])
-                    const { face, delta } = getFaceAndQuaternionDelta([r.y, r.z, r.x]);
+                    //const { face, delta } = getFaceAndQuaternionDelta([r.y, r.z, r.x]);
+                    const { face, euler } = getTopFace(body);
+                    if (face > 0) { // means we detected a face and not edge
+                        const delta = getRotationDeltaForTopFace(face, [euler.x, euler.y, euler.z]);
 
-                    console.log("Dice settled with face:", face);
-
+                        // You can now interpolate from the current quaternion to the targetQuaternion:
+                        // body.quaternion.slerp(targetQuaternion, 0.5, body.quaternion) will rotate to the half way
+                        //body.quaternion.copy(targetQuaternion) // force it to the target.
+                        body.quaternion.setFromEuler(delta[0], delta[1], delta[2]);
+                        body.allowSleep = true;
+                    }
+                    // console.log("Dice settled with face:", face);
+                    // const toDeg = (rad: number[]) => rad.map(r => r * 180 / Math.PI);
+                    // //const delta = getRotationDeltaForTopFace(face, [euler.x, euler.y, euler.z])
+                    // const currUp = body.quaternion.vmult(new CANNON.Vec3(0, 1, 0));
+                    // console.log("curr up", toDeg(currUp.toArray()))
                     // Apply the delta to correct the orientation:
-                    // body.quaternion.setFromEuler(delta[0], delta[1], delta[2])
+                    //body.quaternion.setFromEuler(delta[0], delta[1], delta[2])
+
+
                 });
                 world.addBody(body);
 
                 isDotArray[i] = die.template == Templates.Dots;
 
-
-
                 return {
-                    body,
-                    // todo dot or not?
+                    body
                 };
             });
         diceCount.value = worldDiceRef.current.length;
         isDotDice.value = isDotArray;
 
-        // Create a ground as a large static box.
-        const ground = new CANNON.Body({
-            mass: 0,
-            shape: new CANNON.Box(new CANNON.Vec3(50, 1, 50)),
-        });
+        const disposeables: CANNON.Body[] = [];
 
-        // Position so that the top surface is at y = 0.
-        ground.position.set(0, -1, 0);
-        world.addBody(ground);
+        disposeables.push(createFloor(world));
 
-
-        const backWall = new CANNON.Body({
-            mass: 0,
-            shape: new CANNON.Box(new CANNON.Vec3(50, 50, wallThickness)),
-        });
-
-        backWall.position.set(0, 0, bounds.top / scale);
-        world.addBody(backWall);
-
-        const leftWall = new CANNON.Body({
-            mass: 0,
-            shape: new CANNON.Box(new CANNON.Vec3(wallThickness, 50, 50)),
-        });
-
-        leftWall.position.set(bounds.left / scale, 0, 0);
-        world.addBody(leftWall);
-
-        const rightWall = new CANNON.Body({
-            mass: 0,
-            shape: new CANNON.Box(new CANNON.Vec3(wallThickness, 50, 50)),
-        });
-
-        rightWall.position.set(bounds.right / scale, 0, 0);
-        world.addBody(rightWall);
-
-        const frontWall = new CANNON.Body({
-            mass: 0,
-            shape: new CANNON.Box(new CANNON.Vec3(50, 50, wallThickness)),
-        });
-
-        frontWall.position.set(0, 0, bounds.bottom / scale);
-        world.addBody(frontWall);
+        disposeables.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.top / scale])); //back
+        disposeables.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.bottom / scale])); //front
+        disposeables.push(createWall(world, [wallThickness, 50, 50], [bounds.left / scale, 0, 0])); //left
+        disposeables.push(createWall(world, [wallThickness, 50, 50], [bounds.right / scale, 0, 0])); //right
 
         return () => {
             worldDiceRef.current?.map(die => world.removeBody(die.body));
-            world.removeBody(ground);
-            world.removeBody(backWall);
-            world.removeBody(rightWall);
-            world.removeBody(leftWall);
-            world.removeBody(frontWall);
+            disposeables.map(d => world.removeBody(d));
+
         };
     }, [world, bounds, diceInfo, worldDiceRef]);
 
@@ -345,12 +304,12 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         useSharedValue<DieRotation>(DefaultRotation)
     ];
 
-    const activeDice = diceInfo.filter(die=>die.active);
-    const texture = [0,1,2,3]
+    const activeDice = diceInfo.filter(die => die.active);
+    const texture = [0, 1, 2, 3]
         //.filter(die => die.active)
         .map(i => {
             //if (die.template == Templates.Dots) return undefined;
-            let template = i< activeDice.length ? activeDice[i].template : Templates.Dots;
+            let template = i < activeDice.length ? activeDice[i].template : Templates.Dots;
             let textureSource
             switch (template) {
                 case Templates.Numbers:
@@ -365,7 +324,13 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     //await getRandomFile(getCustomTypePath(template) + "/dice.jpg", "jpg")
                     break;
             }
-            return useBuffer(textureSource);
+            try {
+                const t = useBuffer(textureSource);
+                return t;
+            } catch (e) {
+                console.log("Cannot find texture", textureSource)
+                return undefined;
+            }
         });
 
 
@@ -443,12 +408,12 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         <FilamentView style={{ flex: 1 }} renderCallback={renderCallback} >
             <DefaultLight />
             {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
-            {/* <Light type="point" intensity={100_000} colorKelvin={6_500} castShadows={true} 
-            falloffRadius={bounds.right}
-            position={[0,10,0]} //direction={[0,0,0]}
-            /> */}
+            <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
+                //falloffRadius={bounds.right}
+                position={[0, 100, 100]} //direction={[0,0,0]}
+            />
 
-            <Skybox colorInHex={profile.tableColor} showSun={false} />
+            <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
 
 
             {activeDice

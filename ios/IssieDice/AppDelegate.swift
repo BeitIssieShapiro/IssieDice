@@ -40,7 +40,11 @@ class AppDelegate: RCTAppDelegate {
 
   override func bundleURL() -> URL? {
 #if DEBUG
+//    #if targetEnvironment(macCatalyst)
     return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+//    #else
+//    return URL(string: "http://192.168.0.228:8081/index.bundle?platform=ios&dev=true")
+//    #endif
 #else
     return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif

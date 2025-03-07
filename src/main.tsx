@@ -11,7 +11,7 @@ import * as Progress from 'react-native-progress';
 import { isRTL, translate } from "./lang";
 import { WinSize } from "./utils";
 import { FilamentScene } from "react-native-filament";
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
@@ -111,6 +111,8 @@ export default function App() {
     sceneRef.current?.update(profile);
   };
 
+  const insets = useSafeAreaInsets();
+
   console.log("current profile", profile)
   return (
     <SafeAreaView style={styles.container} onLayout={(e) => {
@@ -118,7 +120,7 @@ export default function App() {
       setWindowSize(wz);
     }}>
 
-      <TouchableOpacity style={styles.settingsButton}
+      <TouchableOpacity style={[styles.settingsButton, { top: Math.max(35, 15 + insets.top) }]}
         onPress={() => setOpenSettings(true)}
       >
         <Icon name={"setting"} color={"white"} size={35} />
@@ -131,7 +133,7 @@ export default function App() {
           activeOpacity={1}
         >
           {/** indicator to a lock */}
-          {inRecovery && <View style={styles.lockIndicator} />}
+          {inRecovery && <View style={[styles.lockIndicator, {top:Math.max(4, insets.top)}]} />}
           {/** Progress */}
           {importInProgress && <View style={styles.progressBarHost}>
             <Text style={{ fontSize: 28, marginBottom: 5 }}>{importInProgress.message}</Text>
@@ -177,7 +179,9 @@ const styles = StyleSheet.create({
   viroContainer: {
     backgroundColor: "red",
   },
-  settingsButton: { position: "absolute", top: 35, right: 15, zIndex: 600 },
+  settingsButton: {
+    position: "absolute", right: 15, zIndex: 600
+  },
   progressBarHost: {
     position: 'absolute',
     shadowColor: '#000',

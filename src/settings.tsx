@@ -13,6 +13,8 @@ import { Alert } from "react-native";
 import prompt from "react-native-prompt-android";
 import Toast from "react-native-toast-message";
 import Share from 'react-native-share';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { safeColor } from "./utils";
 
 export const BTN_COLOR = "#6E6E6E";
 const disabledColor = "gray";
@@ -33,6 +35,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [diceBusy, setDiceBusy] = useState<number>(-1);
     const [busy, setBusy] = useState<boolean>(false);
     const [openSelectTemplate, setOpenSelectTemplate] = useState<number>(-1);
+
+    const insets = useSafeAreaInsets();
 
 
     const [profileName, setProfileName] = useState<string>("");
@@ -269,7 +273,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
-    return <View style={styles.container}>
+    return <View style={[styles.container, {top:insets.top}]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
@@ -383,7 +387,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             {/* Table Color */}
             <View style={sectionStyle}>
                 <View style={{ flexDirection: "row" }}>
-                    <View style={[styles.colorCircle, { backgroundColor: profile.tableColor }]} onTouchEnd={() => setOpenColorPicker(true)} />
+                    <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.tableColor) }]} onTouchEnd={() => setOpenColorPicker(true)} />
                     {/* <IconButton text={translate("Change")} onPress={() => setOpenColorPicker(true)} /> */}
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("TableColor")}:</Text>
