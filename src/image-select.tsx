@@ -1,10 +1,10 @@
 import { StyleSheet } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import RNFS from 'react-native-fs';
+import { copyFileToFolder } from "./profile";
 
-export function doNothing() { }
 
-export async function SelectFromGallery(targetFolder: string, fileName: string, cacheBusterPrefix: string | undefined): Promise<string> {
+export async function SelectFromGallery(targetFile: string) {
     const options: any = {
         mediaType: 'photo',
         selectionLimit: 1,
@@ -22,7 +22,7 @@ export async function SelectFromGallery(targetFolder: string, fileName: string, 
                 // Copy the image to the app's document folder
                 if (selectedImageUri) {
                     try {
-                        resolve(copyFileToFolder(selectedImageUri, targetFolder, fileName, true, cacheBusterPrefix));
+                        resolve(copyFileToFolder(selectedImageUri, targetFile));
                     } catch (error) {
                         reject(error)
                     }
@@ -33,50 +33,6 @@ export async function SelectFromGallery(targetFolder: string, fileName: string, 
     });
 
 }
-
-export const copyFileToFolder = async (sourcePath: string, targetPath: string, fileName: string, overwrite = true, cacheBusterPrefix: string | undefined = undefined) => {
-
-
-    const destPath = `${RNFS.DocumentDirectoryPath}/${targetPath}`;
-    await RNFS.mkdir(destPath);
-    const targetFilePath = `${destPath}/${fileName}`;
-
-    if (overwrite) {
-        if (!cacheBusterPrefix) {
-            await RNFS.unlink(targetFilePath).catch(doNothing);
-        } else {
-            const files = await RNFS.readDir(destPath);
-            for (const file of files) {
-                if (file.name.indexOf(cacheBusterPrefix) > 0) {
-                    await RNFS.unlink(file.path);
-                }
-            }
-        }
-    }
-    // Copy the file from the sourcePath to the destinationPath
-    await RNFS.copyFile(sourcePath, targetFilePath);
-
-    return targetFilePath;
-};
-
-export const deleteFile = async (filePath: string) => {
-    if (filePath.length == 0 || filePath.startsWith("http")) return;
-    try {
-        // Check if the file exists before attempting to delete it
-        const fileExists = await RNFS.exists(filePath);
-
-        if (fileExists) {
-            await RNFS.unlink(filePath); // Delete the file
-            console.log(`File deleted: ${filePath}`);
-        } else {
-            console.log('File does not exist');
-        }
-    } catch (e: any) {
-        console.log("error deleting file", filePath, e.message);
-    }
-}
-
-
 
 const styles = StyleSheet.create({
     closeButton: {

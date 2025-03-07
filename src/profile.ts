@@ -10,6 +10,8 @@ import { unzip, zip } from 'react-native-zip-archive';
 import { FaceText } from './edit-text';
 import { ImageSourcePropType } from 'react-native';
 
+export function doNothing() { }
+
 export const enum Folders {
     Profiles = "profiles",
     Dice = "dice",
@@ -99,6 +101,7 @@ export interface Dice {
     template: Templates;
     active: boolean;
     faces?: FaceInfo[] | undefined;
+    texture?: string;
 }
 
 export interface Profile {
@@ -268,10 +271,12 @@ export async function readCurrentProfile(): Promise<Profile> {
         if (diceTemplateType.length > i && !diceTemplateType[i].startsWith(Templates.prefix)) {
             faces = await loadFaceImages(diceTemplateType[i]);
         }
+        const template = diceTemplateType.length > i && diceTemplateType[i] ? diceTemplateType[i] as Templates : Templates.Numbers;
         dice.push({
-            template: diceTemplateType.length > i && diceTemplateType[i] ? diceTemplateType[i] as Templates : Templates.Numbers,
+            template,
             active: diceActive.length > i && diceActive[i] != undefined ? diceActive[i] : true,
             faces,
+            texture: await readTexture(template)
         });
     }
 
@@ -315,7 +320,7 @@ async function loadProfiles(): Promise<List[]> {
 
 async function loadCustomDice(ommitFaces = false): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(async (folders) => {
-        const list = [];
+        const list:List[] = [];
         for (const folder of folders) {
             list.push({
                 key: folder.name,
@@ -353,6 +358,20 @@ export async function loadFaceImages(name: string): Promise<FaceInfo[]> {
     }
 
     return list;
+}
+
+export async function readTexture(name: string): Promise<string> {
+    if (name.startsWith(Templates.prefix)) {
+        return "";
+    }
+    const customDicePath = getCustomTypePath(name);
+    const files = await RNFS.readDir(customDicePath);
+    for (const elem of files) {
+        if (elem.name.startsWith("texture$$") && elem.name.endsWith(".jpg")) {
+            return "file://" + elem.path;
+        }
+    }
+    return "";
 }
 
 export async function saveDataUrlAs(dataUrl: string, filePath: string) {
@@ -424,7 +443,7 @@ export async function exportDice(name: string): Promise<string> {
     }
     const files = (await loadFaceImages(name)).filter(f => f.uri.length > 0).map(f => ensureAndroidCompatible(f.uri));
 
-    const diceMaterialUri = path.join(getCustomTypePath(name), "dice.jpg");
+    const diceMaterialUri =  await readTexture(name)
     files.push(diceMaterialUri);
 
     files.push(ensureAndroidCompatible(metaDataFile));
@@ -566,15 +585,90 @@ function loadFile(path: string) {
     return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
 }
 
-export async  function writeFile(path: string, content: string, verifyFolderExists?:string) {
+export async function writeFileWithCacheBuster(targetPath: string, content: string) {
+    const { folder, fileName } = splitFilePath(targetPath);
+    const cacheBusterPrefixPos = fileName.indexOf("$$");
+
+    if (!await RNFS.exists(folder)) {
+        await RNFS.mkdir(folder);
+    }
+    if (cacheBusterPrefixPos < 0) {
+        await RNFS.unlink(targetPath).catch(doNothing);
+    } else {
+        const baseFileName = fileName.substring(0, cacheBusterPrefixPos);
+        const files = await RNFS.readDir(folder);
+        for (const file of files) {
+            // delete any file with same base path
+            if (file.name.startsWith(baseFileName)) {
+                await RNFS.unlink(file.path);
+            }
+        }
+    }
+    return writeFile(targetPath, content);
+}
+
+
+export async function writeFile(path: string, content: string, verifyFolderExists?: string) {
     if (verifyFolderExists) {
         if (!await RNFS.exists(verifyFolderExists)) {
             await RNFS.mkdir(verifyFolderExists);
         }
     }
     return RNFS.writeFile(ensureAndroidCompatible(path), content)
-   
+
 }
+
+function splitFilePath(targetPath: string): { folder: string; fileName: string } {
+    const lastSlashIndex = targetPath.lastIndexOf("/");
+    if (lastSlashIndex === -1) {
+        // If no slash is found, there's no folder information.
+        return { folder: "", fileName: targetPath };
+    }
+    const folder = targetPath.substring(0, lastSlashIndex);
+    const fileName = targetPath.substring(lastSlashIndex + 1);
+    return { folder, fileName };
+}
+
+export const copyFileToFolder = async (sourcePath: string, targetPath: string, overwrite = true) => {
+
+    const { folder, fileName } = splitFilePath(targetPath);
+    await RNFS.mkdir(folder);
+    if (overwrite) {
+        const cacheBusterPrefixPos = fileName.indexOf("$$");
+
+        if (cacheBusterPrefixPos < 0) {
+            await RNFS.unlink(targetPath).catch(doNothing);
+        } else {
+            const baseFileName = fileName.substring(0, cacheBusterPrefixPos);
+            const files = await RNFS.readDir(folder);
+            for (const file of files) {
+                // delete any file with same base path
+                if (file.name.startsWith(baseFileName)) {
+                    await RNFS.unlink(file.path);
+                }
+            }
+        }
+    }
+    await RNFS.copyFile(sourcePath, targetPath);
+};
+
+export const deleteFile = async (filePath: string) => {
+    if (filePath.length == 0 || filePath.startsWith("http")) return;
+    try {
+        // Check if the file exists before attempting to delete it
+        const fileExists = await RNFS.exists(filePath);
+
+        if (fileExists) {
+            await RNFS.unlink(filePath); // Delete the file
+            console.log(`File deleted: ${filePath}`);
+        } else {
+            console.log('File does not exist');
+        }
+    } catch (e: any) {
+        console.log("error deleting file", filePath, e.message);
+    }
+}
+
 
 function getTempFileName(ext: string) {
     const date = new Date()
@@ -587,4 +681,8 @@ export async function getRandomFile(filePath: string, ext: string): Promise<stri
     const tempFileTime = getTempFileName(ext)
     await RNFS.copyFile(filePath, tempFileTime);
     return tempFileTime;
+}
+
+export function getCacheBusterSuffix(): string {
+    return "$$" + Math.floor(Math.random() * 1000000);
 }

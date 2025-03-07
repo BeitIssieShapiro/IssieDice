@@ -5,8 +5,8 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import IconIonic from 'react-native-vector-icons/Ionicons';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { FaceType } from "./profile-picker";
-import { copyFileToFolder, SelectFromGallery } from "./image-select";
-import { existsFolder, FaceInfo, Folders, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, } from "./profile";
+import {  SelectFromGallery } from "./image-select";
+import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { unlink } from "react-native-fs";
@@ -62,7 +62,8 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     async function handleAddFace(index: number, type: FaceType, editedName: string) {
         console.log("handleAddFace", index)
         if (type == FaceType.Image) {
-            const filePath = await SelectFromGallery(`${Folders.CustomDice}/${editedName}`, `face_${index}$$${Math.floor(Math.random() * 1000000)}.jpg`, `face_${index}$$`);
+            const filePath = `${getCustomTypePath(editedName)}/face_${index}${getCacheBusterSuffix()}.jpg`
+            await SelectFromGallery(filePath);
             if (filePath.length > 0) {
                 setEditImage({ uri: filePath, index });
             }
@@ -80,10 +81,10 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         if (faceText.text.length > 0) {
             // Save it as a json file
             const basePath = getCustomTypePath(editedName);
-            const faceName = `face_${index}$$${Math.floor(Math.random() * 1000000)}.json`
+            const faceName = `face_${index}${getCacheBusterSuffix()}.json`
             const content = JSON.stringify(faceText, undefined, " ");
             const faceFilePath = path.join(basePath, faceName);
-            writeFile(faceFilePath, content, basePath).then(() => {
+            writeFileWithCacheBuster(faceFilePath, content).then(() => {
                 setFaces(curr => {
                     curr[index] = faceFilePath;
                     return [...curr];
@@ -140,7 +141,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         let facesTouched = false;
         setBusy(true);
         try {
-            // Auto dave upon changes
+            // Auto save upon changes
             for (let i = 0; i < faces.length; i++) {
                 if (faces[i] != savedFaces[i]) {
                     if (savedFaces[i].length > 0) {
@@ -152,10 +153,11 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             }
             if (facesTouched) {
                 setSavedFaces(faces);
-                // save the dice.jpg after it renders
+                // save the texture.jpg after it renders
+                const textureFilePath = `${getCustomTypePath(editedName)}/texture${getCacheBusterSuffix()}.jpg`
                 requestAnimationFrame(() => {
                     diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e))
-                        .then((filePath: string) => copyFileToFolder(filePath, `${Folders.CustomDice}/${editedName}`, "dice.jpg", true))
+                        .then((filePath: string) => copyFileToFolder(filePath, textureFilePath, true))
                 });
             }
         } finally {
@@ -236,7 +238,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             })
             setOpenSearch(-1);
         }} onClose={() => setOpenSearch(-1)} width={width}
-            targetFile={path.join(getCustomTypePath(editedName), `face_${openSearch}$$${Math.floor(Math.random() * 1000000)}.jpg`)}
+            targetFile={path.join(getCustomTypePath(editedName), `face_${openSearch}${getCacheBusterSuffix()}.jpg`)}
         />}
 
         <View style={styles.addFacesHost}>

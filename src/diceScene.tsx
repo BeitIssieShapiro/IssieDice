@@ -28,8 +28,8 @@ import {
 
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
-import { Dice, getCustomTypePath, Profile, Templates, templatesList } from "./profile";
-import {  computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace,  getTopFace, safeColor, WinSize } from "./utils";
+import { Dice, getCustomTypePath, getRandomFile, Profile, Templates, templatesList } from "./profile";
+import { computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace, getTopFace, safeColor, WinSize } from "./utils";
 import { createFloor, createWall } from "./scene-elements";
 
 
@@ -155,7 +155,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const worldRef = useRef<CANNON.World | null>(null);
     if (!worldRef.current) {
         const world = new CANNON.World({
-            gravity: new CANNON.Vec3(0, -50, 0),
+            gravity: new CANNON.Vec3(0, -45, 0),
         });
         // Optional: set broadphase and solver iterations
         world.broadphase = new CANNON.NaiveBroadphase();
@@ -270,26 +270,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                         body.quaternion.setFromEuler(tx, ty, tz);
 
-                        // const targetQ = delta.mult(body.quaternion); // delta * current
-
-                        // // Now smoothly interpolate the body's quaternion toward targetQ
-                        // // For example, with an interpolation factor alpha of 0.05:
-                        // body.quaternion.slerp(targetQ, 0.05, body.quaternion);
-
 
                         setTimeout(() => setSceneActive(prev => prev - 1), 100);
-                        // Apply the delta:
-                        //const q = new CANNON.Quaternion();
-                        //const rotationQuaternion = q.setFromAxisAngle(face2axis(face, angle[1] > 0), angle[1]);
-                        //setLog(prev => prev + "\n" + face + ":" + toDeg(euler.x) + "," + toDeg(euler.y) + "," + toDeg(euler.z));
-                        //setLog(`rot face:${face} ${toDeg(angle[0])},${toDeg(angle[1])},${toDeg(angle[2])}`)
-                        //body.quaternion.mult(rotationQuaternion, body.quaternion);
-                        //rotateBody(body, rotationQuaternion, 0.05)
-
                         body.allowSleep = true;
                     } else {
                         body.allowSleep = false;
                     }
+                    body.addEventListener('collide', (e: any) => {
+                        console.log("contact with ground or another die")
+                    })
 
 
                 });
@@ -337,7 +326,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const activeDice = diceInfo.filter(die => die.active);
     const texture = [0, 1, 2, 3]
         //.filter(die => die.active)
-        .map(i => {
+        .map((i) => {
             //if (die.template == Templates.Dots) return undefined;
             let template = i < activeDice.length ? activeDice[i].template : Templates.Dots;
             let textureSource
@@ -349,9 +338,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     textureSource = { source: asset }
                     break;
                 default:
-                    const uri = "file://" + getCustomTypePath(template) + "/dice.jpg";
+                    const uri = diceInfo[i].texture;
                     textureSource = { source: { uri } };
-                    //await getRandomFile(getCustomTypePath(template) + "/dice.jpg", "jpg")
                     break;
             }
             try {
@@ -434,35 +422,35 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     console.log("bounds", bounds)
 
     return (
-        <>
-            <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
+        // <>
+        //     <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-            <FilamentView style={{ flex: 1 }} renderCallback={scenaActive > 0 ? renderCallback : undefined} >
+        <FilamentView style={{ flex: 1 }} renderCallback={scenaActive > 0 ? renderCallback : undefined} >
 
-                <DefaultLight />
-                {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
-                <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
-                    //falloffRadius={bounds.right}
-                    position={[0, 100, 100]} //direction={[0,0,0]}
-                />
+            <DefaultLight />
+            {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
+            <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
+                //falloffRadius={bounds.right}
+                position={[0, 100, 100]} //direction={[0,0,0]}
+            />
 
-                <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
+            <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
 
 
-                {activeDice
-                    .filter(die => die.active)
-                    .map((dieInfo, i) => (worldDiceRef.current &&
-                        <ModelRenderer key={i + "-" + isDotDice.value[i]}
-                            model={false ? dotDiceModel[i] : generalDiceModel[i]}
-                            castShadow={true} receiveShadow={true}
+            {activeDice
+                .filter(die => die.active)
+                .map((dieInfo, i) => (worldDiceRef.current &&
+                    <ModelRenderer key={i + "-" + isDotDice.value[i]}
+                        model={false ? dotDiceModel[i] : generalDiceModel[i]}
+                        castShadow={true} receiveShadow={true}
 
-                        >
-                            {texture[i] && <EntitySelector byName="Cube"
-                                textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
-                        </ModelRenderer>
-                    ))}
+                    >
+                        {texture[i] && <EntitySelector byName="Cube"
+                            textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
+                    </ModelRenderer>
+                ))}
 
-                {/* <Model source={DiceModel}
+            {/* <Model source={DiceModel}
                 translate={[bounds.left, 0, bounds.top]}
 
             />
@@ -470,8 +458,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 translate={[bounds.right, 0, bounds.bottom]}
 
             /> */}
-                <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
-            </FilamentView>
-        </>
+            <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
+        </FilamentView>
+        //</>
     );
 });
