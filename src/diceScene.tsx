@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { LogBox, View } from "react-native";
+import { LogBox, Text, View } from "react-native";
 import {
     FilamentView,
     DefaultLight,
@@ -29,8 +29,7 @@ import {
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
 import { Dice, getCustomTypePath, Profile, Templates, templatesList } from "./profile";
-import { computeFloorBounds, computeVerticalFov, getCanonicalQuaternion, getFaceAndQuaternionDelta, getRotationDeltaForTopFace, getTopFace, safeColor, WinSize } from "./utils";
-import { FilamentBuffer } from "react-native-filament/lib/typescript/src/native/FilamentBuffer";
+import {  computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace,  getTopFace, safeColor, WinSize } from "./utils";
 import { createFloor, createWall } from "./scene-elements";
 
 
@@ -101,7 +100,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const diceInfoRef = useRef<Dice[]>(profile.dice);
     const [diceSize, setDiceSize] = useState<number>(profile.size);
     const [revision, setRevision] = useState<number>(0);
-
+    const [scenaActive, setSceneActive] = useState<number>(4);
+    const [log, setLog] = useState<string>("")
     const { engine, renderableManager, scene, transformManager } = useFilamentContext()
 
     const generalDiceModel: FilamentModel[] = [
@@ -194,6 +194,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 die.body.allowSleep = true;
             })
+            setSceneActive(worldDiceRef.current.length);
         },
         update: (profile) => {
             setDiceSize(profile.size);
@@ -238,29 +239,57 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 body.sleepTimeLimit = 1;
                 body.allowSleep = true;
 
-                body.quaternion.setFromEuler(0, 0, 0)
+                body.quaternion.setFromEuler(0, Math.PI, -Math.PI / 2)
                 //-Math.PI/2,0,Math.PI/2
 
                 body.addEventListener("sleep", () => {
                     // Compute the face and correction delta
                     //const { face, delta } = getFaceAndQuaternionDelta([r.y, r.z, r.x]);
                     const { face, euler } = getTopFace(body);
-                    if (face > 0) { // means we detected a face and not edge
-                        const delta = getRotationDeltaForTopFace(face, [euler.x, euler.y, euler.z]);
+                    if (face > 0) {
+                        const canonicalEuler = getCanonicalEulerForFace(face); // from your top-face detection
+                        const [cx, cy, cz] = [euler.x, euler.y, euler.z];
+                        const [tx, ty, tz] = canonicalEuler;
 
-                        // You can now interpolate from the current quaternion to the targetQuaternion:
-                        // body.quaternion.slerp(targetQuaternion, 0.5, body.quaternion) will rotate to the half way
-                        //body.quaternion.copy(targetQuaternion) // force it to the target.
-                        body.quaternion.setFromEuler(delta[0], delta[1], delta[2]);
+                        // minimalAngleDiff helps with wrap-around, e.g. going from 359° to 0° is only 1°.
+                        function minimalAngleDiff(a: number, b: number): number {
+                            let diff = b - a;
+                            // clamp to -PI..PI or similar
+                            while (diff > Math.PI) diff -= 2 * Math.PI;
+                            while (diff < -Math.PI) diff += 2 * Math.PI;
+                            return diff;
+                        }
+
+                        const dx = minimalAngleDiff(cx, tx);
+                        const dy = minimalAngleDiff(cy, ty);
+                        const dz = minimalAngleDiff(cz, tz);
+
+                        const toDeg = (d: number) => Math.floor(d * 180 / Math.PI);
+
+                        setLog(`rot face:${face} ${toDeg(dx)},${toDeg(dy)},${toDeg(dz)}`)
+
+                        body.quaternion.setFromEuler(tx, ty, tz);
+
+                        // const targetQ = delta.mult(body.quaternion); // delta * current
+
+                        // // Now smoothly interpolate the body's quaternion toward targetQ
+                        // // For example, with an interpolation factor alpha of 0.05:
+                        // body.quaternion.slerp(targetQ, 0.05, body.quaternion);
+
+
+                        setTimeout(() => setSceneActive(prev => prev - 1), 100);
+                        // Apply the delta:
+                        //const q = new CANNON.Quaternion();
+                        //const rotationQuaternion = q.setFromAxisAngle(face2axis(face, angle[1] > 0), angle[1]);
+                        //setLog(prev => prev + "\n" + face + ":" + toDeg(euler.x) + "," + toDeg(euler.y) + "," + toDeg(euler.z));
+                        //setLog(`rot face:${face} ${toDeg(angle[0])},${toDeg(angle[1])},${toDeg(angle[2])}`)
+                        //body.quaternion.mult(rotationQuaternion, body.quaternion);
+                        //rotateBody(body, rotationQuaternion, 0.05)
+
                         body.allowSleep = true;
+                    } else {
+                        body.allowSleep = false;
                     }
-                    // console.log("Dice settled with face:", face);
-                    // const toDeg = (rad: number[]) => rad.map(r => r * 180 / Math.PI);
-                    // //const delta = getRotationDeltaForTopFace(face, [euler.x, euler.y, euler.z])
-                    // const currUp = body.quaternion.vmult(new CANNON.Vec3(0, 1, 0));
-                    // console.log("curr up", toDeg(currUp.toArray()))
-                    // Apply the delta to correct the orientation:
-                    //body.quaternion.setFromEuler(delta[0], delta[1], delta[2])
 
 
                 });
@@ -290,6 +319,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
         };
     }, [world, bounds, diceInfo, worldDiceRef]);
+
 
     const dicePosition = [
         useSharedValue<Float3>([0, 0, 0]),
@@ -404,32 +434,35 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     console.log("bounds", bounds)
 
     return (
+        <>
+            <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-        <FilamentView style={{ flex: 1 }} renderCallback={renderCallback} >
-            <DefaultLight />
-            {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
-            <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
-                //falloffRadius={bounds.right}
-                position={[0, 100, 100]} //direction={[0,0,0]}
-            />
+            <FilamentView style={{ flex: 1 }} renderCallback={scenaActive > 0 ? renderCallback : undefined} >
 
-            <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
+                <DefaultLight />
+                {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
+                <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
+                    //falloffRadius={bounds.right}
+                    position={[0, 100, 100]} //direction={[0,0,0]}
+                />
+
+                <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
 
 
-            {activeDice
-                .filter(die => die.active)
-                .map((dieInfo, i) => (worldDiceRef.current &&
-                    <ModelRenderer key={i + "-" + isDotDice.value[i]}
-                        model={false ? dotDiceModel[i] : generalDiceModel[i]}
-                        castShadow={true} receiveShadow={true}
+                {activeDice
+                    .filter(die => die.active)
+                    .map((dieInfo, i) => (worldDiceRef.current &&
+                        <ModelRenderer key={i + "-" + isDotDice.value[i]}
+                            model={false ? dotDiceModel[i] : generalDiceModel[i]}
+                            castShadow={true} receiveShadow={true}
 
-                    >
-                        {texture[i] && <EntitySelector byName="Cube"
-                            textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
-                    </ModelRenderer>
-                ))}
+                        >
+                            {texture[i] && <EntitySelector byName="Cube"
+                                textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
+                        </ModelRenderer>
+                    ))}
 
-            {/* <Model source={DiceModel}
+                {/* <Model source={DiceModel}
                 translate={[bounds.left, 0, bounds.top]}
 
             />
@@ -437,8 +470,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 translate={[bounds.right, 0, bounds.bottom]}
 
             /> */}
-            <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
-        </FilamentView>
-
+                <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
+            </FilamentView>
+        </>
     );
 });

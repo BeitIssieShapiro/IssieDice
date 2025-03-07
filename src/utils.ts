@@ -128,6 +128,7 @@ export function safeColor(color: string | undefined | null): string {
   return color
 }
 
+
 export function getTopFace(body: CANNON.Body): { face: Face, euler: CANNON.Vec3 } {
   const euler = new CANNON.Vec3();
   body.quaternion.toEuler(euler);
@@ -165,113 +166,22 @@ export function getTopFace(body: CANNON.Body): { face: Face, euler: CANNON.Vec3 
 }
 
 
-// export function getRotationDeltaForTopFace(face: Face, orig: CANNON.Vec3): [number, number, number] {
-//   const [rx, ry, rz] = [toDeg(orig.x), toDeg(orig.y), toDeg(orig.z)];
-//   console.log("euler degrees", rx, ry, rz)
-//   let target: [number, number, number] = [rx, ry, rz];
-//   switch (face) {
-//     case 1:
-//       // Correct only the roll (Z) to 0°.
-//       target = [-Math.PI / 2, 0, Math.PI / 2];//y should be same as z axis
-//       break;
-//     case 2:
-//       // Correct roll to ±180° (choose the one with minimal difference)
-//       target = [Math.PI, 0, 0]; //y should be same as z axis
-//       break;
-//     case 3:
-//       // Correct pitch (X) to 90°.
-//       target = [0, 0, Math.PI / 2];
-//       break;
-//     case 4:
-//       // Correct pitch to -90°.
-//       target = [0, 0, 0];
-//       break;
-//     case 5:
-//       // Correct yaw (Y) to 90°.
-//       target = [Math.PI / 2, 0, Math.PI / 2];
-//       break;
-//     case 6:
-//       // Correct yaw (Y) to -90°.
-//       target = [rx, 0, rz];
-//       break;
-//     default:
-//       target = [rx, ry, rz];
-//   }
-//   return [
-//     minimalAngleDiff(rx, target[0]),
-//     minimalAngleDiff(ry, target[1]),
-//     minimalAngleDiff(rz, target[2])
-//   ];
-// }
-
-const toDeg = (rad: number) => rad * 180 / Math.PI;
-const toRad = (deg: number) => deg * Math.PI / 180;
-
-export function getRotationDeltaForTopFace(
-  face: Face,
-  orig: [number, number, number]
-): [number, number, number] {
-  const [rx, ry, rz] = [toDeg(orig[0]), toDeg(orig[1]), toDeg(orig[2])];
-  let target: [number, number, number] = [rx, ry, rz];
-  let faceName: "Top" | "Bottom" | "Front" | "Back" | "Right" | "Left";
-
+// Assume Cannon-es uses default YZX order (or set your own).
+export function getCanonicalEulerForFace(face: number): [number, number, number] {
   switch (face) {
+    case 4: 
+      return [0, 0, 0];
+    case 2: 
+      return [0, 0, Math.PI];
+    case 5: 
+      return [Math.PI / 2, 0, Math.PI / 2];
     case 1:
-      faceName = "Back";
-      break;
-    case 2:
-      faceName = "Bottom";
-      break;
-    case 3:
-      faceName = "Left";
-      break;
-    case 4:
-      faceName = "Top";
-      break;
-    case 5:
-      faceName = "Front";
-      break;
-    case 6:
-      faceName = "Right";
-      break;
+      return [-Math.PI / 2, 0, Math.PI / 2];
+    case 6: 
+      return [0, Math.PI, -Math.PI / 2];
+    case 3: 
+      return [0, 0, Math.PI / 2];
     default:
-      return [0, 0, 0]; // No change
+      return [0, 0, 0];
   }
-  console.log("orig", rx, ry, rz, "face:", face, faceName);
-
-  switch (faceName) {
-    case "Top": // 4
-      // Correct only the roll (Z) to 0°.
-      target = [rx, rz > 0 ? rz - 180 : rz + 180, 0];//y should be same as z axis
-      break;
-    case "Bottom": // 2
-      // Correct roll to ±180° (choose the one with minimal difference)
-      target = [rx, 0, 0]; //y should be same as z axis
-      break;
-    case "Front": // 5
-      // Correct pitch (X) to 90°.
-      target = [90, ry, 0];
-      break;
-    case "Back": // 1
-      // Correct pitch to -90°.
-      target = [-90, ry, 0];
-      break;
-    case "Right": // 6
-      // Correct yaw (Y) to 90°.
-      target = [0, ry, -90];
-      break;
-    case "Left": // 3
-      // Correct yaw (Y) to -90°.
-      target = [0, ry, 90];
-      break;
-    default:
-      target = [rx, ry, rz];
-  }
-
-  console.log("target", target)
-  return [
-    toRad(minimalAngleDiff(rx, target[0])),
-    toRad(minimalAngleDiff(ry, target[1])),
-    toRad(minimalAngleDiff(rz, target[2]))
-  ];
 }
