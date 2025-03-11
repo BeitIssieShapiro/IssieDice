@@ -39,7 +39,8 @@ const TransparentShadowMaterial = require('../assets/transparent_shadow_material
 
 LogBox.ignoreLogs([
     //"has already", 
-    "Failed to load asset"
+    "Failed to load asset",
+    "Missing required parameter"
 ]);
 
 

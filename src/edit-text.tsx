@@ -14,15 +14,8 @@ import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BTN_COLOR } from "./settings";
 import { Dropdown } from "react-native-element-dropdown";
+import { FaceText } from "./edit-face";
 
-export interface FaceText {
-    text: string;
-    fontSize: number;
-    fontName?: string;
-    fontBold: boolean;
-    backgroundColor: string;
-    color: string;
-}
 
 interface EditTextProps {
     label: string;

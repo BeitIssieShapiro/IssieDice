@@ -1,20 +1,23 @@
 import { ActivityIndicator, Alert, Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { translate } from "./lang";
+import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconIonic from 'react-native-vector-icons/Ionicons';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { FaceType } from "./profile-picker";
-import {  SelectFromGallery } from "./image-select";
+import { SelectFromGallery } from "./image-select";
 import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { unlink } from "react-native-fs";
 import { EditImage } from "./edit-image";
 import { CameraOverlay } from "./CameraOverlay";
-import { EditText, FaceText } from "./edit-text";
+import { EditText } from "./edit-text";
 import { Menu, MenuItem } from "react-native-material-menu";
 import { SearchImage } from "./search-image";
+import { EditFace, FaceText } from "./edit-face";
+import * as RNFS from 'react-native-fs';
+
 
 const blankImg = require("../assets/blank.png");
 interface EditDiceProps {
@@ -24,88 +27,130 @@ interface EditDiceProps {
 }
 
 export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
-const emptyFaceText: FaceText = {
-    text: "",
-    fontSize: 0,
-    fontBold: false,
-    backgroundColor: "#E7E7E7",
-    color: "black"
 
-}
-const emptyFacesArray = ["", "", "", "", "", ""]
-const emptyFacesText = [emptyFaceText, emptyFaceText, emptyFaceText, emptyFaceText, emptyFaceText, emptyFaceText,]
+const emptyFaceInfo: FaceInfo = {}
+
+const FacePreviewSize = 75;
+export const DefaultFaceBackgroundColor = "#E7E7E7";
+
+const emptyFacesInfoArray = [emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo];
+
 export function EditDice({ onClose, name, width }: EditDiceProps) {
     const [editedName, setEditedName] = useState<string>(name);
     const [openNameEditor, setOpenNameEditor] = useState<boolean>(false);
-    const [editedFaceText, setEditedFaceText] = useState<number>(-1);
-    const [faces, setFaces] = useState<string[]>(emptyFacesArray);
-    const [savedFaces, setSavedFaces] = useState<string[]>(emptyFacesArray);
-    const [facesText, setFacesText] = useState<FaceText[]>(emptyFacesText);
+    const [editFace, setEditFace] = useState<number>(-1);
+    const [facesInfo, setFacesInfo] = useState<FaceInfo[]>([...emptyFacesInfoArray]);
     const diceLayoutRef = useRef<any>(null);
-    const [editImage, setEditImage] = useState<{ uri: string, index: number } | undefined>();
-    const [openCamera, setOpenCamera] = useState<number>(-1);
-    const [openSearch, setOpenSearch] = useState<number>(-1);
-    const [showAddTypesMenu, setShowAddTypesMenu] = useState<number>(-1);
     const [busy, setBusy] = useState<boolean>(false);
 
     useEffect(() => {
         if (name.length > 0) {
-            loadFaceImages(name).then(async (faceFiles) => {
-                const fileList = faceFiles.map(f => f.uri);
-                setFaces(fileList);
-                setSavedFaces([...fileList])
-                setFacesText(faceFiles.map(f => f.text || emptyFaceText));
+            loadFaceImages(name).then(async (fInfo) => {
+                setFacesInfo([...fInfo]);
             });
+        } else {
+            selectDieName();
+            setFacesInfo([...emptyFacesInfoArray]);
         }
     }, [])
 
-    async function handleAddFace(index: number, type: FaceType, editedName: string) {
-        console.log("handleAddFace", index)
-        if (type == FaceType.Image) {
-            const filePath = `${getCustomTypePath(editedName)}/face_${index}${getCacheBusterSuffix()}.jpg`
-            await SelectFromGallery(filePath);
-            if (filePath.length > 0) {
-                setEditImage({ uri: filePath, index });
+    async function selectDieName() {
+        // chooses a name with the patter Cube 1/2/3 the first which is available
+        let counter = 1;
+        let newCubeName = fTranslate("NewDieName", counter);
+
+        let exists = false;
+        do {
+            const diePath = getCustomTypePath(newCubeName);
+            exists = await RNFS.exists(diePath);
+            if (exists) {
+                counter++;
+                newCubeName = fTranslate("NewDieName", counter);
             }
-        } else if (type == FaceType.Camera) {
-            setOpenCamera(index);
-        } else if (type == FaceType.Text) {
-            setEditedFaceText(index);
-        } else if (type == FaceType.Search) {
-            setOpenSearch(index);
-        }
-        setShowAddTypesMenu(-1);
+        } while (exists);
+
+        setEditedName(newCubeName);
     }
 
-    function handleFaceTextChange(index: number, faceText: FaceText) {
-        if (faceText.text.length > 0) {
-            // Save it as a json file
-            const basePath = getCustomTypePath(editedName);
-            const faceName = `face_${index}${getCacheBusterSuffix()}.json`
-            const content = JSON.stringify(faceText, undefined, " ");
-            const faceFilePath = path.join(basePath, faceName);
-            writeFileWithCacheBuster(faceFilePath, content).then(() => {
-                setFaces(curr => {
-                    curr[index] = faceFilePath;
-                    return [...curr];
-                })
-                setFacesText(curr => {
-                    curr[index] = faceText;
-                    return [...curr];
-                })
-            });
+    async function handleFaceInfoChange(index: number, faceInfo: FaceInfo, currFacesInfo: FaceInfo[]) {
+        let infoUri = currFacesInfo[index].infoUri;
+        let text = currFacesInfo[index].text;
+        let backgroundUri = currFacesInfo[index].backgroundUri;
+        let backgroundColor = currFacesInfo[index].backgroundColor;
+        let changed = false;
+        setBusy(true);
+
+        const isTextChanged = (before: FaceText, after: FaceText) => {
+            if (before && !after || after && !before) return true;
+            if (!before && !after) return false;
+
+            return before.color != after.color ||
+                before.fontBold != after.fontBold ||
+                before.fontName != after.fontName ||
+                before.fontSize != after.fontSize ||
+                before.text != after.text;
+        }
+
+        if (isTextChanged(text, faceInfo.text) || backgroundColor != faceInfo.backgroundColor) {
+            changed = true;
+            // text or background change
+            if (infoUri) {
+                await unlink(infoUri);
+                infoUri = undefined;
+            }
+
+            if (faceInfo.text || faceInfo.backgroundColor) {
+                const basePath = getCustomTypePath(editedName);
+                const faceName = `face_${index}${getCacheBusterSuffix()}.json`
+                const content = JSON.stringify({ ...faceInfo.text, backgroundColor: faceInfo.backgroundColor }, undefined, " ");
+
+                // save new json
+                infoUri = path.join(basePath, faceName);
+                await writeFileWithCacheBuster(infoUri, content);
+                text = faceInfo.text;
+            }
+
+            backgroundColor = faceInfo.backgroundColor;
+        }
+
+        if (backgroundUri != faceInfo.backgroundUri) {
+            changed = true;
+            if (backgroundUri) {
+                await unlink(backgroundUri);
+                backgroundUri = undefined;
+            }
+            if (faceInfo.backgroundUri) {
+                // move image to cube's folder
+                const basePath = getCustomTypePath(editedName);
+                const faceName = `face_${index}${getCacheBusterSuffix()}.jpg`
+                backgroundUri = path.join(basePath, faceName);
+
+                await copyFileToFolder(faceInfo.backgroundUri, backgroundUri, true);
+            }
+        }
+
+        if (changed) {
+            setFacesInfo(curr => {
+                return curr.map((item, i) => i == index ?
+                    { infoUri, backgroundUri, backgroundColor, text } as FaceInfo
+                    : item)
+            })
+
+            const textureFilePath = `${getCustomTypePath(editedName)}/texture${getCacheBusterSuffix()}.jpg`
+            setTimeout(() => {
+                console.log("capture the texture")
+                diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e))
+                    .then((filePath: string) => {
+                        copyFileToFolder(filePath, textureFilePath, true)
+                        console.log("saved the texture")
+                    })
+                    .finally(() => setBusy(false))
+            }, 1000);
+            console.log("FacesInfo updated", facesInfo)
         } else {
-            setFaces(curr => {
-                curr[index] = "";
-                return [...curr];
-            })
-            setFacesText(curr => {
-                curr[index] = emptyFaceText;
-                return [...curr];
-            })
+            setBusy(false);
         }
     }
-
 
     const handleEditName = async (newName: string, editedName: string): Promise<boolean> => {
         if (!newName || newName.length == 0) {
@@ -128,63 +173,14 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             if (editedName.length > 0) {
                 setBusy(true);
                 await renameDiceFolder(editedName, newName)
+                    .then(() => setEditedName(newName))
                     .finally(() => setBusy(false));
             }
         }
         setOpenNameEditor(false);
-        setEditedName(newName);
         return true;
     }
-
-
-    useEffect(() => {
-        let facesTouched = false;
-        setBusy(true);
-        try {
-            // Auto save upon changes
-            for (let i = 0; i < faces.length; i++) {
-                if (faces[i] != savedFaces[i]) {
-                    if (savedFaces[i].length > 0) {
-                        // remove previos face (async)
-                        unlink(savedFaces[i]);
-                    }
-                    facesTouched = true;
-                }
-            }
-            if (facesTouched) {
-                setSavedFaces(faces);
-                // save the texture.jpg after it renders
-                const textureFilePath = `${getCustomTypePath(editedName)}/texture${getCacheBusterSuffix()}.jpg`
-                requestAnimationFrame(() => {
-                    diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e))
-                        .then((filePath: string) => copyFileToFolder(filePath, textureFilePath, true))
-                });
-            }
-        } finally {
-            setBusy(false);
-        }
-    }, [faces, savedFaces]);
-
-    function hideMenu() {
-        setShowAddTypesMenu(-1)
-    }
-
-    if (editImage) {
-        return <EditImage uri={editImage.uri} onClose={() => setEditImage(undefined)} onDone={(url) => {
-            setFaces(curr => {
-                curr[editImage.index] = url;
-                return [...curr];
-            })
-            setEditImage(undefined);
-        }} />
-    }
-
-    if (openCamera >= 0) {
-        return <CameraOverlay onClose={() => setOpenCamera(-1)} onDone={(uri) => {
-            setEditImage({ uri, index: openCamera });
-            setOpenCamera(-1);
-        }} />
-    }
+    console.log("facesInfo", facesInfo)
 
     return <View style={styles.container}>
         <View style={styles.settingTitle}>
@@ -195,27 +191,24 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
 
         {busy && <ActivityIndicator />}
 
-        <View style={[styles.section]} >
+        <View style={[styles.section, { flexDirection: isRTL() ? "row-reverse" : "row" }]} >
             <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
             <Text style={styles.sectionValue}>{editedName}</Text>
             <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
 
         </View>
 
-        {editedFaceText >= 0 && <EditText label={translate("FaceTextLabel")}
-            initialText={facesText[editedFaceText].text}
-            initialFontBold={facesText[editedFaceText].fontBold}
-            initialFontSize={facesText[editedFaceText].fontSize}
-            initialColor={facesText[editedFaceText].color}
-            initialBGColor={facesText[editedFaceText].backgroundColor}
-            initialFontName={facesText[editedFaceText].fontName}
-            onClose={() => setEditedFaceText(-1)}
-            onDone={(faceText) => {
-                handleFaceTextChange(editedFaceText, faceText);
-                setEditedFaceText(-1);
+
+        {editFace >= 0 && <EditFace initialFaceText={facesInfo[editFace]?.text}
+            initialBackgroundImage={facesInfo[editFace]?.backgroundUri}
+            initialBackgroundColor={facesInfo[editFace]?.backgroundColor}
+            onClose={() => setEditFace(-1)}
+            onDone={(faceInfo) => {
+                console.log("onDone", faceInfo)
+                handleFaceInfoChange(editFace, faceInfo, facesInfo);
+                setEditFace(-1);
             }} width={width}
-            textWidth={70}
-            textHeight={70}
+            size={70}
         />}
 
         {openNameEditor && <EditText label={translate("EditNameTitle")}
@@ -231,70 +224,64 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
 
         />}
 
-        {openSearch >= 0 && <SearchImage onSelectImage={(uri) => {
-            setFaces(curr => {
-                curr[openSearch] = uri;
-                return [...curr];
-            })
-            setOpenSearch(-1);
-        }} onClose={() => setOpenSearch(-1)} width={width}
-            targetFile={path.join(getCustomTypePath(editedName), `face_${openSearch}${getCacheBusterSuffix()}.jpg`)}
-        />}
-
         <View style={styles.addFacesHost}>
+            <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", margin: 10 }}>
+                <DicePreview facesInfo={facesInfo} size={150} />
+                <DiceLayout facesInfo={facesInfo} size={FacePreviewSize*4} ref={diceLayoutRef} />
+            </View>
+            <View style={{ flexDirection: "column", width: "100%" }}>
+                <View style={styles.faceRow}>
+                    {[0, 1, 2].map(index => (
+                        <View key={index} style={styles.faceView}>
+                            <FacePreview size={FacePreviewSize}
+                                backgroundColor={facesInfo[index].backgroundColor}
+                                faceText={facesInfo[index].text}
+                                backgroundImage={facesInfo[index].backgroundUri}
+                            />
 
-            {[0, 1, 2, 3, 4, 5].map(index => {
-                return (
-                    <Menu
-                        style={{ margin: 60 }}
-                        key={index}
-                        visible={showAddTypesMenu == index}
-                        onRequestClose={hideMenu}
-                        anchor={<TouchableOpacity key={index} style={styles.addFace}
-                            onPress={() => {
-                                if (editedName.length == 0) {
-                                    Alert.alert(translate("MustHaveDiceNameBeforeAddFace"))
-                                    return;
-                                }
-                                setShowAddTypesMenu(index);
-                            }}
-                        >
-                            {faces[index]?.length > 0 && !faces[index].endsWith(".json") ?
-                                <Image source={{ uri: faces[index] }} style={{ width: 75, height: 75, backgroundColor: "#E7E7E7" }} /> :
-                                (facesText[index].text.length > 0 ?
-                                    <TextFace style={[]} faceText={facesText[index]} size={75} /> :
-                                    <Icon name="plus" size={35} />)
-                            }
-                        </TouchableOpacity>} >
-                        <FaceTypeMenuItem label={translate("FaceTypeText")} icon="text" onPress={() => handleAddFace(index, FaceType.Text, editedName)} />
-                        <FaceTypeMenuItem label={translate("FaceTypeCamera")} icon="camera-outline" onPress={() => handleAddFace(index, FaceType.Camera, editedName)} />
-                        <FaceTypeMenuItem label={translate("FaceTypeImage")} icon="image-outline" onPress={() => handleAddFace(index, FaceType.Image, editedName)} />
-                        <FaceTypeMenuItem label={translate("FaceTypeSearch")} icon="search-outline" onPress={() => handleAddFace(index, FaceType.Search, editedName)} />
+                            <View style={styles.faceButtons}>
+                                <Icon name="edit" size={30} onPress={(() => setEditFace(index))} />
+                                {/*todo add listen to audio*/}
+                                <Icon name="close" size={30} />
+                            </View>
+                        </View>
+                    ))}
+                </View>
 
-                    </Menu>)
-            })}
-        </View>
-        <View style={{ flexDirection: "row", width: "100%", justifyContent: "center" }}>
-            <DicePreview faces={faces.map((f, i) => ({ uri: f, text: facesText[i] }))} size={150} />
-            <DiceLayout faces={faces} facesText={facesText} size={200} ref={diceLayoutRef} />
-        </View>
-        {/* <Button title={translate("Save")} onPress={() => handleSave(editedName, lastSavedName)} /> */}
-    </View>
+                <View style={styles.faceRow}>
+                    {[3, 4, 5].map(index => (
+                        <View key={index} style={styles.faceView}>
+                            <FacePreview size={FacePreviewSize}
+                                backgroundColor={facesInfo[index].backgroundColor}
+                                faceText={facesInfo[index].text}
+                                backgroundImage={facesInfo[index].backgroundUri}
+                            />
+
+                            <View style={styles.faceButtons}>
+                                <Icon name="edit" size={30} onPress={(() => setEditFace(index))} />
+                                {/*todo add listen to audio*/}
+                                <Icon name="close" size={30} />
+                            </View>
+                        </View>
+                    ))}
+                </View>
+            </View>
+
+        </View >
+    </View >
 }
 
 interface DiceLayoutProps {
-    faces: string[];
-    facesText: FaceText[]
+    facesInfo: FaceInfo[]
     size: number;
 
 }
 interface DicePreviewProps {
-    faces: FaceInfo[] | ImageSourcePropType;
+    facesInfo: FaceInfo[] | ImageSourcePropType;
     size: number;
 }
 
-export function DicePreview({ faces, size }: DicePreviewProps) {
-    if (!faces) return null
+export function DicePreview({ facesInfo, size }: DicePreviewProps) {
     const faceSize = { width: size / 2, height: size / 2, left: size / 2, top: size / 2 }
     const facesStyles = [
         [styles.previewFace, styles.faceBorder, styles.previewFaceTop, faceSize, { bottom: size * 2 / 3 }], // Top
@@ -313,19 +300,25 @@ export function DicePreview({ faces, size }: DicePreviewProps) {
     return (
         <View style={[styles.previewContainer, { width: size, height: size }]}>
             {[0, 1, 2].map(index => {
-                if (!Array.isArray(faces)) {
+                if (!Array.isArray(facesInfo)) {
                     return <View key={index} style={[{ overflow: 'hidden' }, facesStyles[index]]}>
-                        <Image key={index} source={faces} style={[{
+                        <Image key={index} source={facesInfo} style={[{
                             width: size * 2, height: size * 2,
                             position: "absolute",
                         }, presetDice[index]]} />
                     </View>
                 }
 
-                const face = faces[index] as FaceInfo;
-                return face.uri.length > 0 && !face.uri.endsWith(".json") ?
-                    <Image key={index} source={{ uri: face.uri }} style={facesStyles[index]} /> :
-                    <TextFace key={index} faceText={face.text ?? emptyFaceText} style={facesStyles[index]} size={size / 2} />
+                const face = facesInfo[index] as FaceInfo;
+
+                return <FacePreview
+                    key={index}
+                    size={size / 2}
+                    style={facesStyles[index]}
+                    backgroundColor={face.backgroundColor}
+                    faceText={face.text}
+                    backgroundImage={face.backgroundUri}
+                />
             })}
         </View>
     );
@@ -333,14 +326,8 @@ export function DicePreview({ faces, size }: DicePreviewProps) {
 }
 
 
-function DiceLayoutImpl({ faces, size, facesText }: DiceLayoutProps, ref: any) {
+function DiceLayoutImpl({ facesInfo, size }: DiceLayoutProps, ref: any) {
     const viewShotRef = useRef(null);
-    const usedFaces = faces.map(f => ({ uri: f }));
-    if (usedFaces.length < 6) {
-        for (let i = 0; i < 6; i++) {
-            usedFaces.push(blankImg)
-        }
-    }
 
     useImperativeHandle(ref, () => ({
         toImage: () => {
@@ -350,7 +337,6 @@ function DiceLayoutImpl({ faces, size, facesText }: DiceLayoutProps, ref: any) {
 
     const faceSize = size / 4;
     const faceSizeStyle = { width: faceSize, height: faceSize }
-    console.log("usedFaces", usedFaces)
     const facesStyles = [
         [styles.previewFace, , faceSizeStyle, { left: faceSize + faceSize / 2, top: 0 }], // Right
         [styles.previewFace, , faceSizeStyle, { left: faceSize / 2, top: faceSize }], // Bottom
@@ -360,47 +346,54 @@ function DiceLayoutImpl({ faces, size, facesText }: DiceLayoutProps, ref: any) {
         [styles.previewFace, , faceSizeStyle, { left: faceSize + faceSize / 2, top: 3 * faceSize }], // Front
     ]
 
-
     return (
         <View style={[styles.previewContainer, { width: 4 * faceSize, height: 4 * faceSize }, { position: "absolute", left: -1000 }]}
             collapsable={false} ref={viewShotRef}>
-            {
-                [0, 1, 2, 3, 4, 5].map(i => (
-                    usedFaces[i] && usedFaces[i].uri && usedFaces[i].uri.length > 0 && !usedFaces[i].uri.endsWith(".json") ?
-                        <Image key={i} source={usedFaces[i]} style={facesStyles[i]} /> :
-                        faces[i] && facesText[i].text.length > 0 &&
-                        <TextFace key={i} style={facesStyles[i]} faceText={facesText[i]} size={faceSize} />
-
-                ))
-            }
+            {[0, 1, 2, 3, 4, 5].map(i => (
+                <FacePreview key={i} size={faceSize}
+                    style={facesStyles[i]}
+                    backgroundColor={facesInfo[i].backgroundColor}
+                    faceText={facesInfo[i].text}
+                    backgroundImage={facesInfo[i].backgroundUri} />
+            ))}
         </View>
     );
-
 }
 
-function TextFace({ faceText, style, size }: { faceText: FaceText, style: any, size: number }) {
-    return <View style={[...style, styles.textFaceContainer, { minWidth: size, maxWidth: size, minHeight: size, maxHeight: size, backgroundColor: "transparent" }]}>
-        <View style={[styles.textFaceTextContainer, { backgroundColor: faceText.backgroundColor, width: size, height: size }]}>
-            <Text style={[styles.textFace, {
+export function FacePreview({ faceText, backgroundColor, size, backgroundImage, style }: {
+    faceText?: FaceText,
+    backgroundColor?: string, backgroundImage?: string, size: number, style?: any
+}) {
+    const scale = size / FacePreviewSize;
+
+    return <View style={[styles.textFaceContainer,
+    {
+        minWidth: size, maxWidth: size, minHeight: size, maxHeight: size,
+        backgroundColor: "transparent",
+        overflow: 'hidden'
+    },
+        style
+    ]}>
+        <View style={[styles.textFaceTextContainer,
+        { backgroundColor: backgroundColor ?? DefaultFaceBackgroundColor, width: FacePreviewSize, height: FacePreviewSize },
+        scale != 1 ? {
+            transform: [
+                { scaleX: scale },
+                { scaleY: scale }
+            ]
+        } : {}
+        ]}>
+            {backgroundImage && backgroundImage.length > 0 && <Image source={{ uri: backgroundImage }} style={{ position: "absolute", width: "100%", height: "100%" }} />}
+            {faceText && faceText.text.length > 0 && <Text style={[styles.textFace, {
                 color: faceText.color,
                 fontWeight: faceText.fontBold ? "bold" : undefined,
                 fontSize: faceText.fontSize,
                 fontFamily: faceText.fontName ?? undefined
-            }]}>{faceText.text}</Text>
+            },
+            ]}>{faceText.text}</Text>}
         </View>
     </View >
 }
-
-function FaceTypeMenuItem({ label, icon, onPress }: { label: string, icon: string, onPress: () => void }) {
-    return <MenuItem onPress={onPress}>
-        <View style={styles.menuItem}  >
-            <IconIonic name={icon} color="blue" size={22} />
-            <Spacer w={10} />
-            <Text style={{ fontSize: 22 }}>{label}</Text>
-        </View>
-    </MenuItem>
-}
-
 
 export const DiceLayout = forwardRef(DiceLayoutImpl);
 
@@ -449,7 +442,20 @@ const styles = StyleSheet.create({
     addFacesHost: {
         flexDirection: "row",
         flexWrap: "wrap",
+        alignItems: "center",
+        justifyContent: "center",
 
+    },
+    faceView: {
+        width: FacePreviewSize,
+        height: FacePreviewSize,
+        backgroundColor: "#E7E7E7",
+        margin: 20,
+    },
+    faceButtons: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
     },
     addFace: {
         margin: 20,
@@ -465,14 +471,21 @@ const styles = StyleSheet.create({
     previewContainer: {
         backgroundColor: 'transparent',
     },
+    faceRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        margin: 25
+    },
     previewFace: {
         position: 'absolute',
         transformOrigin: "0.0",
         backgroundColor: "#E7E7E7",
-        borderRadius: 5,
+        //borderRadius: 5,
     },
     faceBorder: {
-        borderWidth: 1,
+        borderWidth: 2,
+        borderStyle: "solid",
         borderColor: "gray",
     },
     previewFaceLeft: {
@@ -506,6 +519,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     textFace: {
+        position: "absolute",
         fontSize: 25,
         textAlign: "center",
         flexWrap: "wrap",

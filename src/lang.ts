@@ -162,6 +162,12 @@ const strings = {
         "Numbers": "מספרים",
         "Colors": "צבעים",
         "Dots": "נקודות",
+        "EditFace": "עריכת פאה",
+        "EditText": "טקסט",
+        "EditBackground": "רקע",
+        "EditAudio":"הקלטה",
+        "NewDieName": "קוביה {1}"
+
     },
     "ar": {
         "ButtonTitle": "زر {1}",

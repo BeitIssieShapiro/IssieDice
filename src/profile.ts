@@ -7,8 +7,8 @@ import { ensureAndroidCompatible, ignore, joinPaths } from './utils';
 import { fTranslate, translate } from './lang';
 import { FaceType } from './profile-picker';
 import { unzip, zip } from 'react-native-zip-archive';
-import { FaceText } from './edit-text';
 import { ImageSourcePropType } from 'react-native';
+import { FaceText } from './edit-face';
 
 export function doNothing() { }
 
@@ -300,7 +300,7 @@ export function getProfilePath(name: string): string {
 
 async function loadProfiles(): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.Profiles}`).then(async (files) => {
-        const list = [];
+        const list: List[] = [];
         for (const file of files) {
             if (file.name.endsWith(".json")) {
                 const name = file.name.substring(0, file.name.length - 5);
@@ -320,7 +320,7 @@ async function loadProfiles(): Promise<List[]> {
 
 async function loadCustomDice(ommitFaces = false): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(async (folders) => {
-        const list:List[] = [];
+        const list: List[] = [];
         for (const folder of folders) {
             list.push({
                 key: folder.name,
@@ -336,23 +336,30 @@ async function loadCustomDice(ommitFaces = false): Promise<List[]> {
 }
 
 export interface FaceInfo {
-    uri: string;
+    backgroundUri?: string;
+    infoUri?: string;
+    backgroundColor?: string
     text?: FaceText;
+    // todo audio
 }
 
 export async function loadFaceImages(name: string): Promise<FaceInfo[]> {
     const customDicePath = getCustomTypePath(name);
 
     const files = await RNFS.readDir(customDicePath);
-    const list: FaceInfo[] = [{ uri: "" }, { uri: "" }, { uri: "" }, { uri: "" }, { uri: "" }, { uri: "" }];
+    const list: FaceInfo[] = [{}, {}, {}, {}, {}, {}];
     for (const elem of files) {
         if (elem.name.startsWith("face")) {
             const index = parseInt(elem.name.substring(5, 6));
-            list[index].uri = elem.path;
             if (elem.path.endsWith(".json")) {
                 // is a text
                 const textInfo = JSON.parse(await loadFile(elem.path));
                 list[index].text = textInfo;
+                list[index].backgroundColor = textInfo.backgroundColor;
+                list[index].infoUri = elem.path;
+            } else {
+                // a jpg:
+                list[index].backgroundUri = elem.path;
             }
         }
     }
@@ -382,8 +389,6 @@ export async function saveDataUrlAs(dataUrl: string, filePath: string) {
 export async function ListElements(folder: Folders): Promise<List[]> {
     if (folder == Folders.DiceTemplates) {
         return [...templatesList, ...(await loadCustomDice())];
-    } else if (folder == Folders.FaceType) {
-        return faceTypes;
     } else if (folder == Folders.Profiles) {
         return loadProfiles();
     }
@@ -416,7 +421,7 @@ export async function renameDiceFolder(currName: string, newName: string) {
     // Check all profile and change dice name if includes the old dice name
     const allProfiles = await loadProfiles();
     for (const profileListItem of allProfiles) {
-        const profileString = await loadFile(getProfilePath(profileListItem.key));
+        const profileString = await loadFile(getProfilePath(profileListItem.key + ".json"));
         const profile: Profile = JSON.parse(profileString);
         let modified = false;
         for (const die of profile.dice) {
@@ -441,9 +446,14 @@ export async function exportDice(name: string): Promise<string> {
         type: "dice",
         name
     }
-    const files = (await loadFaceImages(name)).filter(f => f.uri.length > 0).map(f => ensureAndroidCompatible(f.uri));
+    const files = (await loadFaceImages(name)).filter(f => (
+        f.backgroundUri && f.backgroundUri.length > 0 ||
+        f.infoUri && f.infoUri.length > 0
+    )).map(f => ensureAndroidCompatible(
+        f.backgroundUri && f.backgroundUri.length > 0 ? f.backgroundUri : f.infoUri!
+    ));
 
-    const diceMaterialUri =  await readTexture(name)
+    const diceMaterialUri = await readTexture(name)
     files.push(diceMaterialUri);
 
     files.push(ensureAndroidCompatible(metaDataFile));
@@ -586,7 +596,7 @@ function loadFile(path: string) {
 }
 
 export async function writeFileWithCacheBuster(targetPath: string, content: string) {
-    const { folder, fileName } = splitFilePath(targetPath);
+    const { folder, fileName, extension } = splitFilePath(targetPath);
     const cacheBusterPrefixPos = fileName.indexOf("$$");
 
     if (!await RNFS.exists(folder)) {
@@ -599,7 +609,7 @@ export async function writeFileWithCacheBuster(targetPath: string, content: stri
         const files = await RNFS.readDir(folder);
         for (const file of files) {
             // delete any file with same base path
-            if (file.name.startsWith(baseFileName)) {
+            if (file.name.startsWith(baseFileName) && file.name.endsWith(extension)) {
                 await RNFS.unlink(file.path);
             }
         }
@@ -618,16 +628,23 @@ export async function writeFile(path: string, content: string, verifyFolderExist
 
 }
 
-function splitFilePath(targetPath: string): { folder: string; fileName: string } {
+function splitFilePath(targetPath: string): { folder: string; fileName: string; extension: string } {
     const lastSlashIndex = targetPath.lastIndexOf("/");
-    if (lastSlashIndex === -1) {
-        // If no slash is found, there's no folder information.
-        return { folder: "", fileName: targetPath };
+    let folder = "";
+    let fullName = targetPath;
+    if (lastSlashIndex !== -1) {
+      folder = targetPath.substring(0, lastSlashIndex);
+      fullName = targetPath.substring(lastSlashIndex + 1);
     }
-    const folder = targetPath.substring(0, lastSlashIndex);
-    const fileName = targetPath.substring(lastSlashIndex + 1);
-    return { folder, fileName };
-}
+    const lastDotIndex = fullName.lastIndexOf(".");
+    let fileName = fullName;
+    let extension = "";
+    if (lastDotIndex !== -1) {
+      fileName = fullName.substring(0, lastDotIndex);
+      extension = fullName.substring(lastDotIndex); // includes the dot, e.g. ".jpg"
+    }
+    return { folder, fileName, extension };
+  }
 
 export const copyFileToFolder = async (sourcePath: string, targetPath: string, overwrite = true) => {
 
@@ -670,7 +687,7 @@ export const deleteFile = async (filePath: string) => {
 }
 
 
-function getTempFileName(ext: string) {
+export function getTempFileName(ext: string) {
     const date = new Date()
     let fn = Math.random() + '-' + date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + 'T' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
 

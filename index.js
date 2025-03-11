@@ -2,7 +2,7 @@
  * @format
  */
 
-import { AppRegistry } from 'react-native';
+import { AppRegistry, LogBox } from 'react-native';
 import { name as appName } from './app.json';
 import App from './src/main';
 import { Init } from './src/profile';
@@ -12,6 +12,11 @@ import { EditText } from './src/edit-text';
 import { EditDice } from './src/edit-dice';
 
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+LogBox.ignoreLogs([
+    "Missing required parameter"
+]);
+
 
 Init();
 
