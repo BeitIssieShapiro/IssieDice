@@ -1,25 +1,18 @@
-import { ActivityIndicator, Alert, Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { fTranslate, isRight2Left, isRTL, translate } from "./lang";
+import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { fTranslate, isRTL, translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
-import IconIonic from 'react-native-vector-icons/Ionicons';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { FaceType } from "./profile-picker";
-import { SelectFromGallery } from "./image-select";
 import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { unlink } from "react-native-fs";
-import { EditImage } from "./edit-image";
-import { CameraOverlay } from "./CameraOverlay";
 import { EditText } from "./edit-text";
-import { Menu, MenuItem } from "react-native-material-menu";
-import { SearchImage } from "./search-image";
 import { EditFace, FaceText } from "./edit-face";
 import * as RNFS from 'react-native-fs';
+import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
-const blankImg = require("../assets/blank.png");
 interface EditDiceProps {
     name: string;
     onClose: () => void;
@@ -30,7 +23,8 @@ export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
 
 const emptyFaceInfo: FaceInfo = {}
 
-const FacePreviewSize = 75;
+export const FacePreviewSize = 150;
+export const FontFactor = FacePreviewSize / 70;
 export const DefaultFaceBackgroundColor = "#E7E7E7";
 
 const emptyFacesInfoArray = [emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo];
@@ -77,18 +71,20 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         let text = currFacesInfo[index].text;
         let backgroundUri = currFacesInfo[index].backgroundUri;
         let backgroundColor = currFacesInfo[index].backgroundColor;
+        let audioUri = currFacesInfo[index].audioUri;
+
         let changed = false;
         setBusy(true);
 
-        const isTextChanged = (before: FaceText, after: FaceText) => {
+        const isTextChanged = (before: FaceText | undefined, after: FaceText | undefined) => {
             if (before && !after || after && !before) return true;
             if (!before && !after) return false;
 
-            return before.color != after.color ||
-                before.fontBold != after.fontBold ||
-                before.fontName != after.fontName ||
-                before.fontSize != after.fontSize ||
-                before.text != after.text;
+            return before!.color != after!.color ||
+                before!.fontBold != after!.fontBold ||
+                before!.fontName != after!.fontName ||
+                before!.fontSize != after!.fontSize ||
+                before!.text != after!.text;
         }
 
         if (isTextChanged(text, faceInfo.text) || backgroundColor != faceInfo.backgroundColor) {
@@ -128,11 +124,24 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                 await copyFileToFolder(faceInfo.backgroundUri, backgroundUri, true);
             }
         }
+        if (audioUri != faceInfo.audioUri) {
+            changed = true;
+            if (audioUri) {
+                await unlink(audioUri);
+                audioUri = undefined;
+            }
+            if (faceInfo.audioUri) {
+                const basePath = getCustomTypePath(editedName);
+                const faceName = `face_${index}${getCacheBusterSuffix()}.mp4`;
+                audioUri = path.join(basePath, faceName);
+                await copyFileToFolder(faceInfo.audioUri, audioUri, true);
+            }
+        }
 
         if (changed) {
             setFacesInfo(curr => {
                 return curr.map((item, i) => i == index ?
-                    { infoUri, backgroundUri, backgroundColor, text } as FaceInfo
+                    { infoUri, backgroundUri, backgroundColor, text, audioUri } as FaceInfo
                     : item)
             })
 
@@ -202,13 +211,14 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         {editFace >= 0 && <EditFace initialFaceText={facesInfo[editFace]?.text}
             initialBackgroundImage={facesInfo[editFace]?.backgroundUri}
             initialBackgroundColor={facesInfo[editFace]?.backgroundColor}
+            intialAudioUri={facesInfo[editFace]?.audioUri}
             onClose={() => setEditFace(-1)}
             onDone={(faceInfo) => {
                 console.log("onDone", faceInfo)
                 handleFaceInfoChange(editFace, faceInfo, facesInfo);
                 setEditFace(-1);
             }} width={width}
-            size={70}
+            size={FacePreviewSize}
         />}
 
         {openNameEditor && <EditText label={translate("EditNameTitle")}
@@ -227,7 +237,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         <View style={styles.addFacesHost}>
             <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", margin: 10 }}>
                 <DicePreview facesInfo={facesInfo} size={150} />
-                <DiceLayout facesInfo={facesInfo} size={FacePreviewSize*4} ref={diceLayoutRef} />
+                <DiceLayout facesInfo={facesInfo} size={FacePreviewSize * 4} ref={diceLayoutRef} />
             </View>
             <View style={{ flexDirection: "column", width: "100%" }}>
                 <View style={styles.faceRow}>
@@ -237,6 +247,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                                 backgroundColor={facesInfo[index].backgroundColor}
                                 faceText={facesInfo[index].text}
                                 backgroundImage={facesInfo[index].backgroundUri}
+                                audioUri={facesInfo[index].audioUri}
                             />
 
                             <View style={styles.faceButtons}>
@@ -255,6 +266,7 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                                 backgroundColor={facesInfo[index].backgroundColor}
                                 faceText={facesInfo[index].text}
                                 backgroundImage={facesInfo[index].backgroundUri}
+                                audioUri={facesInfo[index].audioUri}
                             />
 
                             <View style={styles.faceButtons}>
@@ -318,6 +330,7 @@ export function DicePreview({ facesInfo, size }: DicePreviewProps) {
                     backgroundColor={face.backgroundColor}
                     faceText={face.text}
                     backgroundImage={face.backgroundUri}
+                    audioUri={face.audioUri}
                 />
             })}
         </View>
@@ -354,15 +367,18 @@ function DiceLayoutImpl({ facesInfo, size }: DiceLayoutProps, ref: any) {
                     style={facesStyles[i]}
                     backgroundColor={facesInfo[i].backgroundColor}
                     faceText={facesInfo[i].text}
-                    backgroundImage={facesInfo[i].backgroundUri} />
+                    backgroundImage={facesInfo[i].backgroundUri}
+                    audioUri={facesInfo[i].audioUri}
+                />
+
             ))}
         </View>
     );
 }
 
-export function FacePreview({ faceText, backgroundColor, size, backgroundImage, style }: {
+export function FacePreview({ faceText, backgroundColor, size, backgroundImage, audioUri, style, onAudioPress }: {
     faceText?: FaceText,
-    backgroundColor?: string, backgroundImage?: string, size: number, style?: any
+    backgroundColor?: string, backgroundImage?: string, size: number, style?: any, audioUri?: string, onAudioPress?: () => void
 }) {
     const scale = size / FacePreviewSize;
 
@@ -375,7 +391,7 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
         style
     ]}>
         <View style={[styles.textFaceTextContainer,
-        { backgroundColor: backgroundColor ?? DefaultFaceBackgroundColor, width: FacePreviewSize, height: FacePreviewSize },
+        { backgroundColor: !backgroundColor || backgroundColor == "" ? DefaultFaceBackgroundColor : backgroundColor, width: FacePreviewSize, height: FacePreviewSize },
         scale != 1 ? {
             transform: [
                 { scaleX: scale },
@@ -387,10 +403,16 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
             {faceText && faceText.text.length > 0 && <Text style={[styles.textFace, {
                 color: faceText.color,
                 fontWeight: faceText.fontBold ? "bold" : undefined,
-                fontSize: faceText.fontSize,
+                fontSize: faceText.fontSize * FontFactor,
                 fontFamily: faceText.fontName ?? undefined
             },
             ]}>{faceText.text}</Text>}
+
+            {audioUri && <Pressable style={[styles.playButton]}
+                onPress={() => onAudioPress ? onAudioPress() : {}}
+            >
+                <IconMCI name="play-outline" size={35} style={{ transform: [{ translateX: 3 }] }} />
+            </Pressable>}
         </View>
     </View >
 }
@@ -527,6 +549,18 @@ const styles = StyleSheet.create({
     menuItem: {
         flexDirection: "row",
         alignItems: "center",
+    },
+    playButton: {
+        position: "absolute",
+        right: 0,
+        top: 0,
+        margin: 10,
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        backgroundColor: "lightgray",
+        justifyContent: "center",
+        alignItems: "center"
     }
 
 })

@@ -10,8 +10,9 @@ import React from "react";
 import { GlobalContext } from './src/global-context';
 import { EditText } from './src/edit-text';
 import { EditDice } from './src/edit-dice';
+import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 LogBox.ignoreLogs([
     "Missing required parameter"
@@ -19,6 +20,8 @@ LogBox.ignoreLogs([
 
 
 Init();
+export const audioRecorderPlayer = new AudioRecorderPlayer();
+
 
 const AppWithCtx = (props) => (
     <GlobalContext.Provider value={{

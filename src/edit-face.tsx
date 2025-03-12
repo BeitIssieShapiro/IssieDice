@@ -6,20 +6,24 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
+    ActivityIndicator,
+    Pressable,
 
 } from "react-native";
-import { translate } from "./lang";
+import { isRTL, translate } from "./lang";
 import { IconButton, NumberSelector, Spacer } from "./components";
 import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BTN_COLOR } from "./settings";
 import { Dropdown } from "react-native-element-dropdown";
-import { DefaultFaceBackgroundColor, FacePreview } from "./edit-dice";
+import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize, FontFactor } from "./edit-dice";
 import { FaceInfo, getTempFileName } from "./profile";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import IconIonic from 'react-native-vector-icons/Ionicons';
 import { SelectFromGallery } from "./image-select";
 import { CameraOverlay } from "./CameraOverlay";
 import { SearchImage } from "./search-image";
+import { playAudio, RecordButton } from "./audio";
+import { audioRecorderPlayer } from "../index";
 
 export interface FaceText {
     text: string;
@@ -33,6 +37,7 @@ interface EditFaceProps {
     initialFaceText?: FaceText;
     initialBackgroundColor?: string;
     initialBackgroundImage?: string;
+    intialAudioUri?: string;
 
     onDone: (faceInfo: FaceInfo) => void;
     onClose: () => void;
@@ -55,6 +60,7 @@ const FONTS = [
 
 export const EditFace: React.FC<EditFaceProps> = ({
     initialFaceText,
+    intialAudioUri,
     initialBackgroundColor,
     initialBackgroundImage, onDone, onClose, width, size,
 }) => {
@@ -66,15 +72,26 @@ export const EditFace: React.FC<EditFaceProps> = ({
     const [backgroundColor, setBackgroundColor] = useState(initialBackgroundColor);
     const [openColorPicker, setOpenColorPicker] = useState<ColorPickerProps | undefined>();
     const [backgroundImage, setBackgroundImage] = useState<string | undefined>(initialBackgroundImage);
+    const [audioUri, setAudioUri] = useState<string | undefined>(intialAudioUri);
     const [openCamera, setOpenCamera] = useState<boolean>(false);
     const [openSearch, setOpenSearch] = useState<boolean>(false);
+    const [busy, setBusy] = useState<boolean>(false);
 
+
+    async function handlePlay(uri: string | undefined) {
+        if (!uri) return;
+        
+    }
 
     if (openCamera) {
-        return <CameraOverlay onClose={() => setOpenCamera(false)} onDone={(uri) => {
+        return <CameraOverlay onClose={() => {
+            setOpenCamera(false)
+            setBusy(false);
+        }} onDone={(uri) => {
             setBackgroundImage(uri);
             setBackgroundColor(undefined)
             setOpenCamera(false);
+            setBusy(false);
         }} />
     }
 
@@ -85,11 +102,17 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 setBackgroundImage(uri);
                 setBackgroundColor(undefined)
                 setOpenSearch(false);
+                setBusy(false);
             }}
-            onClose={() => setOpenSearch(false)} width={width}
+            onClose={() => {
+                setOpenSearch(false);
+                setBusy(false);
+            }} width={width}
             targetFile={filePath}
         />
     }
+
+    const styleLabel: any = [styles.styleLabel, { textAlign: "left" }]
 
     return (
         <View style={[StyleSheet.absoluteFill, styles.overlay]}>
@@ -97,18 +120,23 @@ export const EditFace: React.FC<EditFaceProps> = ({
 
                 <Text allowFontScaling={false} style={styles.title}>{translate("EditFace")}</Text>
 
-
-                <FacePreview size={size}
-                    backgroundColor={backgroundColor}
-                    backgroundImage={backgroundImage}
-                    faceText={{
-                        fontBold: isBold,
-                        fontSize,
-                        text: text || "",
-                        color,
-                    }}
-                />
-                <Spacer h={10} />
+                <View style={{ marginBottom: 10 }}>
+                    {busy && <View style={styles.busy}>
+                        <ActivityIndicator />
+                    </View>}
+                    <FacePreview size={size}
+                        backgroundColor={backgroundColor}
+                        backgroundImage={backgroundImage}
+                        faceText={{
+                            fontBold: isBold,
+                            fontSize: fontSize,
+                            text: text || "",
+                            color,
+                        }}
+                        audioUri={audioUri}
+                        onAudioPress={() => audioUri && playAudio(audioUri)}
+                    />
+                </View>
 
 
                 <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={openColorPicker ? openColorPicker.color : "white"}
@@ -120,67 +148,91 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 />
 
 
-                <View style={{ width: "100%", flexDirection: "row", alignItems: "center" }}>
+
+
+                <View style={{ width: "100%", flexDirection: isRTL() ? "row-reverse" : "row", alignItems: "center", justifyContent: "center" }}>
                     {/*Background*/}
-                    <View style={styles.faceEditSection}>
+                    <View style={[styles.faceEditSection, { width: "30%" }]}>
                         <Text allowFontScaling={false} style={styles.label}>{translate("EditBackground")}</Text>
 
-                        <Icon name="view-gallery-outline" size={35} onPress={() => {
+                        <IconButton icon="view-gallery-outline" type="MCI" text={translate("SrcFromGallery")} onPress={() => {
                             const filePath = getTempFileName("jpg")
+                            setBusy(true);
                             SelectFromGallery(filePath).then(() => {
+
                                 setBackgroundImage(filePath);
                                 setBackgroundColor(undefined)
-                            });
-                        }} />
+                            }).finally(() => setBusy(false));
+                        }} backgroundColor='white' />
 
-                        <Icon name="image-search-outline" size={35} onPress={() => setOpenSearch(true)} />
+                        <IconButton icon="image-search-outline" type="MCI" text={translate("SrcFromSearch")} onPress={() => {
+                            setBusy(true);
+                            setOpenSearch(true)
+                        }} backgroundColor='white' />
 
-                        <Icon name="camera-plus-outline" size={35} onPress={() => setOpenCamera(true)} />
-                        <Icon name="camera-plus-outline" size={35} onPress={() => setOpenCamera(true)} />
+                        <IconButton icon="camera-plus-outline" type="MCI" text={translate("SrcFromCamera")} onPress={() => {
+                            setBusy(true);
+                            setOpenCamera(true)
+                        }} backgroundColor='white' />
+
+
+
                         <TouchableOpacity
                             style={styles.colorSelectHost}
                             onPress={() => setOpenColorPicker(({
-                                color: backgroundColor || DefaultFaceBackgroundColor, onSelect: c => {
+                                color: backgroundColor && backgroundColor != "" ? backgroundColor : DefaultFaceBackgroundColor, onSelect: c => {
                                     setBackgroundColor(c)
                                     setBackgroundImage(undefined);
                                 }
                             }))}
                         >
-                            <Text allowFontScaling={false} style={styles.styleLabel}>{translate("BackgroundColor")}</Text>
+                            <Text allowFontScaling={false} style={styleLabel}>{translate("FaceBackgroundColor")}</Text>
                             <View style={[styles.colorCircle, { backgroundColor: backgroundColor }]} />
                         </TouchableOpacity>
+
+                        <IconButton icon="close-outline" type="Ionicon" text={translate("NoBackground")} onPress={() => {
+                            setBackgroundImage(undefined);
+                            setBackgroundColor(undefined)
+                        }
+                        } backgroundColor='white' />
                     </View>
                     {/*Text*/}
-                    <View style={[styles.faceEditSection, { width: "50%" }]}>
+                    <View style={[styles.faceEditSection, { width: "50%", direction: isRTL() ? "rtl" : "ltr" }]} >
                         <Text allowFontScaling={false} style={styles.label}>{translate("EditText")}</Text>
 
                         {/* Editable Text Input */}
+
                         <View style={{ flexDirection: "column", alignItems: "center", }}>
 
-                            <TextInput
-                                style={[
-                                    styles.input,
-                                    { width: size, height: size },
+                            <View>
+                                <TextInput
+                                    style={[
+                                        styles.input,
+                                        { width: size, height: size },
 
-                                    { fontSize, color, fontWeight: isBold ? "bold" : "normal", backgroundColor },
-                                    { fontFamily: fontName }
-                                ]}
-                                placeholderTextColor="gray"
-                                value={text}
-                                autoCapitalize="none"
-                                autoCorrect={false}
+                                        { fontSize: fontSize * FontFactor, color, fontWeight: isBold ? "bold" : "normal", backgroundColor },
+                                        { fontFamily: fontName }
+                                    ]}
+                                    placeholderTextColor="gray"
+                                    value={text}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
 
-                                onChangeText={(newText) => {
-                                    setText(newText);
-                                }}
-                                autoFocus
-                                allowFontScaling={false}
-                            />
+                                    onChangeText={(newText) => {
+                                        setText(newText);
+                                    }}
+                                    autoFocus
+                                    allowFontScaling={false}
+                                />
+                                <IconIonic style={{ position: "absolute", left: -FacePreviewSize / 2 }} size={35} name="close-outline" color="red" onPress={() => {
+                                    setText("");
+                                }} />
+                            </View>
                         </View>
-                        <View style={styles.stylesHost}>
+                        <View style={[styles.stylesHost, { width: "25%" }]}>
                             {/* Font Selection */}
                             <View style={styles.colorSelectHost}>
-                                <Text allowFontScaling={false} style={styles.styleLabel}>{translate("FontName")}</Text>
+                                <Text allowFontScaling={false} style={styleLabel}>{translate("FontName")}</Text>
 
                                 <Dropdown
                                     style={{ width: 150, justifyContent: "flex-start", marginStart: 10 }}
@@ -201,13 +253,13 @@ export const EditFace: React.FC<EditFaceProps> = ({
                             <NumberSelector min={10} max={60} title={translate("FontSize")} value={fontSize} style={styles.fontSelector}
                                 onDown={() => setFoneSize(fontSize - 2)}
                                 onUp={() => setFoneSize(fontSize + 2)}
-                                titleStyle={styles.styleLabel}
+                                titleStyle={styleLabel}
                             />
 
 
                             <TouchableOpacity style={styles.colorSelectHost}
                                 onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} >
-                                <Text allowFontScaling={false} style={styles.styleLabel}>{translate("TextColor")}</Text>
+                                <Text allowFontScaling={false} style={styleLabel}>{translate("TextColor")}</Text>
                                 <View style={[styles.colorCircle, { backgroundColor: color }]} />
                             </TouchableOpacity>
 
@@ -217,15 +269,34 @@ export const EditFace: React.FC<EditFaceProps> = ({
                                     <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
                                     <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
                                 }
-                                <Text allowFontScaling={false} style={styles.styleLabel} >{translate("Bold")}</Text>
+                                <Text allowFontScaling={false} style={styleLabel} >{translate("Bold")}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
 
 
                     {/*Audio*/}
-                    <View style={styles.faceEditSection}>
+                    <View style={[styles.faceEditSection, { alignItems: "center" }]}>
                         <Text allowFontScaling={false} style={styles.label}>{translate("EditAudio")}</Text>
+
+                        <View style={styles.roundButton}>
+                            <RecordButton
+                                size={60}
+                                recordingProgressCallback={(state) => {
+                                    console.log("recording state", state);
+                                    //setRecordingState(state);
+                                }}
+                                onStartRecord={() => { }}
+                                onStopRecord={() => { }}
+                                onNewAudio={(filePath) => setAudioUri(filePath)}
+                            />
+
+                            {/* <IconMCI name="microphone-outline" size={35} /> */}
+                        </View>
+                        <Pressable style={styles.roundButton}
+                            onPress={() => setAudioUri(undefined)}>
+                            <IconMCI name="delete-outline" size={35} />
+                        </Pressable>
                     </View>
 
                 </View>
@@ -243,6 +314,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                             } : undefined,
                             backgroundUri: backgroundImage,
                             backgroundColor,
+                            audioUri,
                         } as FaceInfo
                         onDone(faceInfo);
 
@@ -274,7 +346,6 @@ const styles = StyleSheet.create({
     },
     faceEditSection: {
         height: "100%",
-        width: "22%",
         borderWidth: 1,
         borderColor: "lightgray",
         borderRadius: 7,
@@ -379,4 +450,23 @@ const styles = StyleSheet.create({
         width: '100%',
         zIndex: 1900
     },
+    busy: {
+        position: "absolute",
+        left: -FacePreviewSize / 2,
+        top: FacePreviewSize / 3,
+    },
+    playButton: {
+        position: "absolute",
+        right: 0,
+        top: 0,
+    },
+    roundButton: {
+        margin: 10,
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        backgroundColor: "lightgray",
+        justifyContent: "center",
+        alignItems: "center"
+    }
 });

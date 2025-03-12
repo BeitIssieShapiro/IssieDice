@@ -165,8 +165,17 @@ const strings = {
         "EditFace": "עריכת פאה",
         "EditText": "טקסט",
         "EditBackground": "רקע",
-        "EditAudio":"הקלטה",
-        "NewDieName": "קוביה {1}"
+        "EditAudio": "הקלטה",
+        "NewDieName": "קוביה {1}",
+        "FontSize": "גודל",
+        "FontName": "פונט",
+        "Bold": "מודגש",
+        "TextColor": "צבע",
+        "FaceBackgroundColor": "צבע",
+        "SrcFromGallery": "גלריה",
+        "SrcFromSearch":"חיפוש",
+        "SrcFromCamera":"מצלמה",
+        "NoBackground": "הסר רקע",
 
     },
     "ar": {

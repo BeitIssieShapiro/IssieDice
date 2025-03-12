@@ -128,17 +128,20 @@ export default function App() {
 
       {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => setOpenSettings(false)} />}
       <>
-        {!openSettings && <TouchableOpacity style={styles.overlay}
+        {/** indicator to a lock */}
+        {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), zIndex:1000 }]} />}
+
+        {/** Progress */}
+        {importInProgress && <View style={styles.progressBarHost}>
+          <Text style={{ fontSize: 28, marginBottom: 5 }}>{importInProgress.message}</Text>
+          <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
+        </View>}
+
+        {!openSettings && !inRecovery && <TouchableOpacity style={styles.overlay}
           onPress={handleThrowDice}
           activeOpacity={1}
         >
-          {/** indicator to a lock */}
-          {inRecovery && <View style={[styles.lockIndicator, {top:Math.max(4, insets.top)}]} />}
-          {/** Progress */}
-          {importInProgress && <View style={styles.progressBarHost}>
-            <Text style={{ fontSize: 28, marginBottom: 5 }}>{importInProgress.message}</Text>
-            <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
-          </View>}
+
 
         </TouchableOpacity>}
         {profile && <FilamentScene>

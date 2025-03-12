@@ -31,6 +31,7 @@ import { useSharedValue } from "react-native-worklets-core"
 import { Dice, getCustomTypePath, getRandomFile, Profile, Templates, templatesList } from "./profile";
 import { computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace, getTopFace, safeColor, WinSize } from "./utils";
 import { createFloor, createWall } from "./scene-elements";
+import { playAudio } from "./audio";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
@@ -90,6 +91,7 @@ const cameraHeight = 20;
 const focalLength = 35;
 const fov = computeVerticalFov(focalLength);
 const wallThickness = 0.01;
+const FaceUpInit = [-1, -1, -1, -1];
 
 
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize }: DiceSceneProps, ref: any) => {
@@ -101,9 +103,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const diceInfoRef = useRef<Dice[]>(profile.dice);
     const [diceSize, setDiceSize] = useState<number>(profile.size);
     const [revision, setRevision] = useState<number>(0);
-    const [scenaActive, setSceneActive] = useState<number>(4);
+    const [sceneActive, setSceneActive] = useState<number>(4);
     const [log, setLog] = useState<string>("")
     const { engine, renderableManager, scene, transformManager } = useFilamentContext()
+    const [faceUp, setFaceUp] = useState<number[]>(FaceUpInit)
+
+
+    useEffect(() => {
+        setTimeout(() => setSceneActive(0), 1000)
+    }, [])
 
     const generalDiceModel: FilamentModel[] = [
         useModel(DiceModel),
@@ -196,6 +204,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 die.body.allowSleep = true;
             })
             setSceneActive(worldDiceRef.current.length);
+            setFaceUp(FaceUpInit);
         },
         update: (profile) => {
             setDiceSize(profile.size);
@@ -219,6 +228,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         const b = computeFloorBounds(currWindowSize, cameraHeight, fov, 0);
         setBounds(b)
     }, [currWindowSize])
+
+    const handleAudio = useCallback(() => {
+
+    })
 
 
     useEffect(() => {
@@ -247,6 +260,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     // Compute the face and correction delta
                     //const { face, delta } = getFaceAndQuaternionDelta([r.y, r.z, r.x]);
                     const { face, euler } = getTopFace(body);
+                    setFaceUp(prev => {
+                        return prev.map((orig, cubeIndex) => cubeIndex == i ? face - 1 : orig);
+                    })
                     if (face > 0) {
                         const canonicalEuler = getCanonicalEulerForFace(face); // from your top-face detection
                         const [cx, cy, cz] = [euler.x, euler.y, euler.z];
@@ -426,7 +442,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         // <>
         //     <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-        <FilamentView style={{ flex: 1 }} renderCallback={scenaActive > 0 ? renderCallback : undefined} >
+        <FilamentView style={{ flex: 1 }} renderCallback={sceneActive > 0 ? renderCallback : undefined} >
 
             <DefaultLight />
             {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
@@ -444,7 +460,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     <ModelRenderer key={i + "-" + isDotDice.value[i]}
                         model={false ? dotDiceModel[i] : generalDiceModel[i]}
                         castShadow={true} receiveShadow={true}
+                        onPress={() => {
+                            console.log("cube-pressed", i)
+                            if (faceUp[i] >= 0) {
+                                if (dieInfo.faces?.at(faceUp[i])?.audioUri) {
+                                    playAudio(dieInfo.faces[faceUp[i]]!.audioUri!);
+                                }
 
+                            }
+                        }}
                     >
                         {texture[i] && <EntitySelector byName="Cube"
                             textureMap={{ materialName: "Material", textureSource: texture[i] }} />}

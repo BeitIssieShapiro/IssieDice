@@ -340,7 +340,7 @@ export interface FaceInfo {
     infoUri?: string;
     backgroundColor?: string
     text?: FaceText;
-    // todo audio
+    audioUri?: string
 }
 
 export async function loadFaceImages(name: string): Promise<FaceInfo[]> {
@@ -357,9 +357,11 @@ export async function loadFaceImages(name: string): Promise<FaceInfo[]> {
                 list[index].text = textInfo;
                 list[index].backgroundColor = textInfo.backgroundColor;
                 list[index].infoUri = elem.path;
-            } else {
+            } else if (elem.path.endsWith(".jpg")) {
                 // a jpg:
                 list[index].backgroundUri = elem.path;
+            } else if (elem.path.endsWith("mp4")) {
+                list[index].audioUri = elem.path;
             }
         }
     }
@@ -648,7 +650,7 @@ function splitFilePath(targetPath: string): { folder: string; fileName: string; 
 
 export const copyFileToFolder = async (sourcePath: string, targetPath: string, overwrite = true) => {
 
-    const { folder, fileName } = splitFilePath(targetPath);
+    const { folder, fileName, extension } = splitFilePath(targetPath);
     await RNFS.mkdir(folder);
     if (overwrite) {
         const cacheBusterPrefixPos = fileName.indexOf("$$");
@@ -660,7 +662,7 @@ export const copyFileToFolder = async (sourcePath: string, targetPath: string, o
             const files = await RNFS.readDir(folder);
             for (const file of files) {
                 // delete any file with same base path
-                if (file.name.startsWith(baseFileName)) {
+                if (file.name.startsWith(baseFileName) && file.name.endsWith(extension)) {
                     await RNFS.unlink(file.path);
                 }
             }

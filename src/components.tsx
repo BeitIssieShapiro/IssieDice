@@ -2,6 +2,8 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native
 import { isRTL } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
+import MCIIcon from "react-native-vector-icons/MaterialCommunityIcons";
+
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 
@@ -10,13 +12,14 @@ import { BTN_COLOR } from "./settings";
 
 
 export function IconButton({ icon, onPress, text, type, backgroundColor, width }:
-     { icon?: string, text: string, width?:number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" }) {
-    const IconElem = type == "Ionicon" ? IconIonicons : IconAnt;
+     { icon?: string, text: string, width?:number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
+    const IconElem = type == "Ionicon" ? IconIonicons : 
+    (type == "MCI" ? MCIIcon : IconAnt);
 
-    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row" : "row-reverse", justifyContent: "center" }, backgroundColor && { backgroundColor }]} onPress={onPress} >
-        {!!text && <Text allowFontScaling={false} style={{ width, fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign:icon?"left":"center" }}>{text}</Text>}
+    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row-reverse" : "row" }, backgroundColor && { backgroundColor }]} onPress={onPress} >
 
         {icon && <IconElem name={icon} style={styles.icon} />}
+        {!!text && <Text allowFontScaling={false} style={{ width, fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign:icon?"left":"center" }}>{text}</Text>}
     </TouchableOpacity>
 }
 
@@ -130,7 +133,10 @@ const styles = StyleSheet.create({
 
     iconButton: {
 
-        marginInlineEnd: 10,
+        margin: 10,
+        paddingLeft: 10,
+        paddingRight: 10,
+
         maxHeight: 39,
         minHeight: 39,
         minWidth: 39,

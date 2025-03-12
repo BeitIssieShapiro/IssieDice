@@ -17,6 +17,7 @@ export async function SelectFromGallery(targetFile: string) {
             } else if (response.errorCode) {
                 console.log('Image Picker Error: ', response.errorCode);
             } else if (response.assets) {
+
                 const selectedImageUri = response.assets[0].uri;
 
                 // Copy the image to the app's document folder
