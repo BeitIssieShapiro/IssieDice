@@ -29,7 +29,7 @@ import {
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
 import { Dice, getCustomTypePath, getRandomFile, Profile, Templates, templatesList } from "./profile";
-import { computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace, getTopFace, safeColor, WinSize } from "./utils";
+import { animateYaw, computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace, getTopFace, safeColor, WinSize } from "./utils";
 import { createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio } from "./audio";
 
@@ -93,6 +93,7 @@ const focalLength = 35;
 const fov = computeVerticalFov(focalLength);
 const wallThickness = 0.01;
 const FaceUpInit = [-1, -1, -1, -1];
+const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 
 
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize }: DiceSceneProps, ref: any) => {
@@ -262,10 +263,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                         return prev.map((orig, cubeIndex) => cubeIndex == i ? face - 1 : orig);
                     })
                     if (face > 0) {
-                        const canonicalEuler = getCanonicalEulerForFace(face); // from your top-face detection
                         const [cx, cy, cz] = [euler.x, euler.y, euler.z];
-                        const [tx, ty, tz] = canonicalEuler;
-
+                        const ty = canonicalYaw[face-1];
                         // minimalAngleDiff helps with wrap-around, e.g. going from 359° to 0° is only 1°.
                         function minimalAngleDiff(a: number, b: number): number {
                             let diff = b - a;
@@ -275,18 +274,17 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                             return diff;
                         }
 
-                        const dx = minimalAngleDiff(cx, tx);
                         const dy = minimalAngleDiff(cy, ty);
-                        const dz = minimalAngleDiff(cz, tz);
 
                         const toDeg = (d: number) => Math.floor(d * 180 / Math.PI);
 
-                        setLog(`rot face:${face} ${toDeg(dx)},${toDeg(dy)},${toDeg(dz)}`)
+                        //setLog(`rot face:${face} ${toDeg(dx)},${toDeg(dy)},${toDeg(dz)}`)
 
-                        body.quaternion.setFromEuler(tx, ty, tz);
+                        //body.quaternion.setFromEuler(cx, ty, cz);
+                        animateYaw(body, cx, cz, cy, cy+dy, 400);
 
 
-                        setTimeout(() => setSceneActive(prev => prev - 1), 100);
+                        setTimeout(() => setSceneActive(prev => prev - 1), 400);
                         body.allowSleep = true;
                     } else {
                         body.allowSleep = false;
@@ -442,8 +440,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     console.log("bounds", bounds)
 
     return (
-        // <>
-        //     <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
+        <>
+            <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
         <FilamentView style={{ flex: 1 }} renderCallback={sceneActive > 0 ? renderCallback : undefined} >
 
@@ -491,6 +489,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             /> */}
             <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
         </FilamentView>
-        //</>
+        </>
     );
 });

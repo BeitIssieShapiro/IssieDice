@@ -165,23 +165,29 @@ export function getTopFace(body: CANNON.Body): { face: Face, euler: CANNON.Vec3 
   return { face: result, euler };
 }
 
+// A simple ease-in-out quadratic function.
+function easeInOutQuad(t: number): number {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
 
-// Assume Cannon-es uses default YZX order (or set your own).
-export function getCanonicalEulerForFace(face: number): [number, number, number] {
-  switch (face) {
-    case 4: 
-      return [0, 0, 0];
-    case 2: 
-      return [0, 0, Math.PI];
-    case 5: 
-      return [Math.PI / 2, 0, Math.PI / 2];
-    case 1:
-      return [-Math.PI / 2, 0, Math.PI / 2];
-    case 6: 
-      return [0, Math.PI, -Math.PI / 2];
-    case 3: 
-      return [0, 0, Math.PI / 2];
-    default:
-      return [0, 0, 0];
+export function animateYaw(body: CANNON.Body, x: number, z: number, startYaw: number, targetYaw: number, duration: number = 300) {
+  // Extract the current Euler angles in "YZX" order.
+
+  const deltaYaw = minimalAngleDiff(startYaw, targetYaw);
+  const startTime = Date.now();
+
+  function update() {
+    const elapsed = Date.now() - startTime;
+    const t = Math.min(elapsed / duration, 1); // t in [0,1]
+    const easedT = easeInOutQuad(t);
+    const newYaw = startYaw + deltaYaw * easedT;
+
+    // Update the body's orientation using the constant pitch (x) and roll (z), and the new yaw.
+    body.quaternion.setFromEuler(x, newYaw, z, "YZX");
+
+    if (t < 1) {
+      setTimeout(update, 16); // roughly 60 FPS
+    }
   }
+  update();
 }
