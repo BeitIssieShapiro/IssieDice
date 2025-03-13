@@ -19,8 +19,9 @@ function Seperator({ width }: { width: string }) {
 }
 
 interface ButtonInfo {
-    name: string;
+    name?: string;
     icon?: string;
+    type?: "MCI" | "Ionicon";
 }
 
 interface ProfilePickerProps {
@@ -74,8 +75,8 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             <ScrollView style={[styles.listScroll, { direction: isRTL() ? "rtl" : "ltr" }]}>
                 {list.map(item => (
                     <View key={item.key} style={styles.itemHost}>
-                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row", backgroundColor:"yellow" }]}>
-                            <View style={[styles.listItem, isRTL()?{ direction: "rtl"}:{}]} key={item.key} >
+                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row", backgroundColor: "yellow" }]}>
+                            <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
                                 {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
                                 {item && !item.image && isDicePicker && <DicePreview size={45} facesInfo={item.faces!} />}
                                 <Text
@@ -89,10 +90,10 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                     }}>{item.name}</Text>
                             </View>
                             <View style={{ flexDirection: "row-reverse", width: "40%" }}>
-                                <IconButton icon={loadButton?.icon} onPress={() => onSelect(item.key)} text={loadButton.name} />
-                                {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} text={translate("Delete")} />}
-                                {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} text={isNarrow && editButton?.icon ? "" : editButton?.name!} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon} text={isNarrow && exportButton?.icon ? "" : exportButton?.name!} onPress={() => onExport(item.key)} />}
+                                <IconButton icon={loadButton?.icon} type={loadButton?.type} onPress={() => onSelect(item.key)} text={loadButton.name} />
+                                {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} type={editButton?.type} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon}  type={exportButton?.type}  onPress={() => onExport(item.key)} />}
 
                             </View>
                         </View>

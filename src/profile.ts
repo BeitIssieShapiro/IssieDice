@@ -440,6 +440,30 @@ export async function renameDiceFolder(currName: string, newName: string) {
     }
 }
 
+export async function deleteDice(name:string) {
+    const srcPath = getCustomTypePath(name);
+    await RNFS.unlink(srcPath);
+
+    // Check all profile with the deleted die and change die to a default (dots)
+    const allProfiles = await loadProfiles();
+    for (const profileListItem of allProfiles) {
+        const profileString = await loadFile(getProfilePath(profileListItem.key + ".json"));
+        const profile: Profile = JSON.parse(profileString);
+        let modified = false;
+        for (const die of profile.dice) {
+            if (die.template == name) {
+                modified = true;
+                die.template = Templates.Dots;
+            }
+        }
+        if (modified) {
+            //overwrite Profile after being modified
+            const newProfileString = JSON.stringify(profile, undefined, " ");
+            await writeFile(getProfilePath(profileListItem.key), newProfileString);
+        }
+    }
+}
+
 
 export async function exportDice(name: string): Promise<string> {
     const metaDataFile = getTempFileName("json");

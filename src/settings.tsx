@@ -3,7 +3,7 @@ import { fTranslate, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { IconButton, NumberSelector, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { AlreadyExists, deleteProfile, Dice, EmptyProfile, exportAll, exportDice, exportProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
+import { AlreadyExists, deleteDice, deleteProfile, Dice, EmptyProfile, exportAll, exportDice, exportProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { ProfilePicker } from "./profile-picker";
@@ -273,7 +273,19 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
-    return <View style={[styles.container, {top:insets.top}]}>
+    function handleDeleteDie(name: string, afterDelete: () => void): void {
+        Alert.alert(translate("DeleteDieTitle"), translate("DeleteDieAlert"),[
+            {text:translate("Delete"), onPress:()=>{
+                deleteDice(name);
+                setRevision(prev => prev + 1);
+                afterDelete()
+            }},
+            {text:translate("Cancel"), onPress:()=>{}}
+        ])
+        
+    }
+
+    return <View style={[styles.container, { top: insets.top }]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
@@ -304,9 +316,19 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         <ProfilePicker
             folder={Folders.DiceTemplates}
             open={openSelectTemplate > -1}
-            loadButton={{ name: translate("Select") }}
-            editButton={{ name: translate("Edit") }}
-            exportButton={{ name: translate("Export") }}
+            loadButton={{
+                //name: translate("Select") 
+                icon: "check"
+            }}
+            editButton={{
+                //name: translate("Edit") 
+                icon: "edit"
+            }}
+            exportButton={{
+                //name: translate("Export") 
+                icon: "share-social-outline",
+                type:"Ionicon"
+            }}
             height={windowSize.height * .6}
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
@@ -323,6 +345,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 setEditOrCreateDice("")
             }}
             onExport={handleExportDice}
+            onDelete={(name, afterDelete)=>handleDeleteDie(name, afterDelete) }
             isNarrow={isScreenNarrow}
         />
 

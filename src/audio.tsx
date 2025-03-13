@@ -8,7 +8,7 @@ import Animated, {
     interpolateColor,
 } from 'react-native-reanimated';
 import { audioRecorderPlayer } from '../index.js';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { RecordBackType } from 'react-native-audio-recorder-player';
 
 interface RecordButtonProps {
@@ -33,6 +33,26 @@ export async function playAudio(uri: string) {
     }
 }
 
+export async function playBundledAudio(soundAsset: any) {
+    try {
+      // Stop any previous playback
+      await audioRecorderPlayer.stopPlayer();
+    
+      // Resolve the asset's URI:
+      const assetSource = Image.resolveAssetSource(soundAsset);
+      // assetSource.uri should be something like "file://..." (or an asset URI on Android)
+  
+      console.log('Resolved asset URI:', assetSource.uri);
+  
+      // Start the player with the resolved URI.
+      await audioRecorderPlayer.startPlayer(assetSource.uri);
+      console.log('Player started for asset', assetSource.uri);
+      return true;
+    } catch (error) {
+      console.error("Error playing bundled audio:", error);
+      return false;
+    }
+  }
 
 export const RecordButton = ({
     size,

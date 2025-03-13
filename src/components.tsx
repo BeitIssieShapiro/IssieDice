@@ -12,7 +12,7 @@ import { BTN_COLOR } from "./settings";
 
 
 export function IconButton({ icon, onPress, text, type, backgroundColor, width }:
-     { icon?: string, text: string, width?:number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
+     { icon?: string, text?: string, width?:number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
     const IconElem = type == "Ionicon" ? IconIonicons : 
     (type == "MCI" ? MCIIcon : IconAnt);
 

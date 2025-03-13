@@ -31,12 +31,13 @@ import { useSharedValue } from "react-native-worklets-core"
 import { Dice, getCustomTypePath, getRandomFile, Profile, Templates, templatesList } from "./profile";
 import { computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace, getTopFace, safeColor, WinSize } from "./utils";
 import { createFloor, createWall } from "./scene-elements";
-import { playAudio } from "./audio";
+import { playAudio, playBundledAudio } from "./audio";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
 const DotModel = require("../assets/dot-dice.glb");
 const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
+const dieCollisionSound = require("../assets/dice-sound.mp3");
 
 LogBox.ignoreLogs([
     //"has already", 
@@ -229,11 +230,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         setBounds(b)
     }, [currWindowSize])
 
-    const handleAudio = useCallback(() => {
-
-    })
-
-
     useEffect(() => {
         const scale = diceSize * .5 / 2;
         const isDotArray: boolean[] = [false, false, false, false]
@@ -293,12 +289,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     } else {
                         body.allowSleep = false;
                     }
-                    body.addEventListener('collide', (e: any) => {
-                        console.log("contact with ground or another die")
-                    })
-
-
                 });
+                body.addEventListener('collide', (e: any) => {
+                    playBundledAudio(dieCollisionSound)
+                })
                 world.addBody(body);
 
                 isDotArray[i] = die.template == Templates.Dots;
@@ -461,10 +455,13 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                         model={false ? dotDiceModel[i] : generalDiceModel[i]}
                         castShadow={true} receiveShadow={true}
                         onPress={() => {
-                            console.log("cube-pressed", i)
-                            if (faceUp[i] >= 0) {
-                                if (dieInfo.faces?.at(faceUp[i])?.audioUri) {
-                                    playAudio(dieInfo.faces[faceUp[i]]!.audioUri!);
+                            const body = worldDiceRef.current[i];
+                            const { face } = getTopFace(body.body);
+                            console.log("cube-pressed", i, face)
+
+                            if (face > 0) {
+                                if (dieInfo.faces?.at(face - 1)?.audioUri) {
+                                    playAudio(dieInfo.faces[face - 1]!.audioUri!);
                                 }
 
                             }
