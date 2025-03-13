@@ -188,7 +188,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: () => {
-            worldDiceRef.current?.map((die, i) => {
+            worldDiceRef.current?.forEach((die, i) => {
                 // Reset any existing velocities
                 die.body.velocity.setZero();
                 die.body.angularVelocity.setZero();
@@ -196,7 +196,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 // Optionally, reset position if desired.
                 die.body.position.set(getDieX(i, diceInfo.length, 1) + 3, 8, -5);
 
-                const force = 3 + 5 * Math.random();
+                const force = 3 + 7 * Math.random();
                 die.body.applyImpulse(
                     new CANNON.Vec3(-force, force, 0),
                     new CANNON.Vec3(0, 0, .2)
@@ -231,7 +231,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     }, [currWindowSize])
 
     useEffect(() => {
-        const scale = diceSize * .5 / 2;
+        const winSizeFactor = 900 / currWindowSize.height;
+        const scale = .5 * winSizeFactor * diceSize / 2;
+        
         const isDotArray: boolean[] = [false, false, false, false]
         worldDiceRef.current = diceInfoRef.current
             .filter(die => die.active)
@@ -290,8 +292,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                         body.allowSleep = false;
                     }
                 });
+                let lastTime = -1
                 body.addEventListener('collide', (e: any) => {
-                    playBundledAudio(dieCollisionSound)
+                    const impactVelocity = e.contact.getImpactVelocityAlongNormal();
+                    if (impactVelocity >= 2 && (lastTime < 0 || performance.now() - lastTime > 100)) {
+                        lastTime = performance.now();
+                        const volume = Math.min(1, Math.abs(impactVelocity) / 10);
+                        console.log("collide", impactVelocity)
+                        playBundledAudio(dieCollisionSound, volume)
+                    }
                 })
                 world.addBody(body);
 
@@ -396,8 +405,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     const renderCallback: RenderCallback = useCallback(() => {
         "worklet"
-
-        const scale = .5 * diceSize / 2;
+        const winSizeFactor = 900 / currWindowSize.height;
+        const scale = .5 * winSizeFactor * diceSize / 2;
         const hideTransform = transformManager.createIdentityMatrix().translate([-1000, 0, 0]);
         for (let i = 0; i < 4; i++) {
             const entity = generalEntity[i]; //isDotDice.value[i] ? dotEntity[i] : generalEntity[i];

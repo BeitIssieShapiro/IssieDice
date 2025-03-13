@@ -10,6 +10,8 @@ import Animated, {
 import { audioRecorderPlayer } from '../index.js';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { RecordBackType } from 'react-native-audio-recorder-player';
+import Sound from 'react-native-sound';
+Sound.setCategory('Playback');
 
 interface RecordButtonProps {
     size: number,
@@ -33,21 +35,28 @@ export async function playAudio(uri: string) {
     }
 }
 
-export async function playBundledAudio(soundAsset: any) {
+export async function playBundledAudio(soundAsset: any, volume:number = 1.0) {
     try {
       // Stop any previous playback
       await audioRecorderPlayer.stopPlayer();
     
-      // Resolve the asset's URI:
-      const assetSource = Image.resolveAssetSource(soundAsset);
-      // assetSource.uri should be something like "file://..." (or an asset URI on Android)
-  
-      console.log('Resolved asset URI:', assetSource.uri);
-  
-      // Start the player with the resolved URI.
-      await audioRecorderPlayer.startPlayer(assetSource.uri);
-      console.log('Player started for asset', assetSource.uri);
-      return true;
+      const sound = new Sound(soundAsset, (error) => {
+        if (error) {
+          console.error('Failed to load the sound', error);
+          return;
+        }
+        // Set the playback volume (0.0 to 1.0).
+        sound.setVolume(volume);
+        
+        // Play the sound without stopping any other sound.
+        sound.play((success) => {
+          if (!success) {
+            console.error('Sound playback failed');
+          }
+          // Optionally, release the resource once playback is finished.
+          sound.release();
+        });
+      });
     } catch (error) {
       console.error("Error playing bundled audio:", error);
       return false;
