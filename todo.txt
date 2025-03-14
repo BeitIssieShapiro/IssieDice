@@ -3,7 +3,8 @@ bugs:
 V- in settings, do not render nor world
 V- edit dice - propotional face size to win size
 V- delete default dice 
-
+- after create dice, make it selected
+- sort dice and profiles
 
 
 
@@ -21,8 +22,8 @@ App General:
 
 Features:
 --------
-- audio
-- text & image for faces
+V- audio
+V- text & image for faces
 V- voice of dice hit the floor
 
 
@@ -59,4 +60,4 @@ Ideas:
 
 
 Tests:
-- rename dice - must update all profiles
+V- rename dice - must update all profiles

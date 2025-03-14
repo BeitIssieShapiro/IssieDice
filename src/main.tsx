@@ -5,24 +5,26 @@ import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Aler
 import { DiceScene, DiceSceneMethods } from "./diceScene";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { SettingsUI } from "./settings";
-import { EmptyProfile, importPackage, Profile, readCurrentProfile } from "./profile";
+import { EmptyProfile, importPackage, migrateV1, Profile, readCurrentProfile } from "./profile";
 import { GlobalContext } from "./global-context";
 import * as Progress from 'react-native-progress';
 import { isRTL, translate } from "./lang";
 import { WinSize } from "./utils";
 import { FilamentScene } from "react-native-filament";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MigrateDice } from "./migrate-dice";
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
 
-export default function App() {
+export default function App({migratedDice}:{migratedDice:string[]}) {
   const [windowSize, setWindowSize] = useState<WinSize>({ width: 500, height: 500 });
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [revision, setRevision] = useState<number>(0);
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
   const [inRecovery, setInRecovery] = useState<boolean>(false);
   const [cameraTilt, setCameraTilt] = useState<number>(0);
+  const [migrateDice, setMigrateDice] = useState<string[]>([]);
 
   const [importInProgress, setImportInProgress] = useState<{
     message: string;
@@ -31,6 +33,8 @@ export default function App() {
   const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const context = useContext(GlobalContext);
+
+
 
   useEffect(() => {
 
@@ -41,6 +45,10 @@ export default function App() {
     }
 
     const winDimChange = Dimensions.addEventListener("change", (e) => setWindowSize({ width: e.window.width, height: e.window.height }))
+
+    migrateV1().then(migrateDice => {
+      setMigrateDice(migrateDice)
+    })
 
     return () => {
       winDimChange.remove();
@@ -126,14 +134,17 @@ export default function App() {
         <Icon name={"setting"} color={"white"} size={35} />
       </TouchableOpacity>
 
+      {migrateDice.length > 0 && <MigrateDice migrateDice={migrateDice} setMigrateDice={setMigrateDice}
+        winWidth={windowSize.width} />}
+
       {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => setOpenSettings(false)} />}
       <>
         {/** indicator to a lock */}
-        {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), zIndex:1000 }]} />}
+        {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), zIndex: 1000 }]} />}
 
         {/** Progress */}
         {importInProgress && <View style={styles.progressBarHost}>
-          <Text style={{ fontSize: 28, marginBottom: 5 }}>{importInProgress.message}</Text>
+          <Text allowFontScaling={false} style={{ fontSize: 28, marginBottom: 5 }}>{importInProgress.message}</Text>
           <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
         </View>}
 

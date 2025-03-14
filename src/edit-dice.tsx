@@ -3,7 +3,7 @@ import { fTranslate, isRTL, translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
+import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { unlink } from "react-native-fs";
@@ -51,19 +51,7 @@ export function EditDice({ onClose, name, windowSize }: EditDiceProps) {
 
     async function selectDieName() {
         // chooses a name with the patter Cube 1/2/3 the first which is available
-        let counter = 1;
-        let newCubeName = fTranslate("NewDieName", counter);
-
-        let exists = false;
-        do {
-            const diePath = getCustomTypePath(newCubeName);
-            exists = await RNFS.exists(diePath);
-            if (exists) {
-                counter++;
-                newCubeName = fTranslate("NewDieName", counter);
-            }
-        } while (exists);
-
+        const newCubeName = await getNextDieName("NewDieName");
         setEditedName(newCubeName);
     }
 

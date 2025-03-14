@@ -9,6 +9,7 @@ import { FaceType } from './profile-picker';
 import { unzip, zip } from 'react-native-zip-archive';
 import { ImageSourcePropType } from 'react-native';
 import { FaceText } from './edit-face';
+import { NativeModules } from 'react-native';
 
 export function doNothing() { }
 
@@ -129,7 +130,7 @@ export const getRecordingFileName = (recName: string | number, forceFilePrefix?:
 
 export let storage: MMKV;
 
-export async function Init() {
+export async function Init(migratedDice: string[]) {
 
     console.log("Initializing MMKV storage");
     try {
@@ -153,8 +154,42 @@ export async function Init() {
     if (!exists) {
         await RNFS.mkdir(buttonsPath);
     }
+
+    
 }
 
+export async function migrateV1():Promise<string[]> {
+    const migratedDice = [];
+    // iOD only - migration from v1
+    if (Platform.OS == "ios") {
+        const shouldMigrate = RNSettings.get("MigrateV1");
+        if (shouldMigrate != false) {
+            console.log("Migrating old dice templates")
+            const { TemplateMigrator } = NativeModules;
+
+            const customDice = await TemplateMigrator.migrateCustomTemplates();
+
+            for (const customDie of customDice) {
+                const migratedDieName = await getNextDieName("MigratedDieName");
+                const diePath = getCustomTypePath(migratedDieName);
+                await RNFS.mkdir(diePath);
+                migratedDice.push(migratedDieName);
+
+                for (let i = 1; i <= 6; ++i) {
+                    const base64Image = customDie["iPic" + i];
+                    if (base64Image && base64Image.length > 0) {
+                        // save a jpg file
+                        const faceName = `face_${i - 1}${getCacheBusterSuffix()}.jpg`
+                        const filePath = path.join(diePath, faceName);
+                        await writeFileWithCacheBuster(filePath, base64Image, 'base64');
+                    }
+                }
+            }
+            console.log("Done migrating old dice templates", customDice.length);
+        }
+    }
+    return migratedDice;
+}
 
 export async function SaveProfile(name: string, profile: Profile, overwrite = false) {
     if (!isValidFilename(name)) {
@@ -440,7 +475,7 @@ export async function renameDiceFolder(currName: string, newName: string) {
     }
 }
 
-export async function deleteDice(name:string) {
+export async function deleteDice(name: string) {
     const srcPath = getCustomTypePath(name);
     await RNFS.unlink(srcPath);
 
@@ -621,7 +656,7 @@ function loadFile(path: string) {
     return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
 }
 
-export async function writeFileWithCacheBuster(targetPath: string, content: string) {
+export async function writeFileWithCacheBuster(targetPath: string, content: string, encoding: string | undefined = undefined) {
     const { folder, fileName, extension } = splitFilePath(targetPath);
     const cacheBusterPrefixPos = fileName.indexOf("$$");
 
@@ -640,17 +675,17 @@ export async function writeFileWithCacheBuster(targetPath: string, content: stri
             }
         }
     }
-    return writeFile(targetPath, content);
+    return writeFile(targetPath, content, undefined, encoding);
 }
 
 
-export async function writeFile(path: string, content: string, verifyFolderExists?: string) {
+export async function writeFile(path: string, content: string, verifyFolderExists?: string, encoding?: string) {
     if (verifyFolderExists) {
         if (!await RNFS.exists(verifyFolderExists)) {
             await RNFS.mkdir(verifyFolderExists);
         }
     }
-    return RNFS.writeFile(ensureAndroidCompatible(path), content)
+    return RNFS.writeFile(ensureAndroidCompatible(path), content, encoding)
 
 }
 
@@ -659,18 +694,18 @@ function splitFilePath(targetPath: string): { folder: string; fileName: string; 
     let folder = "";
     let fullName = targetPath;
     if (lastSlashIndex !== -1) {
-      folder = targetPath.substring(0, lastSlashIndex);
-      fullName = targetPath.substring(lastSlashIndex + 1);
+        folder = targetPath.substring(0, lastSlashIndex);
+        fullName = targetPath.substring(lastSlashIndex + 1);
     }
     const lastDotIndex = fullName.lastIndexOf(".");
     let fileName = fullName;
     let extension = "";
     if (lastDotIndex !== -1) {
-      fileName = fullName.substring(0, lastDotIndex);
-      extension = fullName.substring(lastDotIndex); // includes the dot, e.g. ".jpg"
+        fileName = fullName.substring(0, lastDotIndex);
+        extension = fullName.substring(lastDotIndex); // includes the dot, e.g. ".jpg"
     }
     return { folder, fileName, extension };
-  }
+}
 
 export const copyFileToFolder = async (sourcePath: string, targetPath: string, overwrite = true) => {
 
@@ -728,4 +763,21 @@ export async function getRandomFile(filePath: string, ext: string): Promise<stri
 
 export function getCacheBusterSuffix(): string {
     return "$$" + Math.floor(Math.random() * 1000000);
+}
+
+export async function getNextDieName(transKey: string): Promise<string> {
+    let counter = 1;
+    let newCubeName = fTranslate(transKey, counter);
+
+    let exists = false;
+    do {
+        const diePath = getCustomTypePath(newCubeName);
+        exists = await RNFS.exists(diePath);
+        if (exists) {
+            counter++;
+            newCubeName = fTranslate(transKey, counter);
+        }
+    } while (exists);
+
+    return newCubeName;
 }

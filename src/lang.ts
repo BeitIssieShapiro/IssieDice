@@ -167,6 +167,7 @@ const strings = {
         "EditBackground": "רקע",
         "EditAudio": "הקלטה",
         "NewDieName": "קוביה {1}",
+        "MigratedDieName": "קוביה מגרסא קודמת {1}",
         "FontSize": "גודל",
         "FontName": "פונט",
         "Bold": "מודגש",
@@ -176,6 +177,8 @@ const strings = {
         "SrcFromSearch":"חיפוש",
         "SrcFromCamera":"מצלמה",
         "NoBackground": "הסר רקע",
+
+        "MigrateOldDice":"טוען קוביות מגרסא קודמת",
 
     },
     "ar": {
@@ -267,7 +270,7 @@ export function translate(id: string) {
     return currStrings[id] || id;
 }
 
-export function fTranslate(id: string, ...args: any[]) {
+export function fTranslate(id: string, ...args: any[]):string {
     return replaceArgs(translate(id), args);
 }
 

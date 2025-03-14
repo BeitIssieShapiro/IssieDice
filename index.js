@@ -20,6 +20,7 @@ LogBox.ignoreLogs([
 
 
 Init();
+
 export const audioRecorderPlayer = new AudioRecorderPlayer();
 
 
@@ -28,7 +29,7 @@ const AppWithCtx = (props) => (
         url: props.url
     }}>
         <SafeAreaProvider>
-        <App />
+            <App />
         </SafeAreaProvider>
         {/* <EditText label={"my label"} initialText={"abc"} onClose={() => {}}
             onDone={(text, style) => {}} width={400}/> */}
