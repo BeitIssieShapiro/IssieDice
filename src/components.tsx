@@ -12,14 +12,16 @@ import { BTN_COLOR } from "./settings";
 
 
 export function IconButton({ icon, onPress, text, type, backgroundColor, width }:
-     { icon?: string, text?: string, width?:number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
-    const IconElem = type == "Ionicon" ? IconIonicons : 
-    (type == "MCI" ? MCIIcon : IconAnt);
+    { icon?: string, text?: string, width?: number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
+    const IconElem = type == "Ionicon" ? IconIonicons :
+        (type == "MCI" ? MCIIcon : IconAnt);
 
-    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row-reverse" : "row" }, backgroundColor && { backgroundColor }]} onPress={onPress} >
+    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row-reverse" : "row" },
+    backgroundColor && { backgroundColor },
+    !text && { borderWidth: 0 }]} onPress={onPress} >
 
         {icon && <IconElem name={icon} style={styles.icon} />}
-        {!!text && <Text allowFontScaling={false} style={{ width, fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign:icon?"left":"center" }}>{text}</Text>}
+        {!!text && <Text allowFontScaling={false} style={{ width, fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign: icon ? "left" : "center" }}>{text}</Text>}
     </TouchableOpacity>
 }
 
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
 
     icon: {
         color: "#6E6E6E",
-        fontSize: 30
+        fontSize: 28
     },
 
     iconButton: {

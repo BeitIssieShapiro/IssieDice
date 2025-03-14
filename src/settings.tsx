@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { AlreadyExists, deleteDice, deleteProfile, Dice, EmptyProfile, exportAll, exportDice, exportProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
-import { ProfilePicker } from "./profile-picker";
+import { DiePicker, ProfilePicker } from "./profile-picker";
 import { EditDice } from "./edit-dice";
 import { MyColorPicker } from "./color-picker";
 import { Alert } from "react-native";
@@ -313,22 +313,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
 
         {/** Cube Picker */}
-        <ProfilePicker
-            folder={Folders.DiceTemplates}
+        <DiePicker
             open={openSelectTemplate > -1}
-            loadButton={{
-                //name: translate("Select") 
-                icon: "check"
-            }}
-            editButton={{
-                //name: translate("Edit") 
-                icon: "edit"
-            }}
-            exportButton={{
-                //name: translate("Export") 
-                icon: "share-social-outline",
-                type:"Ionicon"
-            }}
             height={windowSize.height * .6}
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
@@ -346,7 +332,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
             onExport={handleExportDice}
             onDelete={(name, afterDelete)=>handleDeleteDie(name, afterDelete) }
-            isNarrow={isScreenNarrow}
+            currentDie={openSelectTemplate>=0 ? profile.dice[openSelectTemplate].template : Templates.Dots}
         />
 
         <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={profile.tableColor}

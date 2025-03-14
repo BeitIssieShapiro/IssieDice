@@ -327,10 +327,10 @@ export function DicePreview({ facesInfo, size }: DicePreviewProps) {
                     key={index}
                     size={size / 2}
                     style={facesStyles[index]}
-                    backgroundColor={face.backgroundColor}
-                    faceText={face.text}
-                    backgroundImage={face.backgroundUri}
-                    audioUri={face.audioUri}
+                    backgroundColor={face?.backgroundColor }
+                    faceText={face?.text}
+                    backgroundImage={face?.backgroundUri}
+                    audioUri={face?.audioUri}
                 />
             })}
         </View>

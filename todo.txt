@@ -1,3 +1,12 @@
+bugs:
+- freeze rendering - cancel timeout if clicked
+- in settings, do not render nor world
+- edit dice - propotional face size to win size
+- delete default dice 
+
+
+
+
 Tech Challenges:
 - Generate texture programatically (dots, numbers, texts, shapes)
 - Change material programatically

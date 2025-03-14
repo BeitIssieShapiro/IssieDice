@@ -128,6 +128,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                         backgroundColor={backgroundColor}
                         backgroundImage={backgroundImage}
                         faceText={{
+                            fontName: fontName,
                             fontBold: isBold,
                             fontSize: fontSize,
                             text: text || "",

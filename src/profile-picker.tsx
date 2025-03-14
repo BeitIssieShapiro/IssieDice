@@ -1,10 +1,11 @@
 import { Fragment, useEffect, useState } from "react";
 import { Folders, List, ListElements, Templates } from "./profile";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { FadeInView, IconButton } from "./components";
 import { DicePreview } from "./edit-dice";
+import { RadioButton } from "./radio-button";
 
 
 function Seperator({ width }: { width: string }) {
@@ -93,7 +94,99 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                 <IconButton icon={loadButton?.icon} type={loadButton?.type} onPress={() => onSelect(item.key)} text={loadButton.name} />
                                 {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
                                 {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} type={editButton?.type} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon}  type={exportButton?.type}  onPress={() => onExport(item.key)} />}
+                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon} type={exportButton?.type} onPress={() => onExport(item.key)} />}
+
+                            </View>
+                        </View>
+                        <Seperator width="100%" />
+                    </View>
+
+                ))}
+            </ScrollView>
+        }
+    </FadeInView>
+}
+
+
+interface DiePickerProps {
+    open: boolean;
+    height: number;
+    onClose: () => void;
+    onSelect: (item: string) => void;
+    onDelete?: (name: string, afterDelete: () => void) => void;
+    onEdit?: (name: string, afterSave: () => void) => void;
+    onCreate?: () => void;
+    onExport?: (name: string) => void;
+    currentDie: string
+}
+export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelete, onEdit, onCreate, onExport }: DiePickerProps) {
+    const [list, setList] = useState<List[]>([]);
+    const [revision, setRevision] = useState<number>(0);
+
+
+    useEffect(() => {
+        if (open) {
+            ListElements(Folders.DiceTemplates).then(list => {
+                setList(list);
+            })
+        }
+    }, [open, revision]);
+
+
+    return <FadeInView height={open ? height : 0}
+        style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
+        <View style={styles.titleHost}>
+            {onCreate && // New Die Icon
+                <Pressable style={{position:"absolute", left:"20%"}} onPress={() => onCreate()}>
+                    <DicePreview facesInfo={[
+                        {backgroundColor:"white"},
+                        {backgroundColor:"white"},
+                        {backgroundColor:"white"},
+                        ]} size={65}/>
+                    <Icon name="plus" size={25}  style={{
+                        position:"absolute",
+                        left:-6,
+                        top:40,
+                        width: 27, height: 27,
+                        backgroundColor:"white",
+                        
+                    }}/>
+                </Pressable>}
+            <Text allowFontScaling={false} style={{ fontSize: 28, margin: 25 }}>{
+                translate("SelectDiceTitle")
+            }</Text>
+        </View>
+        <Seperator width="90%" />
+        <View style={styles.closeButton}>
+            <Icon name="close" size={45} onPress={onClose} />
+        </View>
+        {!list || list.length == 0 ?
+            <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
+            <ScrollView style={[styles.listScroll, { direction: isRTL() ? "rtl" : "ltr" }]}>
+                {list.map(item => (
+                    <View key={item.key} style={styles.itemHost}>
+                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row" }]}>
+                            <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
+                                <RadioButton selected={currentDie == item.key} />
+                                <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
+                                    {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
+                                    {item && !item.image && <DicePreview size={45} facesInfo={item.faces!} />}
+                                    <Text
+                                        allowFontScaling={false}
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
+                                        style={{
+                                            textAlign: (isRTL() ? "right" : "left"),
+                                            fontSize: 28, paddingLeft: 10, paddingRight: 10,
+                                            paddingTop: 10, paddingBottom: 10,
+                                        }}>{item.name}</Text>
+                                </View>
+                            </Pressable>
+                            <View style={{ flexDirection: "row-reverse", width: "40%" }}>
+                                {onDelete && !item.readOnly && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onEdit && !item.readOnly && <IconButton icon="edit" onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onExport && !item.readOnly && <IconButton icon="share-social-outline"
+                                    type="Ionicon" onPress={() => onExport(item.key)} />}
 
                             </View>
                         </View>
@@ -144,6 +237,7 @@ const styles = StyleSheet.create({
         width: "95%",
         justifyContent: "center",
         alignItems: "center",
+
     },
     itemRow: {
         width: "95%",
@@ -153,13 +247,13 @@ const styles = StyleSheet.create({
     listItem: {
         width: "60%",
         flexDirection: "row",
-        paddingLeft: "10%",
-        paddingRight: "10%",
+        paddingLeft: 10,
+        paddingRight: 10,
         flex: 1,
     },
     listScroll: {
-        padding: 20,
-        width: "100%",
+        //padding: "5%",
+        //width: "100%",
     },
     pickerImage: {
         width: 45,
@@ -167,6 +261,8 @@ const styles = StyleSheet.create({
     },
     titleHost: {
         flexDirection: "row",
-        alignItems: "center"
+        alignItems: "center",
+        justifyContent:"center",
+        width:"100%"
     }
 });
