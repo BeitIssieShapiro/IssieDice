@@ -1,8 +1,8 @@
 bugs:
 - freeze rendering - cancel timeout if clicked
-- in settings, do not render nor world
-- edit dice - propotional face size to win size
-- delete default dice 
+V- in settings, do not render nor world
+V- edit dice - propotional face size to win size
+V- delete default dice 
 
 
 

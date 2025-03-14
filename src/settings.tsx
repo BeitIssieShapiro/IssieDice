@@ -345,7 +345,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
         {editOrCreateDice != undefined && <EditDice
             name={editOrCreateDice}
-            width={windowSize.width}
+            windowSize={windowSize}
             onClose={() => {
                 // todo rename cube
                 setEditOrCreateDice(undefined)

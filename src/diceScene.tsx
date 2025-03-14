@@ -64,6 +64,7 @@ interface DiceSceneProps {
     initialTorque: number[];
     profile: Profile;
     windowSize: WinSize;
+    freeze:boolean
 }
 export interface DiceSceneMethods {
     rollDice: () => void;
@@ -96,7 +97,7 @@ const FaceUpInit = [-1, -1, -1, -1];
 const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 
 
-export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize }: DiceSceneProps, ref: any) => {
+export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize, freeze }: DiceSceneProps, ref: any) => {
     const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
     const [bounds, setBounds] = useState<{ left: number; right: number; bottom: number; top: number }>(
         computeFloorBounds(windowSize, cameraHeight, fov, 0)
@@ -292,6 +293,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 });
                 let lastTime = -1
                 body.addEventListener('collide', (e: any) => {
+
+
                     const impactVelocity = e.contact.getImpactVelocityAlongNormal();
                     if (impactVelocity >= 2 && (lastTime < 0 || performance.now() - lastTime > 100)) {
                         lastTime = performance.now();
@@ -371,6 +374,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
 
     useEffect(() => {
+        if (freeze) return;
         let lastTime = performance.now();
         let frameId: number;
 
@@ -397,7 +401,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         }
         frameId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(frameId);
-    }, [world]);
+    }, [world, freeze]);
 
 
 
@@ -443,7 +447,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         <>
             <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-        <FilamentView style={{ flex: 1 }} renderCallback={sceneActive > 0 ? renderCallback : undefined} >
+        <FilamentView style={{ flex: 1 }} renderCallback={sceneActive > 0 && !freeze ? renderCallback : undefined} >
 
             <DefaultLight />
             {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}

@@ -11,12 +11,13 @@ import { EditText } from "./edit-text";
 import { EditFace, FaceText } from "./edit-face";
 import * as RNFS from 'react-native-fs';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import { WinSize } from "./utils";
 
 
 interface EditDiceProps {
     name: string;
     onClose: () => void;
-    width: number
+    windowSize: WinSize
 }
 
 export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
@@ -29,7 +30,7 @@ export const DefaultFaceBackgroundColor = "#E7E7E7";
 
 const emptyFacesInfoArray = [emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo];
 
-export function EditDice({ onClose, name, width }: EditDiceProps) {
+export function EditDice({ onClose, name, windowSize }: EditDiceProps) {
     const [editedName, setEditedName] = useState<string>(name);
     const [openNameEditor, setOpenNameEditor] = useState<boolean>(false);
     const [editFace, setEditFace] = useState<number>(-1);
@@ -191,6 +192,26 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
     }
     console.log("facesInfo", facesInfo)
 
+    const isLandscape = windowSize.height < 760;
+    const faceSize = !isLandscape ?
+        Math.min(windowSize.width / 4, FacePreviewSize, 0.15 * windowSize.height) :
+        windowSize.width / 8;
+
+    const renderFaceRow = (index: number) => (<View key={index} style={[styles.faceView, { width: faceSize, height: faceSize }]}>
+        <FacePreview size={faceSize}
+            backgroundColor={facesInfo[index].backgroundColor}
+            faceText={facesInfo[index].text}
+            backgroundImage={facesInfo[index].backgroundUri}
+            audioUri={facesInfo[index].audioUri}
+        />
+
+        <View style={styles.faceButtons}>
+            <Icon name="edit" size={30} onPress={(() => setEditFace(index))} />
+            {/*todo add listen to audio*/}
+            <Icon name="close" size={30} />
+        </View>
+    </View>)
+
     return <View style={styles.container}>
         <View style={styles.settingTitle}>
             <Spacer w={35} />
@@ -199,12 +220,13 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
         </View>
 
         {busy && <ActivityIndicator />}
-
-        <View style={[styles.section, { flexDirection: isRTL() ? "row-reverse" : "row" }]} >
-            <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
-            <Text style={styles.sectionValue}>{editedName}</Text>
-            <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
-
+        <View style={{ width: "100%", flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "center", margin: 10 }}>
+            <View style={[styles.section, { flexDirection: isRTL() ? "row-reverse" : "row" }]} >
+                <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
+                <Text style={styles.sectionValue}>{editedName}</Text>
+                <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
+            </View>
+            {isLandscape && <DicePreview facesInfo={facesInfo} size={90} />}
         </View>
 
 
@@ -217,7 +239,8 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
                 console.log("onDone", faceInfo)
                 handleFaceInfoChange(editFace, faceInfo, facesInfo);
                 setEditFace(-1);
-            }} width={width}
+            }}
+            width={windowSize.width}
             size={FacePreviewSize}
         />}
 
@@ -233,54 +256,31 @@ export function EditDice({ onClose, name, width }: EditDiceProps) {
             textHeight={80}
 
         />}
+        <DiceLayout facesInfo={facesInfo} size={FacePreviewSize * 4} ref={diceLayoutRef} />
 
         <View style={styles.addFacesHost}>
-            <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", margin: 10 }}>
+            {!isLandscape && <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", margin: 10 }}>
                 <DicePreview facesInfo={facesInfo} size={150} />
-                <DiceLayout facesInfo={facesInfo} size={FacePreviewSize * 4} ref={diceLayoutRef} />
-            </View>
+            </View>}
             <View style={{ flexDirection: "column", width: "100%" }}>
-                <View style={styles.faceRow}>
-                    {[0, 1, 2].map(index => (
-                        <View key={index} style={styles.faceView}>
-                            <FacePreview size={FacePreviewSize}
-                                backgroundColor={facesInfo[index].backgroundColor}
-                                faceText={facesInfo[index].text}
-                                backgroundImage={facesInfo[index].backgroundUri}
-                                audioUri={facesInfo[index].audioUri}
-                            />
-
-                            <View style={styles.faceButtons}>
-                                <Icon name="edit" size={30} onPress={(() => setEditFace(index))} />
-                                {/*todo add listen to audio*/}
-                                <Icon name="close" size={30} />
-                            </View>
+                {isLandscape ?
+                    <View style={styles.faceRow}>
+                        {[0, 1, 2, 3, 4, 5].map(index => renderFaceRow(index))}
+                    </View>
+                    :
+                    <>
+                        <View style={styles.faceRow}>
+                            {[0, 1, 2].map(index => renderFaceRow(index))}
                         </View>
-                    ))}
-                </View>
-
-                <View style={styles.faceRow}>
-                    {[3, 4, 5].map(index => (
-                        <View key={index} style={styles.faceView}>
-                            <FacePreview size={FacePreviewSize}
-                                backgroundColor={facesInfo[index].backgroundColor}
-                                faceText={facesInfo[index].text}
-                                backgroundImage={facesInfo[index].backgroundUri}
-                                audioUri={facesInfo[index].audioUri}
-                            />
-
-                            <View style={styles.faceButtons}>
-                                <Icon name="edit" size={30} onPress={(() => setEditFace(index))} />
-                                {/*todo add listen to audio*/}
-                                <Icon name="close" size={30} />
-                            </View>
+                        <View style={styles.faceRow}>
+                            {[3, 4, 5].map(index => renderFaceRow(index))}
                         </View>
-                    ))}
-                </View>
+                    </>}
             </View>
+        </View>
 
-        </View >
     </View >
+
 }
 
 interface DiceLayoutProps {
@@ -327,7 +327,7 @@ export function DicePreview({ facesInfo, size }: DicePreviewProps) {
                     key={index}
                     size={size / 2}
                     style={facesStyles[index]}
-                    backgroundColor={face?.backgroundColor }
+                    backgroundColor={face?.backgroundColor}
                     faceText={face?.text}
                     backgroundImage={face?.backgroundUri}
                     audioUri={face?.audioUri}
@@ -443,6 +443,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         backgroundColor: "white",
         height: 60,
+        width: "80%",
         padding: 8,
         paddingHorizontal: 20,
         alignItems: "center",
@@ -469,8 +470,6 @@ const styles = StyleSheet.create({
 
     },
     faceView: {
-        width: FacePreviewSize,
-        height: FacePreviewSize,
         backgroundColor: "#E7E7E7",
         margin: 20,
     },

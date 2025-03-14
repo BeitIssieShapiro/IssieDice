@@ -147,6 +147,7 @@ export default function App() {
         {profile && <FilamentScene>
           <DiceScene
             ref={sceneRef}
+            freeze={openSettings}
             initialImpulse={initialImpulse}
             initialTorque={initialTorque}
             profile={revision >= 0 && profile ? profile : EmptyProfile}
