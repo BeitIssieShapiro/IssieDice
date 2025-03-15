@@ -130,7 +130,7 @@ export const getRecordingFileName = (recName: string | number, forceFilePrefix?:
 
 export let storage: MMKV;
 
-export async function Init(migratedDice: string[]) {
+export async function Init() {
 
     console.log("Initializing MMKV storage");
     try {
@@ -154,11 +154,9 @@ export async function Init(migratedDice: string[]) {
     if (!exists) {
         await RNFS.mkdir(buttonsPath);
     }
-
-    
 }
 
-export async function migrateV1():Promise<string[]> {
+export async function migrateV1(): Promise<string[]> {
     const migratedDice = [];
     // iOD only - migration from v1
     if (Platform.OS == "ios") {
@@ -344,8 +342,8 @@ async function loadProfiles(): Promise<List[]> {
                     name
                 })
             }
-
         }
+        list.sort((a, b) => a.name.localeCompare(b.name));
         return list;
     }).catch((e) => {
         console.log("Fail browsing profiles", e);
@@ -425,7 +423,10 @@ export async function saveDataUrlAs(dataUrl: string, filePath: string) {
 
 export async function ListElements(folder: Folders): Promise<List[]> {
     if (folder == Folders.DiceTemplates) {
-        return [...templatesList, ...(await loadCustomDice())];
+        const customDice = await loadCustomDice();
+        customDice.sort((a, b) => a.name.localeCompare(b.name));
+
+        return [...templatesList, ...customDice];
     } else if (folder == Folders.Profiles) {
         return loadProfiles();
     }
@@ -507,15 +508,30 @@ export async function exportDice(name: string): Promise<string> {
         type: "dice",
         name
     }
-    const files = (await loadFaceImages(name)).filter(f => (
-        f.backgroundUri && f.backgroundUri.length > 0 ||
-        f.infoUri && f.infoUri.length > 0
-    )).map(f => ensureAndroidCompatible(
-        f.backgroundUri && f.backgroundUri.length > 0 ? f.backgroundUri : f.infoUri!
-    ));
+
+    const files = [];
+    const exists = await RNFS.exists(getCustomTypePath(name));
+    if (!exists) {
+        return "";
+    }
+
+    const faceInfos = await loadFaceImages(name);
+    for (const faceInfo of faceInfos) {
+        if (faceInfo.backgroundUri) {
+            files.push(ensureAndroidCompatible(faceInfo.backgroundUri));
+        }
+        if (faceInfo.infoUri) {
+            files.push(ensureAndroidCompatible(faceInfo.infoUri));
+        }
+        if (faceInfo.audioUri) {
+            files.push(ensureAndroidCompatible(faceInfo.audioUri))
+        }
+    }
 
     const diceMaterialUri = await readTexture(name)
-    files.push(diceMaterialUri);
+    if (diceMaterialUri.length > 0) {
+        files.push(ensureAndroidCompatible(diceMaterialUri));
+    }
 
     files.push(ensureAndroidCompatible(metaDataFile));
     await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
@@ -558,10 +574,13 @@ export async function exportProfile(name: string, alreadyIncludedCubes: string[]
     for (const dice of p.dice) {
         if (alreadyIncludedCubes.includes(dice.template) || dice.template.startsWith(Templates.prefix)) continue;
         diceNames.push(dice.template);
-        diceZips.push(
-            await exportDice(dice.template)
-        );
+        const dieZip = await exportDice(dice.template)
+        if (dieZip.length > 0) {
+            diceZips.push(dieZip);
+        }
     }
+
+
 
     if (returnInOne) {
         const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
@@ -583,9 +602,10 @@ export async function exportAll(): Promise<string> {
     const diceList = await loadCustomDice(true);
     const diceNames = diceList.map(d => d.name);
     for (const name of diceNames) {
-        files.push(
-            await exportDice(name)
-        );
+        const dieZip = await exportDice(name);
+        if (dieZip.length > 0) {
+            files.push(dieZip);
+        }
     }
 
     const profileList = await loadProfiles();
@@ -606,24 +626,27 @@ export async function exportAll(): Promise<string> {
     });
 }
 
-export async function importPackage(packagePath: string, overwrite = false) {
-    const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported"));
+export async function importPackage(packagePath: string, overwrite = false, subFolder = "", failSilent = false) {
+    const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported", subFolder));
+    await RNFS.unlink(unzipTargetPath).catch(ignore);
     const unzipFolderPath = await unzip(packagePath, unzipTargetPath);
 
     const items = await RNFS.readDir(ensureAndroidCompatible(unzipFolderPath));
-    const metaDataItem = items.find(f => f.name.endsWith(".json"));
+    const metaDataItem = items.find(f => f.name.endsWith(".json") && !f.name.startsWith("face"));
     if (metaDataItem) {
         const metadataStr = await loadFile(metaDataItem.path);
         const md = JSON.parse(metadataStr);
         if (md.type == "dice") {
-            const targetPath = getCustomTypePath(md.name);
-            if (!overwrite && await existsFolder(targetPath)) {
+            const targetPath = getCustomTypePath(md.name)
+
+            if (!overwrite && await RNFS.exists(targetPath)) {
+                if (failSilent) return;
                 throw fTranslate("ImportDiceExist", md.name);
             }
 
             await RNFS.mkdir(targetPath);
-            for (const file of items.filter(item => !item.name.endsWith(".json"))) {
-                await RNFS.moveFile(file.path, targetPath);
+            for (const file of items.filter(item => item.name != metaDataItem.name)) {
+                await RNFS.moveFile(file.path, targetPath + "/" + file.name).catch(e => console.log("copy file on import failed", e));
             }
         } else if (md.type == "profile") {
             const targetPath = getProfilePath(md.name);
@@ -644,8 +667,9 @@ export async function importPackage(packagePath: string, overwrite = false) {
         }
     } else {
         // list of zips
+        let i = 0;
         for (const item of items) {
-            await importPackage(item.path);
+            await importPackage(item.path, false, i++ + "", true);
         }
     }
 }

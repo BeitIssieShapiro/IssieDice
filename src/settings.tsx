@@ -30,7 +30,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [revision, setRevision] = useState<number>(0);
     const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
     const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
-    const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined)
+    const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined);
+    const [setDieAfterCreate, setSetDieAfterCreate] = useState<number>(-1);
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
     const [diceBusy, setDiceBusy] = useState<number>(-1);
     const [busy, setBusy] = useState<boolean>(false);
@@ -75,6 +76,9 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     }
 
     function handleSetRecoveryTime(newRecoveryTime: number) {
+        if (newRecoveryTime < 0) {
+            newRecoveryTime = 0;
+        }
         Settings.set(SettingsKeys.RecoveryTime, newRecoveryTime);
         setRevision(old => old + 1);
     }
@@ -255,8 +259,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     async function handleBackupAll() {
         setBusy(true)
         const zipPath = (await exportAll()
+            .catch(err => console.log("export all failed", err))
             .finally(() => setBusy(false))
         ) as string;
+
+        console.log("Export All", zipPath)
         const shareOptions = {
             title: translate("ShareBackupWithTitle"),
             subject: translate("ShareBackupEmailSubject"),
@@ -274,15 +281,17 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
     function handleDeleteDie(name: string, afterDelete: () => void): void {
-        Alert.alert(translate("DeleteDieTitle"), translate("DeleteDieAlert"),[
-            {text:translate("Delete"), onPress:()=>{
-                deleteDice(name);
-                setRevision(prev => prev + 1);
-                afterDelete()
-            }},
-            {text:translate("Cancel"), onPress:()=>{}}
+        Alert.alert(translate("DeleteDieTitle"), fTranslate("DeleteDieAlert", name), [
+            {
+                text: translate("Delete"), onPress: () => {
+                    deleteDice(name);
+                    setRevision(prev => prev + 1);
+                    afterDelete()
+                }
+            },
+            { text: translate("Cancel"), onPress: () => { } }
         ])
-        
+
     }
 
     return <View style={[styles.container, { top: insets.top }]}>
@@ -319,20 +328,25 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
                 setOpenSelectTemplate(-1);
-                setRevision(prev => prev + 1);
+                setSetDieAfterCreate(-1);
             }}
             onEdit={(template) => {
                 setOpenSelectTemplate(-1);
                 setEditOrCreateDice(template);
+                setSetDieAfterCreate(-1);
             }}
-            onClose={() => setOpenSelectTemplate(-1)}
+            onClose={() => {
+                setOpenSelectTemplate(-1);
+                setSetDieAfterCreate(-1);
+            }}
             onCreate={() => {
+                setSetDieAfterCreate(openSelectTemplate);
                 setOpenSelectTemplate(-1);
                 setEditOrCreateDice("")
             }}
             onExport={handleExportDice}
-            onDelete={(name, afterDelete)=>handleDeleteDie(name, afterDelete) }
-            currentDie={openSelectTemplate>=0 ? profile.dice[openSelectTemplate].template : Templates.Dots}
+            onDelete={(name, afterDelete) => handleDeleteDie(name, afterDelete)}
+            currentDie={openSelectTemplate >= 0 ? profile.dice[openSelectTemplate].template : Templates.Dots}
         />
 
         <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={profile.tableColor}
@@ -350,7 +364,15 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 // todo rename cube
                 setEditOrCreateDice(undefined)
                 setRevision(prev => prev + 1)
-            }} />}
+            }}
+            onAfterSave={(name) => {
+                if (setDieAfterCreate >= 0) {
+                    setDiceTemplate(setDieAfterCreate, name as Templates);
+                    setSetDieAfterCreate(-1);
+                    setRevision(prev => prev + 1)
+                }
+            }}
+        />}
 
         {/** Title */}
         <View style={styles.settingTitle}>
@@ -403,7 +425,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             </View>
 
             {/* Dice Size */}
-            <NumberSelector style={sectionStyle} title={translate("DiceSize")} min={1} max={7} value={profile.size}
+            <NumberSelector style={sectionStyle} title={translate("DiceSize")} min={1} max={5} value={profile.size}
                 onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} titleStyle={styles.sectionTitle} />
 
             {/* Number of Dice */}

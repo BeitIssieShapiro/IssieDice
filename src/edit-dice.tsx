@@ -3,7 +3,7 @@ import { fTranslate, isRTL, translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
+import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, getNextDieName, InvalidCharachters, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { unlink } from "react-native-fs";
@@ -12,15 +12,16 @@ import { EditFace, FaceText } from "./edit-face";
 import * as RNFS from 'react-native-fs';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { WinSize } from "./utils";
+import { playAudio } from "./audio";
 
 
 interface EditDiceProps {
     name: string;
     onClose: () => void;
+    onAfterSave: (name: string) => void;
     windowSize: WinSize
 }
 
-export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
 
 const emptyFaceInfo: FaceInfo = {}
 
@@ -30,7 +31,7 @@ export const DefaultFaceBackgroundColor = "#E7E7E7";
 
 const emptyFacesInfoArray = [emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo];
 
-export function EditDice({ onClose, name, windowSize }: EditDiceProps) {
+export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDiceProps) {
     const [editedName, setEditedName] = useState<string>(name);
     const [openNameEditor, setOpenNameEditor] = useState<boolean>(false);
     const [editFace, setEditFace] = useState<number>(-1);
@@ -144,7 +145,8 @@ export function EditDice({ onClose, name, windowSize }: EditDiceProps) {
                     })
                     .finally(() => setBusy(false))
             }, 1000);
-            console.log("FacesInfo updated", facesInfo)
+            console.log("FacesInfo updated", facesInfo);
+            onAfterSave(editedName);
         } else {
             setBusy(false);
         }
@@ -158,7 +160,7 @@ export function EditDice({ onClose, name, windowSize }: EditDiceProps) {
 
         if (newName != editedName) {
             if (!isValidFilename(newName)) {
-                Alert.alert(translate("InvalideDiceName"), "", [{ text: translate("OK") }]);
+                Alert.alert(fTranslate("InvalideDiceName", InvalidCharachters), "", [{ text: translate("OK") }]);
                 return false;
             }
 
@@ -191,12 +193,12 @@ export function EditDice({ onClose, name, windowSize }: EditDiceProps) {
             faceText={facesInfo[index].text}
             backgroundImage={facesInfo[index].backgroundUri}
             audioUri={facesInfo[index].audioUri}
+            onAudioPress={() => facesInfo[index].audioUri && playAudio(facesInfo[index].audioUri)}
         />
 
         <View style={styles.faceButtons}>
             <Icon name="edit" size={30} onPress={(() => setEditFace(index))} />
             {/*todo add listen to audio*/}
-            <Icon name="close" size={30} />
         </View>
     </View>)
 
@@ -464,7 +466,7 @@ const styles = StyleSheet.create({
     faceButtons: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "center",
     },
     addFace: {
         margin: 20,

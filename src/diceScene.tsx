@@ -28,14 +28,13 @@ import {
 
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
-import { Dice, getCustomTypePath, getRandomFile, Profile, Templates, templatesList } from "./profile";
-import { animateYaw, computeFloorBounds, computeVerticalFov, getCanonicalEulerForFace, getTopFace, safeColor, WinSize } from "./utils";
-import { createFloor, createWall } from "./scene-elements";
+import { Dice, Profile, Templates, templatesList } from "./profile";
+import { animateYaw, computeFloorBounds, computeVerticalFov, getTopFace, safeColor, WinSize } from "./utils";
+import { createDieShape, createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio } from "./audio";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
-const DotModel = require("../assets/dot-dice.glb");
 const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
 const dieCollisionSound = require("../assets/dice-sound.mp3");
 
@@ -64,7 +63,7 @@ interface DiceSceneProps {
     initialTorque: number[];
     profile: Profile;
     windowSize: WinSize;
-    freeze:boolean
+    freeze: boolean
 }
 export interface DiceSceneMethods {
     rollDice: () => void;
@@ -123,17 +122,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         useModel(DiceModel)
     ];
 
-    const dotDiceModel: FilamentModel[] = [
-        useModel(DotModel),
-        useModel(DotModel),
-        useModel(DotModel),
-        useModel(DotModel)
-    ]
     const generalDiceAsset = generalDiceModel.map(d => getAssetFromModel(d));
     const generalEntity = generalDiceAsset.map(de => de?.getRenderableEntities()[0]);
-
-    const dotDiceAsset = dotDiceModel.map(d => getAssetFromModel(d));
-    const dotEntity = dotDiceAsset.map(de => de?.getRenderableEntities()[0]);
 
 
     //#region Setup shadow plane
@@ -235,16 +225,17 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     useEffect(() => {
         const winSizeFactor = 900 / currWindowSize.height;
         const scale = .5 * winSizeFactor * diceSize / 2;
-        
+
         const isDotArray: boolean[] = [false, false, false, false]
         worldDiceRef.current = diceInfoRef.current
             .filter(die => die.active)
             .map((die, i) => {
                 // Create a dynamic dice body (a 1x1x1 box)
-                const body = new CANNON.Body({
-                    mass: 1,
-                    shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-                });
+                // const body = new CANNON.Body({
+                //     mass: 1,
+                //     shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+                // });
+                const body = createDieShape();
                 // Initial position above ground.
                 //body.quaternion.setFromEuler(0,45,90)
 
@@ -255,46 +246,38 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 body.quaternion.setFromEuler(0, Math.PI, -Math.PI / 2)
                 //-Math.PI/2,0,Math.PI/2
+                if (die.template != Templates.Dots) {
+                    body.addEventListener("sleep", () => {
+                        const { face, euler } = getTopFace(body);
+                        setFaceUp(prev => {
+                            return prev.map((orig, cubeIndex) => cubeIndex == i ? face - 1 : orig);
+                        })
+                        if (face > 0) {
+                            const [cx, cy, cz] = [euler.x, euler.y, euler.z];
+                            const ty = canonicalYaw[face - 1];
+                            // minimalAngleDiff helps with wrap-around, e.g. going from 359° to 0° is only 1°.
+                            function minimalAngleDiff(a: number, b: number): number {
+                                let diff = b - a;
+                                // clamp to -PI..PI or similar
+                                while (diff > Math.PI) diff -= 2 * Math.PI;
+                                while (diff < -Math.PI) diff += 2 * Math.PI;
+                                return diff;
+                            }
 
-                body.addEventListener("sleep", () => {
-                    // Compute the face and correction delta
-                    //const { face, delta } = getFaceAndQuaternionDelta([r.y, r.z, r.x]);
-                    const { face, euler } = getTopFace(body);
-                    setFaceUp(prev => {
-                        return prev.map((orig, cubeIndex) => cubeIndex == i ? face - 1 : orig);
-                    })
-                    if (face > 0) {
-                        const [cx, cy, cz] = [euler.x, euler.y, euler.z];
-                        const ty = canonicalYaw[face-1];
-                        // minimalAngleDiff helps with wrap-around, e.g. going from 359° to 0° is only 1°.
-                        function minimalAngleDiff(a: number, b: number): number {
-                            let diff = b - a;
-                            // clamp to -PI..PI or similar
-                            while (diff > Math.PI) diff -= 2 * Math.PI;
-                            while (diff < -Math.PI) diff += 2 * Math.PI;
-                            return diff;
+                            const dy = minimalAngleDiff(cy, ty);
+
+                            animateYaw(body, cx, cz, cy, cy + dy, 400);
+
+
+                            setTimeout(() => setSceneActive(prev => prev - 1), 400);
+                            body.allowSleep = true;
+                        } else {
+                            body.allowSleep = false;
                         }
-
-                        const dy = minimalAngleDiff(cy, ty);
-
-                        const toDeg = (d: number) => Math.floor(d * 180 / Math.PI);
-
-                        //setLog(`rot face:${face} ${toDeg(dx)},${toDeg(dy)},${toDeg(dz)}`)
-
-                        //body.quaternion.setFromEuler(cx, ty, cz);
-                        animateYaw(body, cx, cz, cy, cy+dy, 400);
-
-
-                        setTimeout(() => setSceneActive(prev => prev - 1), 400);
-                        body.allowSleep = true;
-                    } else {
-                        body.allowSleep = false;
-                    }
-                });
+                    });
+                }
                 let lastTime = -1
                 body.addEventListener('collide', (e: any) => {
-
-
                     const impactVelocity = e.contact.getImpactVelocityAlongNormal();
                     if (impactVelocity >= 2 && (lastTime < 0 || performance.now() - lastTime > 100)) {
                         lastTime = performance.now();
@@ -411,15 +394,12 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         const scale = .5 * winSizeFactor * diceSize / 2;
         const hideTransform = transformManager.createIdentityMatrix().translate([-1000, 0, 0]);
         for (let i = 0; i < 4; i++) {
-            const entity = generalEntity[i]; //isDotDice.value[i] ? dotEntity[i] : generalEntity[i];
-            const otherEntity = dotEntity[i]; //isDotDice.value[i] ? generalEntity[i] : dotEntity[i];
+            const entity = generalEntity[i];
 
             if (entity) {
-                //console.log("type", entity, otherEntity)
                 const pos = [dicePosition[i].value[0], dicePosition[i].value[1], dicePosition[i].value[2]] as Float3
                 const angle = diceRotation[i].value.angle;
                 const axis = [diceRotation[i].value.axis[0], diceRotation[i].value.axis[1], diceRotation[i].value.axis[2]] as Float3;
-                //console.log("transform", pos,  angle, axis)
 
 
                 if (i < diceCount.value) {
@@ -432,12 +412,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     transformManager.setTransform(entity, hideTransform);
                 }
 
-                // hide the other type's model
-                if (otherEntity) transformManager.setTransform(otherEntity, hideTransform);
             }
         }
 
-    }, [dicePosition, diceRotation, generalEntity, dotEntity, transformManager, diceCount, isDotDice, diceSize])
+    }, [dicePosition, diceRotation, generalEntity, transformManager, diceCount, isDotDice, diceSize])
 
 
 
@@ -447,43 +425,43 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         <>
             <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-        <FilamentView style={{ flex: 1 }} renderCallback={sceneActive > 0 && !freeze ? renderCallback : undefined} >
+            <FilamentView style={{ flex: 1 }} renderCallback={sceneActive > 0 && !freeze ? renderCallback : undefined} >
 
-            <DefaultLight />
-            {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
-            <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
-                //falloffRadius={bounds.right}
-                position={[0, 100, 100]} //direction={[0,0,0]}
-            />
+                <DefaultLight />
+                {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
+                <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
+                    //falloffRadius={bounds.right}
+                    position={[0, 100, 100]} //direction={[0,0,0]}
+                />
 
-            <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
+                <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
 
 
-            {activeDice
-                .filter(die => die.active)
-                .map((dieInfo, i) => (worldDiceRef.current &&
-                    <ModelRenderer key={i + "-" + isDotDice.value[i]}
-                        model={false ? dotDiceModel[i] : generalDiceModel[i]}
-                        castShadow={true} receiveShadow={true}
-                        onPress={() => {
-                            const body = worldDiceRef.current[i];
-                            const { face } = getTopFace(body.body);
-                            console.log("cube-pressed", i, face)
+                {activeDice
+                    .filter(die => die.active)
+                    .map((dieInfo, i) => (worldDiceRef.current &&
+                        <ModelRenderer key={i + "-" + isDotDice.value[i]}
+                            model={generalDiceModel[i]}
+                            castShadow={true} receiveShadow={true}
+                            onPress={() => {
+                                const body = worldDiceRef.current[i];
+                                const { face } = getTopFace(body.body);
+                                console.log("cube-pressed", i, face)
 
-                            if (face > 0) {
-                                if (dieInfo.faces?.at(face - 1)?.audioUri) {
-                                    playAudio(dieInfo.faces[face - 1]!.audioUri!);
+                                if (face > 0) {
+                                    if (dieInfo.faces?.at(face - 1)?.audioUri) {
+                                        playAudio(dieInfo.faces[face - 1]!.audioUri!);
+                                    }
+
                                 }
+                            }}
+                        >
+                            {texture[i] && <EntitySelector byName="Cube"
+                                textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
+                        </ModelRenderer>
+                    ))}
 
-                            }
-                        }}
-                    >
-                        {texture[i] && <EntitySelector byName="Cube"
-                            textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
-                    </ModelRenderer>
-                ))}
-
-            {/* <Model source={DiceModel}
+                {/* <Model source={DiceModel}
                 translate={[bounds.left, 0, bounds.top]}
 
             />
@@ -491,8 +469,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 translate={[bounds.right, 0, bounds.bottom]}
 
             /> */}
-            <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
-        </FilamentView>
+                <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
+            </FilamentView>
         </>
     );
 });

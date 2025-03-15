@@ -23,3 +23,6 @@ add in assets/fonts
 `npx react-native-asset`
 
 https://github.com/software-mansion/react-native-screens/issues/2652    
+
+Blend:
+export with modifiers

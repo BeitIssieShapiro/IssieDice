@@ -3,8 +3,8 @@ bugs:
 V- in settings, do not render nor world
 V- edit dice - propotional face size to win size
 V- delete default dice 
-- after create dice, make it selected
-- sort dice and profiles
+V- after create dice, make it selected
+V- sort dice and profiles
 
 
 

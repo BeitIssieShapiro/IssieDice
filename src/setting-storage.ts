@@ -15,7 +15,7 @@ export class Settings {
     static getNumber(key: string, defValue: number): number {
         if (!storage) throw "Missing Storage"
         const val = storage.getNumber(key);
-        if (!val) return defValue;
+        if (val == undefined || val == null) return defValue;
         return val;
     }
     static getBoolean(key: string, defValue: boolean): boolean {

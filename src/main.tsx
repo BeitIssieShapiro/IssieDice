@@ -78,6 +78,7 @@ export default function App({migratedDice}:{migratedDice:string[]}) {
 
     importPackage(url)
       .then(() => Alert.alert("SuccessfulImport"))
+      .catch(err=>Alert.alert(translate("ImportError"), err))
       .finally(() => setImportInProgress(undefined))
 
   }
