@@ -1,4 +1,11 @@
-bugs:
+todo:
+- floor color (use plane instead of skybox)
+- implement About
+- Changes to camera - make npm-patch
+- zoom in camera?
+
+
+
 - freeze rendering - cancel timeout if clicked
 V- in settings, do not render nor world
 V- edit dice - propotional face size to win size
