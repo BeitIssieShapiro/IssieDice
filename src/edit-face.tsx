@@ -24,6 +24,8 @@ import { CameraOverlay } from "./CameraOverlay";
 import { SearchImage } from "./search-image";
 import { playAudio, RecordButton } from "./audio";
 import { audioRecorderPlayer } from "../index";
+import IconIonicons from 'react-native-vector-icons/Ionicons';
+import { EditImage } from "./edit-image";
 
 export interface FaceText {
     text: string;
@@ -76,12 +78,9 @@ export const EditFace: React.FC<EditFaceProps> = ({
     const [openCamera, setOpenCamera] = useState<boolean>(false);
     const [openSearch, setOpenSearch] = useState<boolean>(false);
     const [busy, setBusy] = useState<boolean>(false);
+    const [editImage, setEditImage] = useState<boolean>(false);
 
 
-    async function handlePlay(uri: string | undefined) {
-        if (!uri) return;
-        
-    }
 
     if (openCamera) {
         return <CameraOverlay onClose={() => {
@@ -112,6 +111,15 @@ export const EditFace: React.FC<EditFaceProps> = ({
         />
     }
 
+    if (editImage && backgroundImage) {
+        return <EditImage uri={backgroundImage} onClose={() => {
+            setEditImage(false)
+        }} onDone={(uri) => {
+            setBackgroundImage(uri);
+            setEditImage(false);
+        }} />
+    }
+
     const styleLabel: any = [styles.styleLabel, { textAlign: "left" }]
 
     return (
@@ -137,6 +145,10 @@ export const EditFace: React.FC<EditFaceProps> = ({
                         audioUri={audioUri}
                         onAudioPress={() => audioUri && playAudio(audioUri)}
                     />
+                    {backgroundImage && <View style={styles.cropButton}>
+                        <IconIonic  size={35} name="crop" onPress={()=>{
+                        setEditImage(true);
+                    }}/></View>}
                 </View>
 
 
@@ -455,6 +467,11 @@ const styles = StyleSheet.create({
         position: "absolute",
         left: -FacePreviewSize / 2,
         top: FacePreviewSize / 3,
+    },
+    cropButton: {
+            position: "absolute",
+            right: -40,
+            bottom: 0,
     },
     playButton: {
         position: "absolute",

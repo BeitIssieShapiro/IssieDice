@@ -26,3 +26,18 @@ https://github.com/software-mansion/react-native-screens/issues/2652
 
 Blend:
 export with modifiers
+
+
+camera-kit:
+CKCameraViewComponentView.mm
+
+    // id scanBarcode = CKConvertFollyDynamicToId(newProps.scanBarcode);
+    // if (scanBarcode != nil) {
+    //     _view.scanBarcode = scanBarcode;
+    if (_view.scanBarcode != newProps.scanBarcode) {
+        _view.scanBarcode = newProps.scanBarcode;
+        [changedProps addObject:@"scanBarcode"];
+    }
+    // id showFrame = CKConvertFollyDynamicToId(newProps.showFrame);
+    // if (showFrame != nil) {
+    //     _view.showFrame = showFrame;

@@ -186,7 +186,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 die.body.angularVelocity.setZero();
 
                 // Optionally, reset position if desired.
-                die.body.position.set(getDieX(i, diceInfo.length, 1) + 3, 8, -5);
+                //die.body.position.set(getDieX(i, diceInfo.length, 1) + 3, 8, -5);
+                die.body.position.set(0, 8+i, -5);
 
                 const force = 3 + 7 * Math.random();
                 die.body.applyImpulse(

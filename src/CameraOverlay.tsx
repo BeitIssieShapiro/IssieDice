@@ -60,6 +60,12 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone })
           style={styles.camera}
           cameraType={CameraType.Front}
           shutterPhotoSound={true}
+          showFrame={false}
+          scanBarcode={false}
+          zoomMode="on"
+          onZoom={()=>{
+            console.log("Zooming")
+          }}
         //saveToCameraRoll={false}
         />
       ) : (
@@ -69,7 +75,7 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone })
       )}
 
       <View style={styles.topContainer}>
-        <IconButton icon="close" text={translate("DoneBtn")} onPress={onClose} backgroundColor='white'/>
+        <IconButton icon="close" text={translate("CancelBtn")} onPress={onClose} backgroundColor='white'/>
       </View>
       <View style={styles.bottomContainer}>
         <TouchableOpacity style={styles.shutterOuter} onPress={takePicture}>

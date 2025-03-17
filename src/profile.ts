@@ -449,7 +449,11 @@ export function existsFolder(name: string): Promise<boolean> {
 export async function renameDiceFolder(currName: string, newName: string) {
     const srcPath = getCustomTypePath(currName);
     const destPath = getCustomTypePath(newName);
-    await RNFS.moveFile(srcPath, destPath);
+    if (await RNFS.exists(srcPath)) {
+        await RNFS.moveFile(srcPath, destPath);
+    } else {
+        await RNFS.mkdir(destPath);
+    }
 
     // change saved settings and profiles including old dice name
     const diceTemplateTypes = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);

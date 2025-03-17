@@ -13,6 +13,7 @@ import { WinSize } from "./utils";
 import { FilamentScene } from "react-native-filament";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MigrateDice } from "./migrate-dice";
+import { CountdownEditButton } from "./settings-btn";
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
@@ -129,11 +130,13 @@ export default function App({migratedDice}:{migratedDice:string[]}) {
       setWindowSize(wz);
     }}>
 
-      <TouchableOpacity style={[styles.settingsButton, { top: Math.max(35, 15 + insets.top) }]}
+      {/* <TouchableOpacity style={[styles.settingsButton, { top: Math.max(35, 15 + insets.top) }]}
         onPress={() => setOpenSettings(true)}
       >
         <Icon name={"setting"} color={"white"} size={35} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+
+      <CountdownEditButton iconSize={35} onComplete={()=>setOpenSettings(true)} top={ Math.max(35, 15 + insets.top) }/>
 
       {migrateDice.length > 0 && <MigrateDice migrateDice={migrateDice} setMigrateDice={setMigrateDice}
         winWidth={windowSize.width} />}

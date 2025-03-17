@@ -113,7 +113,10 @@ const strings = {
         "ImportProfileExist": "Profile import failed. Profile '{1}' already exists",
         "ImportDiceExist": "Die import failed. Die '{1}' already exists",
         "DeleteDieTitle": "Delete Die",
-        "DeleteDieAlert": "Delete die '{1}'?"
+        "DeleteDieAlert": "Delete die '{1}'?",
+        "Rotate": "Rotate",
+        "CancelBtn": "Cancel",
+
     },
     "he": {
         "ImportError": "תקלה ביבוא",
@@ -213,8 +216,9 @@ const strings = {
         "ImportDiceExist": "יבוא קוביה נכשל. קובייה '{1}' כבר קיימת",
         "DeleteDieTitle": "מחיקת קובייה",
         "DeleteDieAlert": "'האם למחוק את הקובייה '{1}?",
-
-
+        "Rotate": "סובב",
+        "CancelBtn": "ביטול",
+        "OpenIn":"פתיחה בעוד {1} שניות"
 
     },
     "ar": {
@@ -313,8 +317,9 @@ const strings = {
         "ImportProfileExist": "فشل استيراد الملف الشخصي. الملف الشخصي '{1}' موجود بالفعل",
         "ImportDiceExist": "فشل استيراد النرد. النرد '{1}' موجود بالفعل",
         "DeleteDieTitle": "حذف النرد",
-        "DeleteDieAlert": "هل تريد حذف النرد '{1}'؟"
-
+        "DeleteDieAlert": "هل تريد حذف النرد '{1}'؟",
+        "Rotate": "تدوير",
+        "CancelBtn": "إلغاء"
     }
 };
 

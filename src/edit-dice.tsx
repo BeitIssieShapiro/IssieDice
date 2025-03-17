@@ -164,7 +164,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
                 return false;
             }
 
-            if (await existsFolder(getCustomTypePath(newName))) {
+            if (await RNFS.exists(getCustomTypePath(newName))) {
                 Alert.alert(translate("AlreadyExistsDice"), "", [{ text: translate("OK") }]);
                 return false;
                 //todo - allow overwrite
@@ -212,8 +212,8 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         {busy && <ActivityIndicator />}
         <View style={{ width: "100%", flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "center", margin: 10 }}>
             <View style={[styles.section, { flexDirection: isRTL() ? "row-reverse" : "row" }]} >
-                <Text style={styles.sectionName}>{translate("DiceName")}:</Text>
-                <Text style={styles.sectionValue}>{editedName}</Text>
+                <Text allowFontScaling={false}  style={styles.sectionName}>{translate("DiceName")}:</Text>
+                <Text allowFontScaling={false}  style={styles.sectionValue}>{editedName}</Text>
                 <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
             </View>
             {isLandscape && <DicePreview facesInfo={facesInfo} size={90} />}
