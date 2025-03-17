@@ -6,8 +6,8 @@ const deviceLanguageRaw = bestLanguage;
 const supportedLanguages = ['he', 'en', 'ar'];
 
 // Extract the first two characters of the language code (e.g., 'en', 'he')
-const deviceLanguage = "he"
-// deviceLanguageRaw.split(/[-_]/)[0];
+const deviceLanguage =// "en"
+ deviceLanguageRaw.split(/[-_]/)[0];
 
 // Check if the detected language is supported, otherwise default to 'en'
 export const gCurrentLang: string = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
@@ -99,8 +99,8 @@ const strings = {
         "FontSize": "Font Size",
         "FontName": "Font Name",
         "Bold": "Bold",
-        "TextColor": "Text Color",
-        "FaceBackgroundColor": "Face Background Color",
+        "TextColor": "Color",
+        "FaceBackgroundColor": "Color",
         "SrcFromGallery": "Gallery",
         "SrcFromSearch": "Search",
         "SrcFromCamera": "Camera",
