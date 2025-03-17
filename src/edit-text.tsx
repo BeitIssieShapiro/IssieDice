@@ -59,7 +59,7 @@ export const EditText: React.FC<EditTextProps> = ({
 
     console.log("Render edit-text", text, fontName)
     return (
-        <View style={[StyleSheet.absoluteFill, styles.overlay]}>
+        <View style={[StyleSheet.absoluteFill, styles.overlay, {zIndex:999999}]}>
             <View style={[styles.container, { width: width || "90%" }]}>
 
                 <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={openColorPicker ? openColorPicker.color : "white"}

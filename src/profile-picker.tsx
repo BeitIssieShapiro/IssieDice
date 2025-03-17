@@ -27,6 +27,7 @@ interface ButtonInfo {
 
 interface ProfilePickerProps {
     open: boolean;
+    currentProfile: string;
     loadButton: ButtonInfo;
     editButton?: ButtonInfo;
     exportButton?: ButtonInfo;
@@ -42,7 +43,9 @@ interface ProfilePickerProps {
     isNarrow?: boolean;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, loadButton, editButton, isNarrow, onExport, exportButton }: ProfilePickerProps) {
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, 
+    currentProfile, 
+    loadButton, editButton, isNarrow, onExport, exportButton }: ProfilePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
@@ -76,25 +79,26 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             <ScrollView style={[styles.listScroll, { direction: isRTL() ? "rtl" : "ltr" }]}>
                 {list.map(item => (
                     <View key={item.key} style={styles.itemHost}>
-                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row", backgroundColor: "yellow" }]}>
-                            <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
-                                {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
-                                {item && !item.image && isDicePicker && <DicePreview size={45} facesInfo={item.faces!} />}
-                                <Text
-                                    allowFontScaling={false}
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                    style={{
-                                        textAlign: (isRTL() ? "right" : "left"),
-                                        fontSize: 28, paddingLeft: 15, paddingRight: 15,
-                                        paddingTop: 10, paddingBottom: 10,
-                                    }}>{item.name}</Text>
-                            </View>
+                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row" }]}>
+                            <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
+                                <RadioButton selected={currentProfile == item.key} />
+                                <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
+                                    <Text
+                                        allowFontScaling={false}
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
+                                        style={{
+                                            textAlign: (isRTL() ? "right" : "left"),
+                                            fontSize: 28, paddingLeft: 10, paddingRight: 10,
+                                            paddingTop: 10, paddingBottom: 10,
+                                        }}>{item.name}</Text>
+                                </View>
+                            </Pressable>
                             <View style={{ flexDirection: "row-reverse", width: "40%" }}>
-                                <IconButton icon={loadButton?.icon} type={loadButton?.type} onPress={() => onSelect(item.key)} text={loadButton.name} />
-                                {onDelete && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onEdit && !item.readOnly && <IconButton icon={editButton?.icon} type={editButton?.type} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onExport && !item.readOnly && <IconButton icon={exportButton?.icon} type={exportButton?.type} onPress={() => onExport(item.key)} />}
+                                {onDelete && !item.readOnly && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onEdit && !item.readOnly && <IconButton icon="edit" onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onExport && !item.readOnly && <IconButton icon="share-social-outline"
+                                    type="Ionicon" onPress={() => onExport(item.key)} />}
 
                             </View>
                         </View>

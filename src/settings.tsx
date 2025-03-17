@@ -15,6 +15,7 @@ import Toast from "react-native-toast-message";
 import Share from 'react-native-share';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { safeColor } from "./utils";
+import { EditText } from "./edit-text";
 
 export const BTN_COLOR = "#6E6E6E";
 const disabledColor = "gray";
@@ -36,6 +37,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [diceBusy, setDiceBusy] = useState<number>(-1);
     const [busy, setBusy] = useState<boolean>(false);
     const [openSelectTemplate, setOpenSelectTemplate] = useState<number>(-1);
+    const [showEditProfileName, setShowEditProfileName] = useState<{ name: string, afterSave?: () => void } | undefined>(undefined);
 
     const insets = useSafeAreaInsets();
 
@@ -148,57 +150,50 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         afterDelete();
     }
 
-    const handleProfileEditName = (name: string, isRename: boolean, afterSave: () => void) => {
+
+    const handleProfileEditName = (newName: string, prevName: string, afterSave?: () => void) => {
         const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
-        const isCurrent = currName == name;
-        prompt(isRename ? translate("RenameProfile") : translate("SetProfileName"), undefined, [
-            { text: translate("Cancel"), style: "cancel" },
-            {
-                text: translate("Save"),
-                onPress: (newName) => {
-                    console.log("save pressed", newName)
-                    if (newName) {
-                        doProfileSave(newName, name, isCurrent)
-                            .then(() => {
-                                afterSave();
-                                Toast.show({
-                                    autoHide: true,
-                                    type: 'success',
-                                    text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
-                                })
-                            })
-                            .catch((err) => {
-                                if (err instanceof AlreadyExists) {
-                                    Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", name),
-                                        [
-                                            {
-                                                text: translate("Overwrite"), onPress: () => {
-                                                    doProfileSave(newName, name, isCurrent, true).then(() => {
-                                                        afterSave();
-                                                        Toast.show({
-                                                            autoHide: true,
-                                                            type: 'success',
-                                                            text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
-                                                        })
-                                                    })
-                                                }
-                                            },
-                                            { text: translate("Cancel") }
-                                        ])
-                                } else if (err instanceof InvalidFileName) {
-                                    Alert.alert(fTranslate("InvalidName", InvalidCharachters));
-                                } else {
-                                    Toast.show({
-                                        autoHide: true,
-                                        type: 'error',
-                                        text1: translate(translate("ProfileSaveFailed"))
-                                    })
-                                }
-                            });
+        const isCurrent = currName == newName;
+        const isRename = prevName.length > 0;
+
+        console.log("save pressed", newName)
+        if (newName) {
+            doProfileSave(newName, prevName, isCurrent)
+                .then(() => {
+                    afterSave?.();
+                    Toast.show({
+                        autoHide: true,
+                        type: 'success',
+                        text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
+                    })
+                })
+                .catch((err) => {
+                    if (err instanceof AlreadyExists) {
+                        Alert.alert(translate("ProfileExistsTitle"), fTranslate("ProfileExists", newName),
+                            [
+                                {
+                                    text: translate("Overwrite"), onPress: () => {
+                                        doProfileSave(newName, newName, isCurrent, true).then(() => {
+                                            afterSave?.();
+                                            Toast.show({
+                                                autoHide: true,
+                                                type: 'success',
+                                                text1: translate(isRename ? "ProfileSuccessRenamed" : "ProfileSuccessfulyCreated")
+                                            })
+                                        })
+                                    }
+                                },
+                                { text: translate("Cancel") }
+                            ])
+                    } else {
+                        Toast.show({
+                            autoHide: true,
+                            type: 'error',
+                            text1: translate(translate("ProfileSaveFailed"))
+                        })
                     }
-                }
-            },
-        ], { type: 'plain-text', defaultValue: name });
+                });
+        }
     }
 
     const closeProfile = async () => {
@@ -280,6 +275,20 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
+    function handleDeleteProfile (name: string, afterDelete: () => void): void {
+        Alert.alert(translate("DeleteProfileTitle"), fTranslate("DeleteProfileAlert", name), [
+            {
+                text: translate("Delete"), onPress: () => {
+                    deleteProfile(name);
+                    setRevision(prev => prev + 1);
+                    afterDelete()
+                }
+            },
+            { text: translate("Cancel"), onPress: () => { } }
+        ])
+
+    }
+
     function handleDeleteDie(name: string, afterDelete: () => void): void {
         Alert.alert(translate("DeleteDieTitle"), fTranslate("DeleteDieAlert", name), [
             {
@@ -300,6 +309,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         {/** Profile Picker */}
         <ProfilePicker
             folder={Folders.Profiles}
+            currentProfile={Settings.getString(SettingsKeys.CurrentProfileName, "")}
             open={openLoadProfile}
             loadButton={{ name: translate("Load"), icon: "upload" }}
             exportButton={{ name: translate("Export") }}
@@ -314,7 +324,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             }}
             editButton={{ name: translate("Rename") }}
-            onEdit={(name, afterSave) => handleProfileEditName(name, true, afterSave)}
+            onEdit={(name, afterSave) => setShowEditProfileName({
+                name,
+                afterSave
+            })}
+            onDelete={(name, afterDelete)=>handleDeleteProfile(name, afterDelete)}
             onClose={() => setOpenLoadProfile(false)}
             onExport={handleExportProfile}
             isNarrow={isScreenNarrow}
@@ -357,6 +371,31 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }} open={openColorPicker}
         />
 
+        {showEditProfileName != undefined && <EditText
+            label={showEditProfileName.name.length > 0 ? translate("RenameProfile") : translate("SetProfileName")}
+            initialText={""}
+            textOnly={true}
+            onClose={() => setShowEditProfileName(undefined)}
+            onDone={(newName) => {
+                const newNamedTrimmed = newName.text.trim()
+                if (newNamedTrimmed == "") {
+                    Alert.alert(translate("ProfileMissingName"), "", [{ text: translate("OK") }]);
+                    return;
+                }
+
+                if (!isValidFilename(newNamedTrimmed)) {
+                    Alert.alert(fTranslate("InvalidName", InvalidCharachters), "", [{ text: translate("OK") }]);
+                    return;
+                }
+
+                handleProfileEditName(newNamedTrimmed, showEditProfileName.name, showEditProfileName.afterSave);
+                setShowEditProfileName(undefined);
+            }}
+            width={400}
+            textWidth={300}
+            textHeight={80}
+        />}
+
         {editOrCreateDice != undefined && <EditDice
             name={editOrCreateDice}
             windowSize={windowSize}
@@ -396,7 +435,9 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                     <IconButton text={translate("List")} onPress={() => setOpenLoadProfile(true)} />
                     {profileName.length > 0 ?
                         <IconButton text={translate("Close")} onPress={closeProfile} /> :
-                        <IconButton text={translate("Create")} onPress={() => handleProfileEditName("", false, () => setRevision(prev => prev + 1))} />
+                        <IconButton text={translate("Create")} onPress={() =>
+                            setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
+                        } />
                     }
                 </View>
                 <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>

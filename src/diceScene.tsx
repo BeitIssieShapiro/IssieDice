@@ -35,6 +35,7 @@ import { playAudio, playBundledAudio } from "./audio";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
+const FloorModel = require("../assets/floor.glb");
 const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
 const dieCollisionSound = require("../assets/dice-sound.mp3");
 
@@ -187,7 +188,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 // Optionally, reset position if desired.
                 //die.body.position.set(getDieX(i, diceInfo.length, 1) + 3, 8, -5);
-                die.body.position.set(0, 8+i, -5);
+                die.body.position.set(0, 8 + i, -5);
 
                 const force = 3 + 7 * Math.random();
                 die.body.applyImpulse(
@@ -247,7 +248,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 body.quaternion.setFromEuler(0, Math.PI, -Math.PI / 2)
                 //-Math.PI/2,0,Math.PI/2
-                if (die.template != Templates.Dots) {
+                if (die.template != Templates.Dots && die.template != Templates.Colors) {
                     body.addEventListener("sleep", () => {
                         const { face, euler } = getTopFace(body);
                         setFaceUp(prev => {
@@ -435,7 +436,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     position={[0, 100, 100]} //direction={[0,0,0]}
                 />
 
-                <Skybox colorInHex={safeColor(profile.tableColor)} showSun={false} />
+                <Skybox colorInHex={safeColor(profile.tableColor)}
+                    showSun={false}
+                    envIntensity={10000}
+                />
 
 
                 {activeDice
@@ -461,6 +465,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                                 textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
                         </ModelRenderer>
                     ))}
+                {/* <Model source={FloorModel} receiveShadow={true}>
+                  
+                </Model> */}
 
                 {/* <Model source={DiceModel}
                 translate={[bounds.left, 0, bounds.top]}
