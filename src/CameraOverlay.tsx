@@ -5,6 +5,7 @@ import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { translate } from './lang';
 import { IconButton } from './components';
 import { Touchable } from 'react-native';
+import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface CameraOverlayProps {
   onClose: () => void;
@@ -14,6 +15,7 @@ interface CameraOverlayProps {
 export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone }) => {
   const [captureInProgress, setCaptureInProgress] = useState<boolean>(false);
   const [permission, setPermission] = useState<boolean>(false);
+  const [cameraType, setCameraType] = useState<CameraType>(CameraType.Front);
 
   // Request camera permissions on mount.
   useEffect(() => {
@@ -58,12 +60,13 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone })
         <Camera
           ref={cameraRef}
           style={styles.camera}
-          cameraType={CameraType.Front}
+          cameraType={cameraType}
           shutterPhotoSound={true}
           showFrame={false}
           scanBarcode={false}
           zoomMode="on"
-          onZoom={()=>{
+
+          onZoom={() => {
             console.log("Zooming")
           }}
         //saveToCameraRoll={false}
@@ -75,8 +78,12 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone })
       )}
 
       <View style={styles.topContainer}>
-        <IconButton icon="close" text={translate("CancelBtn")} onPress={onClose} backgroundColor='white'/>
+        <IconButton icon="close" text={translate("CancelBtn")} onPress={onClose} backgroundColor='white' />
+
       </View>
+      <IconMCI name={"camera-flip-outline"} size={45} color={"white"} style={styles.flipContainer}
+        onPress={() => setCameraType(prev => prev == CameraType.Front ? CameraType.Back : CameraType.Front)}
+      />
       <View style={styles.bottomContainer}>
         <TouchableOpacity style={styles.shutterOuter} onPress={takePicture}>
           <View style={styles.shutterInner} />
@@ -119,6 +126,11 @@ const styles = StyleSheet.create({
     bottom: '2%',
     width: '100%',
     backgroundColor: 'transparent',
+  },
+  flipContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
   },
   shutterOuter: {
     width: 100, height: 100,
