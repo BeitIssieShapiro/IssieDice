@@ -23,13 +23,14 @@ import {
     Entity,
     EntitySelector,
     Light,
-    EnvironmentalLight
+    EnvironmentalLight,
+    Float4
 } from "react-native-filament";
 
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
 import { Dice, Profile, Templates, templatesList } from "./profile";
-import { animateYaw, computeFloorBounds, computeVerticalFov, getTopFace, safeColor, WinSize } from "./utils";
+import { animateYaw, computeFloorBounds, computeVerticalFov, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
 import { createDieShape, createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio } from "./audio";
 
@@ -122,6 +123,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         useModel(DiceModel),
         useModel(DiceModel)
     ];
+    // const floorModel = useModel(FloorModel);
+    // const floorAsset = getAssetFromModel(floorModel);
+    // const floorEntity = floorAsset?.getRenderableEntities()[0];
+    // const matInstance = floorEntity && renderableManager.getMaterialInstanceAt(floorEntity, 0);
 
     const generalDiceAsset = generalDiceModel.map(d => getAssetFromModel(d));
     const generalEntity = generalDiceAsset.map(de => de?.getRenderableEntities()[0]);
@@ -178,6 +183,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const worldDiceRef = useRef<{ body: CANNON.Body }[]>([]);
     const diceCount = useSharedValue(0);
     const isDotDice = useSharedValue([false, false, false, false]);
+    const backgroundColorRef = useSharedValue<Float4>([0, 1, 0, 1]);
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: () => {
@@ -206,6 +212,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             const info = profile.dice
             setDiceInfo(info)
             diceInfoRef.current = info;
+            backgroundColorRef.value = hexToSrgb(safeColor(profile.tableColor));
+            setRevision(prev => prev + 1);
         },
         updateWindowSize: (winSize: WinSize) => {
             console.log("updateWindowSize", winSize)
@@ -417,6 +425,11 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             }
         }
 
+        // if (floorEntity) {
+        //     matInstance?.setFloat4Parameter('baseColorFactor', [backgroundColorRef.value[0], backgroundColorRef.value[1], backgroundColorRef.value[2], backgroundColorRef.value[3]]) // in sRGB
+        //     //matInstance.setTransparencyMode("twoPassesTwoSides")
+        // }
+
     }, [dicePosition, diceRotation, generalEntity, transformManager, diceCount, isDotDice, diceSize])
 
 
@@ -431,10 +444,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 <DefaultLight />
                 {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
-                <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
+                {/* <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
                     //falloffRadius={bounds.right}
                     position={[0, 100, 100]} //direction={[0,0,0]}
-                />
+                /> */}
 
                 <Skybox colorInHex={safeColor(profile.tableColor)}
                     showSun={false}

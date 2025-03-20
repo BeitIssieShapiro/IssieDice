@@ -10,7 +10,7 @@ import {
     Pressable,
 
 } from "react-native";
-import { isRTL, translate } from "./lang";
+import {  isRTL, translate } from "./lang";
 import { IconButton, NumberSelector, Spacer } from "./components";
 import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -54,8 +54,12 @@ interface ColorPickerProps {
 }
 const FONT_SIZES = [12, 14, 16, 18, 20, 24, 30, 36, 42];
 const FONTS = [
-    { label: "default", value: undefined },
-    { label: "גברת לוין", value: "Gveret Levin AlefAlefAlef" }
+    { label: "NoFont", value: undefined },
+    { label: "Alef - אלף", value: "Alef-regular" },
+    { label: "Gveret Levin - גברת לוין", value: "Gveret Levin AlefAlefAlef" },
+    { label: "Daba Yad - דנה יד", value: "DanaYadAlefAlefAlef-Normal" },
+    { label: "David Libre - דויד ליבר", value: "DavidLibre-Regular" },
+    { label: "Arial - אריאל", value: "Ariel Regular" },
 ];
 
 
@@ -68,6 +72,8 @@ export const EditFace: React.FC<EditFaceProps> = ({
 }) => {
     const [text, setText] = useState<string>(initialFaceText?.text || "");
     const [fontName, setFontName] = useState<string | undefined>(initialFaceText?.fontName || undefined);
+    const [fonts] = useState<any[]>(FONTS
+        .map(f => ({ ...f, label: translate(f.label) })));
     const [fontSize, setFoneSize] = useState(initialFaceText?.fontSize || 30);
     const [isBold, setIsBold] = useState(initialFaceText?.fontBold !== undefined ? initialFaceText.fontBold : false);
     const [color, setColor] = useState(initialFaceText?.color || "black");
@@ -146,9 +152,9 @@ export const EditFace: React.FC<EditFaceProps> = ({
                         onAudioPress={() => audioUri && playAudio(audioUri)}
                     />
                     {backgroundImage && <View style={styles.cropButton}>
-                        <IconIonic  size={35} name="crop" onPress={()=>{
-                        setEditImage(true);
-                    }}/></View>}
+                        <IconIonic size={35} name="crop" onPress={() => {
+                            setEditImage(true);
+                        }} /></View>}
                 </View>
 
 
@@ -248,17 +254,26 @@ export const EditFace: React.FC<EditFaceProps> = ({
                                 <Text allowFontScaling={false} style={styleLabel}>{translate("FontName")}</Text>
 
                                 <Dropdown
-                                    style={{ width: 150, justifyContent: "flex-start", marginStart: 10 }}
-                                    itemTextStyle={{ fontSize: 20 }}
-                                    selectedTextStyle={{ fontSize: 20 }}
-                                    data={FONTS}
+                                    style={styles.dropdown}
+                                    iconStyle={{ width: 30, height: 30 }}
+                                    containerStyle={{ width: 300 }}
+                                    itemTextStyle={styles.itemText}
+                                    selectedTextStyle={[styles.itemText, { fontFamily: fontName }]}
+                                    data={fonts}
                                     maxHeight={300}
                                     labelField="label"
                                     valueField="value"
                                     value={fontName}
-                                    onChange={item => {
-                                        setFontName(item.value);
-                                    }}
+                                    inverted={true}
+                                    onChange={item => setFontName(item.value)}
+                                    renderItem={(item, selected) => (
+                                        <View style={styles.itemContainer}>
+                                            <Text style={[styles.itemText, { fontFamily: item.value }]}>
+                                                {item.label}
+                                            </Text>
+                                            {selected && <IconIonic name="checkmark-outline" color="blue" size={20} />}
+                                        </View>
+                                    )}
                                 />
                             </View>
 
@@ -279,8 +294,8 @@ export const EditFace: React.FC<EditFaceProps> = ({
                             <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}
                                 onPress={() => setIsBold(!isBold)}>
                                 {isBold ?
-                                    <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                                    <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                                    <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 5, width: 30 }} /> :
+                                    <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 5, width: 30 }} />
                                 }
                                 <Text allowFontScaling={false} style={styleLabel} >{translate("Bold")}</Text>
                             </TouchableOpacity>
@@ -469,9 +484,9 @@ const styles = StyleSheet.create({
         top: FacePreviewSize / 3,
     },
     cropButton: {
-            position: "absolute",
-            right: -40,
-            bottom: 0,
+        position: "absolute",
+        right: -40,
+        bottom: 0,
     },
     playButton: {
         position: "absolute",
@@ -486,5 +501,19 @@ const styles = StyleSheet.create({
         backgroundColor: "lightgray",
         justifyContent: "center",
         alignItems: "center"
-    }
+    },
+    dropdown: {
+        width: 180,
+        justifyContent: "flex-start",
+        marginStart: 10,
+    },
+    itemContainer: {
+        padding: 10,
+        flexDirection: "row",
+        alignItems: "center",
+
+    },
+    itemText: {
+        fontSize: 20,
+    },
 });

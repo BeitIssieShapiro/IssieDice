@@ -2,6 +2,18 @@
   "migIndex": 1,
   "data": [
     {
+      "path": "assets/fonts/Alef-regular.ttf",
+      "sha1": "3369971caa97419580fe77191829b5962cb23559"
+    },
+    {
+      "path": "assets/fonts/DanaYadAlefAlefAlef-Normal.otf",
+      "sha1": "625c5b6b020f6ab9f4ae39594fdbf77b762a875a"
+    },
+    {
+      "path": "assets/fonts/DavidLibre-Regular.ttf",
+      "sha1": "ed9fcd623a8a3f04448638fcd3fd6ba21b467062"
+    },
+    {
       "path": "assets/fonts/Gveret Levin AlefAlefAlef-Regular.ttf",
       "sha1": "faf00f61c84d4c1d4d4362a795bd0083562a57a8"
     }

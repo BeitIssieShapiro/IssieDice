@@ -191,3 +191,19 @@ export function animateYaw(body: CANNON.Body, x: number, z: number, startYaw: nu
   }
   update();
 }
+
+
+export function hexToSrgb(hex: string): [number, number, number, number] {
+  // Remove the hash symbol if present
+  hex = hex.replace(/^#/, '');
+  // Handle short form (#abc -> #aabbcc)
+  if (hex.length === 3) {
+    hex = hex.split('').map(ch => ch + ch).join('');
+  }
+  // Parse the hex string into an integer
+  const intVal = parseInt(hex, 16);
+  const r = (intVal >> 16) & 255;
+  const g = (intVal >> 8) & 255;
+  const b = intVal & 255;
+  return [r / 255, g / 255, b / 255, 1];
+}

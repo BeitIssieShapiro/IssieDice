@@ -530,6 +530,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     textFace: {
+        width: "100%",
         position: "absolute",
         fontSize: 25,
         textAlign: "center",

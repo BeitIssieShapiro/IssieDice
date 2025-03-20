@@ -64,12 +64,10 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone })
           shutterPhotoSound={true}
           showFrame={false}
           scanBarcode={false}
-          zoomMode="on"
-
-          onZoom={() => {
-            console.log("Zooming")
-          }}
-        //saveToCameraRoll={false}
+          zoomMode='on'
+          zoom={1.0}
+          maxZoom={3.0}
+          resizeMode="contain"
         />
       ) : (
         <Text style={styles.permissionText}>

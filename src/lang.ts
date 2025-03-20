@@ -7,7 +7,7 @@ const supportedLanguages = ['he', 'en', 'ar'];
 
 // Extract the first two characters of the language code (e.g., 'en', 'he')
 const deviceLanguage =// "en"
- deviceLanguageRaw.split(/[-_]/)[0];
+    deviceLanguageRaw.split(/[-_]/)[0];
 
 // Check if the detected language is supported, otherwise default to 'en'
 export const gCurrentLang: string = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
@@ -76,7 +76,7 @@ const strings = {
         "BtnSelect": "Select",
         "SelectProfileTitle": "Select Profile",
         "DeleteProfileTitle": "Delete Profile",
-        "DeleteProfileAlert":"Deleting profile '{1}', are you sure?",
+        "DeleteProfileAlert": "Deleting profile '{1}', are you sure?",
 
         "SelectDiceTitle": "Select Dice",
         "NoItemsFound": "No Items Found",
@@ -98,8 +98,8 @@ const strings = {
         "EditAudio": "Audio",
         "NewDieName": "Die {1}",
         "MigratedDieName": "Die from previous version {1}",
-        "FontSize": "Font Size",
-        "FontName": "Font Name",
+        "FontSize": "Size",
+        "FontName": "Name",
         "Bold": "Bold",
         "TextColor": "Color",
         "FaceBackgroundColor": "Color",
@@ -119,6 +119,8 @@ const strings = {
         "Rotate": "Rotate",
         "CancelBtn": "Cancel",
 
+        "NoFont": "Default",
+
     },
     "he": {
         "ImportError": "תקלה ביבוא",
@@ -137,7 +139,7 @@ const strings = {
         "DeleteProfileWarnning": "האם למחוק את הפרופיל {1}?",
         "DeleteCurrentProfileWarnning": "זהו הפרופיל הנוכחי. מחיקתו תאפס את האפליקציה. להמשיך?",
         "DeleteProfileTitle": "מחיקת פרופיל",
-        "DeleteProfileAlert":"האם למחוק פרופיל {1}",
+        "DeleteProfileAlert": "האם למחוק פרופיל {1}",
         "OK": "אישור",
         "Cancel": "ביטול",
         "Delete": "מחיקה",
@@ -221,8 +223,9 @@ const strings = {
         "DeleteDieAlert": "'האם למחוק את הקובייה '{1}?",
         "Rotate": "סובב",
         "CancelBtn": "ביטול",
-        "OpenIn":"פתיחה בעוד {1} שניות"
+        "OpenIn": "פתיחה בעוד {1} שניות",
 
+        "NoFont": "מערכת",
     },
     "ar": {
         "ButtonTitle": "زر {1}",
@@ -322,7 +325,15 @@ const strings = {
         "DeleteDieTitle": "حذف النرد",
         "DeleteDieAlert": "هل تريد حذف النرد '{1}'؟",
         "Rotate": "تدوير",
-        "CancelBtn": "إلغاء"
+        "CancelBtn": "إلغاء",
+
+        "NoFont": "Default",
+        "AlefFont": "Alef",
+        "GveretLevinFont": "Ms. Levin",
+        "DabaYadFont": "Dana-Yad",
+        "DavidLibreFont": "David Libre",
+        "ArielHebrewFont": "Ariel - Hebrew",
+        "ArialFont": "Arial",
     }
 };
 
