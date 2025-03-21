@@ -4,17 +4,16 @@ import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 interface RadioButtonProps {
   label?: string;
   selected: boolean;
-  onPress?: () => void;
 }
 
-export const RadioButton: React.FC<RadioButtonProps> = ({ label, selected, onPress }) => {
+export const RadioButton: React.FC<RadioButtonProps> = ({ label, selected }) => {
   return (
-    <TouchableOpacity onPress={onPress} style={styles.container}>
+    <View  style={styles.container}>
       <View style={[styles.radio, selected && styles.radioSelected]}>
         {selected && <View style={styles.radioInner} />}
       </View>
       {label && <Text style={styles.label}>{label}</Text>}
-    </TouchableOpacity>
+    </View>
   );
 };
 

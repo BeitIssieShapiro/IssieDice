@@ -207,3 +207,19 @@ export function hexToSrgb(hex: string): [number, number, number, number] {
   const b = intVal & 255;
   return [r / 255, g / 255, b / 255, 1];
 }
+
+export function darkenHexColor(hex: string, factor: number): string {
+  // Remove the hash if present.
+  hex = hex.replace(/^#/, '');
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('');
+  }
+  const num = parseInt(hex, 16);
+  let r = (num >> 16) & 0xff;
+  let g = (num >> 8) & 0xff;
+  let b = num & 0xff;
+  r = Math.floor(r * factor);
+  g = Math.floor(g * factor);
+  b = Math.floor(b * factor);
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}

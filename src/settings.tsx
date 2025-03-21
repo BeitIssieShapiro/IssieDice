@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 0, left: 0,
         width: "100%", height: "100%",
-        backgroundColor: "gray",
+        backgroundColor: "lightgray",
         zIndex: 800
     },
     settingTitle: {

@@ -75,5 +75,11 @@ const styles = StyleSheet.create({
     countdownText: {
         margin: 10,
         fontSize: 20,
+        borderRadius:12,
+        //width: 250,
+        marginRight:20,
+        textAlign: "right",
+        color: "black",
+        backgroundColor:"white"
     },
 });

@@ -115,13 +115,13 @@ export interface Profile {
 export const EmptyProfile = {
     dice: [
         {
-            template: Templates.Numbers,
+            template: Templates.Dots,
             active: true,
         }
     ],
     size: 2,
     recoveryTime: 15,
-    tableColor: "green"
+    tableColor: "#00FF00"
 } as Profile;
 
 export const getRecordingFileName = (recName: string | number, forceFilePrefix?: boolean) => {

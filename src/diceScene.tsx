@@ -30,7 +30,7 @@ import {
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
 import { Dice, Profile, Templates, templatesList } from "./profile";
-import { animateYaw, computeFloorBounds, computeVerticalFov, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
+import { animateYaw, computeFloorBounds, computeVerticalFov, darkenHexColor, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
 import { createDieShape, createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio } from "./audio";
 
@@ -106,16 +106,18 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
     const diceInfoRef = useRef<Dice[]>(profile.dice);
     const [diceSize, setDiceSize] = useState<number>(profile.size);
-    const [revision, setRevision] = useState<number>(0);
-    const [sceneActive, setSceneActive] = useState<number>(4);
+    const [revision, setRevision] = useState<number>(-1);
+    const [sceneActive, setSceneActive] = useState<number>(0);
     const [log, setLog] = useState<string>("")
     const { engine, renderableManager, scene, transformManager } = useFilamentContext()
     const [faceUp, setFaceUp] = useState<number[]>(FaceUpInit)
 
+    const sceneActiveRef = useRef<number>(sceneActive);
 
-    useEffect(() => {
-        setTimeout(() => setSceneActive(0), 1000)
-    }, [])
+
+    // useEffect(() => {
+    //     setTimeout(() => setSceneActive(0), 1000)
+    // }, [])
 
     const generalDiceModel: FilamentModel[] = [
         useModel(DiceModel),
@@ -205,6 +207,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 die.body.allowSleep = true;
             })
             setSceneActive(worldDiceRef.current.length);
+            sceneActiveRef.current = worldDiceRef.current.length;
+
             setFaceUp(FaceUpInit);
         },
         update: (profile) => {
@@ -279,7 +283,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                             animateYaw(body, cx, cz, cy, cy + dy, 400);
 
 
-                            setTimeout(() => setSceneActive(prev => prev - 1), 400);
+                            setTimeout(() => setSceneActive(prev => {
+                                sceneActiveRef.current = prev - 1;
+                                return prev - 1
+                            }), 400);
                             body.allowSleep = true;
                         } else {
                             body.allowSleep = false;
@@ -288,6 +295,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 }
                 let lastTime = -1
                 body.addEventListener('collide', (e: any) => {
+                    if (sceneActiveRef.current <= 0) return;
+
                     const impactVelocity = e.contact.getImpactVelocityAlongNormal();
                     if (impactVelocity >= 2 && (lastTime < 0 || performance.now() - lastTime > 100)) {
                         lastTime = performance.now();
@@ -440,7 +449,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         <>
             <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-            <FilamentView style={{ flex: 1 }} renderCallback={sceneActive > 0 && !freeze ? renderCallback : undefined} >
+            <FilamentView style={{ flex: 1 }} renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined} >
 
                 <DefaultLight />
                 {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
@@ -449,9 +458,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     position={[0, 100, 100]} //direction={[0,0,0]}
                 /> */}
 
-                <Skybox colorInHex={safeColor(profile.tableColor)}
+                <Skybox colorInHex={safeColor(darkenHexColor(profile.tableColor, 0.35))}
                     showSun={false}
-                    envIntensity={10000}
+                    envIntensity={0}
                 />
 
 
