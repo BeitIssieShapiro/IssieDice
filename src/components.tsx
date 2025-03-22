@@ -1,4 +1,4 @@
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { isRTL } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
@@ -10,6 +10,24 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useEffect, useState } from "react";
 import { BTN_COLOR } from "./settings";
 
+
+export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black" }:
+    {
+        type?: undefined | "Ionicon" | "MCI",
+        icon: string,
+        label: string,
+        onPress: () => void,
+        size?: number,
+        color?: string,
+    }) {
+    const IconElem = type == "Ionicon" ? IconIonicons :
+        (type == "MCI" ? MCIIcon : IconAnt);
+
+    return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center" , width:70}}>
+        <IconElem name={icon} size={size} color={color}/>
+        <Text allowFontScaling={false} style={{color:"black", fontSize:18 }}>{label}</Text>
+    </Pressable>
+}
 
 export function IconButton({ icon, onPress, text, type, backgroundColor, width }:
     { icon?: string, text?: string, width?: number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {

@@ -6,7 +6,7 @@ const deviceLanguageRaw = bestLanguage;
 const supportedLanguages = ['he', 'en', 'ar'];
 
 // Extract the first two characters of the language code (e.g., 'en', 'he')
-const deviceLanguage =// "en"
+const deviceLanguage = //"en"
     deviceLanguageRaw.split(/[-_]/)[0];
 
 // Check if the detected language is supported, otherwise default to 'en'
@@ -99,14 +99,15 @@ const strings = {
         "NewDieName": "Die {1}",
         "MigratedDieName": "Die from previous version {1}",
         "FontSize": "Size",
-        "FontName": "Name",
+        "FontName": "Font",
         "Bold": "Bold",
         "TextColor": "Color",
         "FaceBackgroundColor": "Color",
         "SrcFromGallery": "Gallery",
         "SrcFromSearch": "Search",
         "SrcFromCamera": "Camera",
-        "NoBackground": "Remove Background",
+        "NoBackground": "Remove",
+        "RecordAudio": "Record",
         "MigrateOldDice": "Loading dice from previous version",
         "DoneBtn": "OK",
         "DiceMissingName": "A die name is required",
@@ -118,8 +119,11 @@ const strings = {
         "DeleteDieAlert": "Delete die '{1}'?",
         "Rotate": "Rotate",
         "CancelBtn": "Cancel",
-
+        "OpenIn": "Open in {1} seconds",
         "NoFont": "Default",
+        "FaceBackgroundTab": "Background",
+        "FaceTextTab": "Text",
+        "FaceAudioTab": "Audio",
 
     },
     "he": {
@@ -210,6 +214,7 @@ const strings = {
         "SrcFromGallery": "גלריה",
         "SrcFromSearch": "חיפוש",
         "SrcFromCamera": "מצלמה",
+        "RecordAudio": "הקלטה",
         "NoBackground": "הסר רקע",
 
         "MigrateOldDice": "טוען קוביות מגרסא קודמת",
@@ -226,6 +231,9 @@ const strings = {
         "OpenIn": "פתיחה בעוד {1} שניות",
 
         "NoFont": "מערכת",
+        "FaceBackgroundTab": "רקע",
+        "FaceTextTab": "טקסט",
+        "FaceAudioTab": "הקלטה",
     },
     "ar": {
         "ButtonTitle": "زر {1}",
@@ -334,6 +342,13 @@ const strings = {
         "DavidLibreFont": "David Libre",
         "ArielHebrewFont": "Ariel - Hebrew",
         "ArialFont": "Arial",
+
+        "DeleteProfileAlert": "هل تريد حذف الملف الشخصي {1}؟",
+        "RecordAudio": "تسجيل الصوت",
+        "OpenIn": "فتح خلال {1} ثانية",
+        "FaceBackgroundTab": "خلفية",
+        "FaceTextTab": "نص",
+        "FaceAudioTab": "تسجيل"
     }
 };
 

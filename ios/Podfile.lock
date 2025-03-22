@@ -1522,6 +1522,27 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-pager-view (6.7.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-safe-area-context (5.3.0):
     - DoubleConversion
     - glog
@@ -2207,6 +2228,7 @@ DEPENDENCIES:
   - react-native-image-crop-tools (from `../node_modules/react-native-image-crop-tools`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-mmkv (from `../node_modules/react-native-mmkv`)
+  - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-view-shot (from `../node_modules/react-native-view-shot`)
   - react-native-worklets-core (from `../node_modules/react-native-worklets-core`)
@@ -2339,6 +2361,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   react-native-mmkv:
     :path: "../node_modules/react-native-mmkv"
+  react-native-pager-view:
+    :path: "../node_modules/react-native-pager-view"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-view-shot:
@@ -2467,6 +2491,7 @@ SPEC CHECKSUMS:
   react-native-image-crop-tools: a751dae773f66ceac0bea7d894dc6bc219a69c03
   react-native-image-picker: c1ecf2bc4393b8ecaa6a40be41a18924f120081a
   react-native-mmkv: 55e8a074ae9cb919609755d7271c16b242c2603f
+  react-native-pager-view: e26e7a6f1ffb0c12ebfaf858ff9100b054de043d
   react-native-safe-area-context: 286b3e7b5589795bb85ffc38faf4c0706c48a092
   react-native-view-shot: 168ed5c6be7321e3e97a743fac716d516776a25f
   react-native-worklets-core: 9bf5dd85f34740af8ceec32b1f9609ed66179d31
