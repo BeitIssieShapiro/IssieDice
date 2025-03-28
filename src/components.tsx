@@ -7,7 +7,7 @@ import MCIIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BTN_COLOR } from "./settings";
 
 
@@ -112,7 +112,7 @@ export function NumberSelector({ style, title, min, max, value, onUp, onDown, ti
 
 
 export const FadeInView = (props: any) => {
-    const [fadeAdmin] = useState(new Animated.Value(0))
+    const fadeAdmin = useRef(new Animated.Value(0)).current;
     const [hide, setHide] = useState(false)
     useEffect(() => {
         setHide(false)

@@ -196,7 +196,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 // Optionally, reset position if desired.
                 //die.body.position.set(getDieX(i, diceInfo.length, 1) + 3, 8, -5);
-                die.body.position.set(0, 8 + i, -5);
+                die.body.position.set(0, 8 + i, -3);
 
                 const force = 3 + 7 * Math.random();
                 die.body.applyImpulse(
@@ -212,7 +212,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             setFaceUp(FaceUpInit);
         },
         update: (profile) => {
-            setDiceSize(profile.size);
+            setDiceSize(profile.size + 2);
             const info = profile.dice
             setDiceInfo(info)
             diceInfoRef.current = info;
@@ -233,12 +233,13 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     useEffect(() => {
         const b = computeFloorBounds(currWindowSize, cameraHeight, fov, 0);
+        console.log("Bounds calculated", b)
         setBounds(b)
     }, [currWindowSize])
 
     useEffect(() => {
         const winSizeFactor = 900 / currWindowSize.height;
-        const scale = .5 * winSizeFactor * diceSize / 2;
+        const scale = .5 * winSizeFactor * 5 / 2;
 
         const isDotArray: boolean[] = [false, false, false, false]
         worldDiceRef.current = diceInfoRef.current
@@ -442,9 +443,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     }, [dicePosition, diceRotation, generalEntity, transformManager, diceCount, isDotDice, diceSize])
 
 
-
-    console.log("bounds", bounds)
-
     return (
         <>
             <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
@@ -490,16 +488,16 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 {/* <Model source={FloorModel} receiveShadow={true}>
                   
                 </Model> */}
+                {/* 
+                <Model source={DiceModel}
+                    translate={[bounds.left, 0, bounds.top]}
 
-                {/* <Model source={DiceModel}
-                translate={[bounds.left, 0, bounds.top]}
+                />
+                <Model source={DiceModel}
+                    translate={[bounds.right, 0, bounds.bottom]}
 
-            />
-            <Model source={DiceModel}
-                translate={[bounds.right, 0, bounds.bottom]}
-
-            /> */}
-                <Camera cameraPosition={[0, cameraHeight, bounds.bottom]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
+                /> */}
+                <Camera cameraPosition={[0, cameraHeight, bounds.bottom / 2]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
             </FilamentView>
         </>
     );

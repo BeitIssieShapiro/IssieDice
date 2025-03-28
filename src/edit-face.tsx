@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
 
     View,
@@ -7,25 +7,24 @@ import {
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
+    Keyboard,
     Pressable,
-    useWindowDimensions,
 
 } from "react-native";
 import { isRTL, translate } from "./lang";
-import { FadeInView, IconButton, LabeledIconButton, NumberSelector, Spacer } from "./components";
+import { FadeInView, IconButton, LabeledIconButton, NumberSelector } from "./components";
 import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconIonic from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/AntDesign';
 import { BTN_COLOR } from "./settings";
 import { Dropdown } from "react-native-element-dropdown";
-import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize, FontFactor } from "./edit-dice";
+import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize } from "./edit-dice";
 import { FaceInfo, getTempFileName } from "./profile";
-import IconIonic from 'react-native-vector-icons/Ionicons';
 import { SelectFromGallery } from "./image-select";
 import { CameraOverlay } from "./CameraOverlay";
 import { SearchImage } from "./search-image";
 import { playAudio, RecordButton } from "./audio";
-import { audioRecorderPlayer } from "../index";
-import IconIonicons from 'react-native-vector-icons/Ionicons';
 import { EditImage } from "./edit-image";
 
 export interface FaceText {
@@ -53,22 +52,14 @@ interface ColorPickerProps {
     color: string;
     onSelect: (color: string) => void;
 }
-const FONT_SIZES = [12, 14, 16, 18, 20, 24, 30, 36, 42];
-const FONTS = [
-    { label: "NoFont", value: undefined },
-    { label: "Alef - אלף", value: "Alef-regular" },
-    { label: "Gveret Levin - גברת לוין", value: "Gveret Levin AlefAlefAlef" },
-    { label: "Daba Yad - דנה יד", value: "DanaYadAlefAlefAlef-Normal" },
-    { label: "David Libre - דויד ליבר", value: "DavidLibre-Regular" },
-    { label: "Arial - אריאל", value: "Ariel Regular" },
-];
 
-
-
+interface FontPickerProps {
+    fontName: string | undefined;
+    onSelect: (fontName: string | undefined) => void;
+}
 
 import { TabView, TabBar } from 'react-native-tab-view';
-
-
+import { FontPicker, FONTS } from "./font-picker";
 
 const routes = [
     { key: 'bg', title: translate('FaceBackgroundTab') },
@@ -102,7 +93,23 @@ export const EditFace: React.FC<EditFaceProps> = ({
     const [openSearch, setOpenSearch] = useState<boolean>(false);
     const [busy, setBusy] = useState<boolean>(false);
     const [editImage, setEditImage] = useState<boolean>(false);
+    const [KBHeight, setKBHeight] = useState<number>(0);
+    const [showFonts, setShowFonts] = useState<FontPickerProps | undefined>();
 
+
+
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e: { endCoordinates: { height: number } }) => {
+            setKBHeight(e.endCoordinates.height);
+        });
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => setKBHeight(0));
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        }
+
+    }, []);
 
 
     if (openCamera) {
@@ -145,7 +152,8 @@ export const EditFace: React.FC<EditFaceProps> = ({
 
 
     return (
-        <FadeInView height={550}
+        // <FadeInView height={550 + KBHeight}
+        <View
             style={[styles.container]}>
 
             <Text allowFontScaling={false} style={styles.title}>{translate("EditFace")}</Text>
@@ -182,6 +190,14 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 }} open={openColorPicker != undefined}
             />
 
+            <FontPicker open={showFonts != undefined} height={400} onClose={() => setShowFonts(undefined)}
+                onSelect={fontName => {
+                    showFonts?.onSelect(fontName);
+                    setShowFonts(undefined);
+                }}
+                currentFont={fontName}
+            />
+
             <View style={{ height: 250, width: "100%", flexDirection: isRTL() ? "row-reverse" : "row", alignItems: "center", justifyContent: "center" }}>
 
                 <TabView
@@ -216,7 +232,8 @@ export const EditFace: React.FC<EditFaceProps> = ({
                             case 'text':
                                 return <FaceText size={size} text={text} setText={setText} fontName={fontName} setFontName={setFontName}
                                     isBold={isBold} setIsBold={setIsBold} fontSize={fontSize} setFoneSize={setFoneSize}
-                                    color={color} setColor={setColor} setOpenColorPicker={setOpenColorPicker} />;
+                                    color={color} setColor={setColor} setOpenColorPicker={setOpenColorPicker}
+                                    setOpenFontPicker={(props: FontPickerProps) => setShowFonts(props)} />;
                             case 'audio':
                                 return <FaceAudio setAudioUri={setAudioUri} />;
                         }
@@ -245,7 +262,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 }} />
                 <IconButton width={80} text={translate("Cancel")} onPress={onClose} />
             </View>
-        </FadeInView>
+        </View>
     );
 };
 
@@ -312,7 +329,7 @@ function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpen
 
 
 
-function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, setFoneSize, setFontName, setIsBold, setOpenColorPicker }:
+function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, setFoneSize, setFontName, setOpenFontPicker, setIsBold, setOpenColorPicker }:
     {
         fontSize: number;
         size: number;
@@ -321,16 +338,14 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
         color: string;
         isBold: boolean;
         setText: (text: string) => void;
-        setFontName: (fontName: string) => void;
+        setFontName: (fontName: string | undefined) => void;
         setColor: (color: string) => void;
         setIsBold: (isBold: boolean) => void;
         setFoneSize: (fontSize: number) => void;
         setOpenColorPicker: (props: ColorPickerProps) => void;
+        setOpenFontPicker: (props: FontPickerProps) => void;
     }
 ) {
-    const [fonts] = useState<any[]>(FONTS
-        .map(f => ({ ...f, label: translate(f.label) })));
-
     return <View style={[styles.faceEditSection, { direction: isRTL() ? "rtl" : "ltr" }]} >
 
         <TextInput
@@ -356,29 +371,20 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
                 {/* Font Selection */}
                 <View style={styles.colorSelectHost}>
                     <Text allowFontScaling={false} style={styles.styleLabel}>{translate("FontName")}</Text>
+                    <Pressable style={{flexDirection:"row", width:300, alignItems:"center", justifyContent:"flex-start"}}
+                    
+                    onPress={() => setOpenFontPicker({
+                        fontName, onSelect: (fontName) => setFontName(fontName)
+                    })}>
+                        <Icon name="edit" size={30} />
+                        <Text allowFontScaling={false}
+                            style={{ fontFamily: fontName, fontSize: 22, marginInlineStart:15 }}
+                        >{fontName ? FONTS.find(f => f.value === fontName)?.label :
+                            translate("NoFont")}</Text>
+                        
+                    </Pressable>
 
-                    <Dropdown
-                        style={styles.dropdown}
-                        iconStyle={{ width: 30, height: 30 }}
-                        containerStyle={{ width: 300 }}
-                        itemTextStyle={styles.itemText}
-                        selectedTextStyle={[styles.itemText, { fontFamily: fontName, textAlign: "left" }]}
-                        data={fonts}
-                        maxHeight={300}
-                        labelField="label"
-                        valueField="value"
-                        value={fontName}
-                        inverted={true}
-                        onChange={item => setFontName(item.value)}
-                        renderItem={(item, selected) => (
-                            <View style={styles.itemContainer}>
-                                <Text style={[styles.itemText, { fontFamily: item.value }]}>
-                                    {item.label}
-                                </Text>
-                                {selected && <IconIonic name="checkmark-outline" color="blue" size={20} />}
-                            </View>
-                        )}
-                    />
+
                 </View>
 
                 {/* Font Size Selection */}
@@ -445,10 +451,9 @@ const styles = StyleSheet.create({
 
     container: {
         position: "absolute",
-        bottom: 0, left: 0, right: 0,
+        top: 0, bottom: 0, left: 0, right: 0,
         padding: 20,
         backgroundColor: "white",
-        borderRadius: 25,
         alignItems: "center",
         zIndex: 1200,
         shadowColor: '#171717',

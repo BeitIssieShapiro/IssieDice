@@ -390,7 +390,7 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
         } : {}
         ]}>
             {backgroundImage && backgroundImage.length > 0 && <Image source={{ uri: backgroundImage }} style={{ position: "absolute", width: "100%", height: "100%" }} />}
-            {faceText && faceText.text.length > 0 && <Text style={[styles.textFace, {
+            {faceText && faceText.text && faceText.text.length > 0 && <Text style={[styles.textFace, {
                 color: faceText.color,
                 fontWeight: faceText.fontBold ? "bold" : undefined,
                 fontSize: faceText.fontSize * FontFactor,

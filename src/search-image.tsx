@@ -30,25 +30,26 @@ export function SearchImage({ onSelectImage, onClose, width, targetFile }: Searc
 
     return (
         <View style={[StyleSheet.absoluteFill, styles.overlay]}>
-            <View style={[styles.container, { width: "95%" , overflow:"hidden"}]}>
+            <View style={[styles.container, { width: "95%", overflow: "hidden" }]}>
                 <View style={styles.closeButton}>
                     <Icon name="close" size={45} onPress={onClose} />
                 </View>
-                <Text style={styles.pickerTitle}>{translate("SearchImageTitle")}</Text>
+                <Text allowFontScaling={false} style={styles.pickerTitle}>{translate("SearchImageTitle")}</Text>
                 <View style={styles.searchRoot}>
                     <View style={[styles.searchTextAndBtnContainer, { direction: isRTL() ? "rtl" : "ltr" }]}>
                         <View style={{ flex: 1, position: "relative" }}>
                             <TextInput
                                 ref={textRef}
                                 style={[styles.searchInput, { textAlign: isRTL() ? "right" : "left" }]}
-                                placeholder={translate("EnterSearchHere")}
+                                //placeholder={translate("EnterSearchHere")}
                                 value={value}
                                 onChangeText={setValue}
                                 onSubmitEditing={doSearch}
+                                
                             />
                             {value?.length > 0 && (
                                 <TouchableOpacity style={styles.cleanSearchX} onPress={() => setValue('')}>
-                                    <Text style={styles.cleanXText}>x</Text>
+                                    <Text allowFontScaling={false} style={styles.cleanXText}>x</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -56,7 +57,7 @@ export function SearchImage({ onSelectImage, onClose, width, targetFile }: Searc
                             style={styles.searchImageBtn}
                             onPress={doSearch}
                         >
-                            <Text style={styles.searchBtnText}>{translate("BtnSearch")}</Text>
+                            <Text allowFontScaling={false} style={styles.searchBtnText}>{translate("BtnSearch")}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
         zIndex: 100
     },
     pickerTitle: {
-        margin: 25,
+        margin: 15,
         fontSize: 25,
 
     },
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
     },
     cleanSearchX: {
-        right: 3,
+        left: 5,
         position: 'absolute',
         top: 0,
     },
@@ -166,6 +167,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 10,
         marginLeft: 10,
+        marginRight: 10,
     },
     searchBtnText: {
         color: 'white',

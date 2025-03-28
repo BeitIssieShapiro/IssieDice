@@ -124,7 +124,7 @@ const strings = {
         "FaceBackgroundTab": "Background",
         "FaceTextTab": "Text",
         "FaceAudioTab": "Audio",
-
+        "SelectFont":"Select Font",
     },
     "he": {
         "ImportError": "תקלה ביבוא",
@@ -234,6 +234,7 @@ const strings = {
         "FaceBackgroundTab": "רקע",
         "FaceTextTab": "טקסט",
         "FaceAudioTab": "הקלטה",
+        "SelectFont":"בחירת פונט",
     },
     "ar": {
         "ButtonTitle": "زر {1}",
