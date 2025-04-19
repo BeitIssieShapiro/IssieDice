@@ -24,20 +24,51 @@ class TemplateMigrator: NSObject {
   // It returns a promise to JS, resolving with an array of dictionaries.
   @objc(migrateCustomTemplates:rejecter:)
   func migrateCustomTemplates(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
-    // Get the AppDelegate's managed object context.
-    guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-      reject("no_app_delegate", "Could not get AppDelegate", nil)
-      return
-    }
+//    // Get the AppDelegate's managed object context.
+//    guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+//      reject("no_app_delegate", "Could not get AppDelegate", nil)
+//      return
+//    }
+//    
+//    // Access the managed object context.
+//    let context = appDelegate.managedObjectContext
     
-    // Access the managed object context.
-    let context = appDelegate.managedObjectContext
+    
+    let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+    let appDictionaryURL = urls[urls.count-1]
+    let modelURL = Bundle.main.url(forResource: "IssieDice", withExtension: "momd")!
+    let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL)!
+    let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: managedObjectModel)
+    let url = appDictionaryURL.appendingPathComponent("IssieDice.sqlite")
+    let failureReason = "There was an error creating or loading the application's saved data."
+    do {
+        try persistentStoreCoordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: url, options: nil)
+    } catch {
+        // Report any error we got.
+        var dict = [String: AnyObject]()
+        dict[NSLocalizedDescriptionKey] = "Failed to initialize the application's saved data" as AnyObject?
+        dict[NSLocalizedFailureReasonErrorKey] = failureReason as AnyObject?
+        
+        dict[NSUnderlyingErrorKey] = error as NSError
+        let wrappedError = NSError(domain: "YOUR_ERROR_DOMAIN", code: 9999, userInfo: dict)
+        // Replace this with code to handle the error appropriately.
+        // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+        NSLog("Unresolved error \(wrappedError), \(wrappedError.userInfo)")
+        abort()
+    }
+        
+    
+    
+    let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+    managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator
+    
+    
     
     // Create a fetch request for the "CustomDice" entity.
     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "CustomDice")
     
     do {
-      let results = try context.fetch(fetchRequest)
+      let results = try managedObjectContext.fetch(fetchRequest)
       var templates: [[String: Any]] = []
       for object in results {
         // Extract fields.

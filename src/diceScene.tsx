@@ -36,7 +36,7 @@ import { playAudio, playBundledAudio } from "./audio";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
-const FloorModel = require("../assets/floor.glb");
+//const FloorModel = require("../assets/floor.glb");
 const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
 const dieCollisionSound = require("../assets/dice-sound.mp3");
 

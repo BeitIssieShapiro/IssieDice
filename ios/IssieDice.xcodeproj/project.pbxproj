@@ -7,39 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		06DBE279806E463EADF2FA62 /* Gveret Levin AlefAlefAlef-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4C7D05C6B5ED4FB98AD95890 /* Gveret Levin AlefAlefAlef-Regular.ttf */; };
+		0C80B921A6F3F58F76C31292 /* libPods-IssieDice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-IssieDice.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		6AEB8AD32D84CA01003F4C8F /* TemplateMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AEB8AD22D84CA01003F4C8F /* TemplateMigrator.swift */; };
-		6AEB8AD62D84CAF7003F4C8F /* TemplateMigrator.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AEB8AD52D84CAF7003F4C8F /* TemplateMigrator.m */; };
-		6AEB8AD92D84D52B003F4C8F /* IssieDice.xcdatamodeld in Resources */ = {isa = PBXBuildFile; fileRef = 6AEB8AD82D84D52B003F4C8F /* IssieDice.xcdatamodeld */; };
-		6C2FA963210F2AE05B97F262 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		3547298851334AAF9FB4D62B /* Gveret Levin AlefAlefAlef-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 121E18C7C5E2433CB8CC9075 /* Gveret Levin AlefAlefAlef-Regular.ttf */; };
+		4CABC0D1506E4FBEA2D1D242 /* DavidLibre-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A224F8C7F19B4B9B9DE5FA3F /* DavidLibre-Regular.ttf */; };
+		6A798ECE2DB4221100F6545E /* IssieDice.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 6A798ECC2DB4221100F6545E /* IssieDice.xcdatamodeld */; };
+		6A798ED12DB4227800F6545E /* TemplateMigrator.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A798ED02DB4227800F6545E /* TemplateMigrator.m */; };
+		6A798ED22DB4227800F6545E /* TemplateMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A798ECF2DB4227800F6545E /* TemplateMigrator.swift */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		83F6237A0FB74AF9BBEAFFA8 /* DanaYadAlefAlefAlef-Normal.otf in Resources */ = {isa = PBXBuildFile; fileRef = AF9B27ED24E94AF3BB237104 /* DanaYadAlefAlefAlef-Normal.otf */; };
-		9A8CAFB098374D40AB626A40 /* DavidLibre-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EF61F7B2BCE6492098F018B2 /* DavidLibre-Regular.ttf */; };
-		E782CF5585B5489D991FD751 /* Alef-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2CEB70A3EC9F4EDBA1E4ADFB /* Alef-regular.ttf */; };
-		F7F170603ACF62957A1A6E39 /* libPods-IssieDice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D4FB998786963B74AE00589A /* libPods-IssieDice.a */; };
+		8572BACA5F2E475B9DB399D2 /* Alef-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FA234884889045EBBC1D5FA4 /* Alef-regular.ttf */; };
+		A8F849A1C6F7DBA8BB5496AA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		C7BF44EB6F2646C1AE71FC6D /* DanaYadAlefAlefAlef-Normal.otf in Resources */ = {isa = PBXBuildFile; fileRef = EDC7E11F06AD4700B2BA16F2 /* DanaYadAlefAlefAlef-Normal.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		121E18C7C5E2433CB8CC9075 /* Gveret Levin AlefAlefAlef-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Gveret Levin AlefAlefAlef-Regular.ttf"; path = "../assets/fonts/Gveret Levin AlefAlefAlef-Regular.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* IssieDice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IssieDice.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = IssieDice/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = IssieDice/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = IssieDice/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		13FF2C055BC8939741672C61 /* Pods-IssieDice.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IssieDice.release.xcconfig"; path = "Target Support Files/Pods-IssieDice/Pods-IssieDice.release.xcconfig"; sourceTree = "<group>"; };
-		2CEB70A3EC9F4EDBA1E4ADFB /* Alef-regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Alef-regular.ttf"; path = "../assets/fonts/Alef-regular.ttf"; sourceTree = "<group>"; };
-		413D584547A6C1BC8B1D047F /* Pods-IssieDice.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IssieDice.debug.xcconfig"; path = "Target Support Files/Pods-IssieDice/Pods-IssieDice.debug.xcconfig"; sourceTree = "<group>"; };
-		4C7D05C6B5ED4FB98AD95890 /* Gveret Levin AlefAlefAlef-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Gveret Levin AlefAlefAlef-Regular.ttf"; path = "../assets/fonts/Gveret Levin AlefAlefAlef-Regular.ttf"; sourceTree = "<group>"; };
-		6AEB8AD22D84CA01003F4C8F /* TemplateMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateMigrator.swift; sourceTree = "<group>"; };
-		6AEB8AD42D84CAF7003F4C8F /* IssieDice-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IssieDice-Bridging-Header.h"; sourceTree = "<group>"; };
-		6AEB8AD52D84CAF7003F4C8F /* TemplateMigrator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TemplateMigrator.m; sourceTree = "<group>"; };
-		6AEB8AD72D84D52B003F4C8F /* IssieDice.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = IssieDice.xcdatamodel; sourceTree = "<group>"; };
+		3B4392A12AC88292D35C810B /* Pods-IssieDice.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IssieDice.debug.xcconfig"; path = "Target Support Files/Pods-IssieDice/Pods-IssieDice.debug.xcconfig"; sourceTree = "<group>"; };
+		5709B34CF0A7D63546082F79 /* Pods-IssieDice.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IssieDice.release.xcconfig"; path = "Target Support Files/Pods-IssieDice/Pods-IssieDice.release.xcconfig"; sourceTree = "<group>"; };
+		5DCACB8F33CDC322A6C60F78 /* libPods-IssieDice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IssieDice.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A798ECD2DB4221100F6545E /* IssieDice.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = IssieDice.xcdatamodel; sourceTree = "<group>"; };
+		6A798ECF2DB4227800F6545E /* TemplateMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateMigrator.swift; sourceTree = "<group>"; };
+		6A798ED02DB4227800F6545E /* TemplateMigrator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TemplateMigrator.m; sourceTree = "<group>"; };
+		6A798ED32DB4227B00F6545E /* IssieDice-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IssieDice-Bridging-Header.h"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = IssieDice/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = IssieDice/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		AF9B27ED24E94AF3BB237104 /* DanaYadAlefAlefAlef-Normal.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DanaYadAlefAlefAlef-Normal.otf"; path = "../assets/fonts/DanaYadAlefAlefAlef-Normal.otf"; sourceTree = "<group>"; };
-		D4FB998786963B74AE00589A /* libPods-IssieDice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IssieDice.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A224F8C7F19B4B9B9DE5FA3F /* DavidLibre-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DavidLibre-Regular.ttf"; path = "../assets/fonts/DavidLibre-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		EF61F7B2BCE6492098F018B2 /* DavidLibre-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DavidLibre-Regular.ttf"; path = "../assets/fonts/DavidLibre-Regular.ttf"; sourceTree = "<group>"; };
+		EDC7E11F06AD4700B2BA16F2 /* DanaYadAlefAlefAlef-Normal.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DanaYadAlefAlefAlef-Normal.otf"; path = "../assets/fonts/DanaYadAlefAlefAlef-Normal.otf"; sourceTree = "<group>"; };
+		FA234884889045EBBC1D5FA4 /* Alef-regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Alef-regular.ttf"; path = "../assets/fonts/Alef-regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,7 +47,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7F170603ACF62957A1A6E39 /* libPods-IssieDice.a in Frameworks */,
+				0C80B921A6F3F58F76C31292 /* libPods-IssieDice.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -57,15 +57,15 @@
 		13B07FAE1A68108700A75B9A /* IssieDice */ = {
 			isa = PBXGroup;
 			children = (
-				6AEB8AD82D84D52B003F4C8F /* IssieDice.xcdatamodeld */,
-				6AEB8AD22D84CA01003F4C8F /* TemplateMigrator.swift */,
-				6AEB8AD52D84CAF7003F4C8F /* TemplateMigrator.m */,
+				6A798ECC2DB4221100F6545E /* IssieDice.xcdatamodeld */,
+				6A798ECF2DB4227800F6545E /* TemplateMigrator.swift */,
+				6A798ED02DB4227800F6545E /* TemplateMigrator.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
-				6AEB8AD42D84CAF7003F4C8F /* IssieDice-Bridging-Header.h */,
+				6A798ED32DB4227B00F6545E /* IssieDice-Bridging-Header.h */,
 			);
 			name = IssieDice;
 			sourceTree = "<group>";
@@ -74,7 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				D4FB998786963B74AE00589A /* libPods-IssieDice.a */,
+				5DCACB8F33CDC322A6C60F78 /* libPods-IssieDice.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -94,7 +94,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
-				B534501DF302422EACB8AEAD /* Resources */,
+				D48535E375384D39913DF463 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -109,24 +109,24 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		B534501DF302422EACB8AEAD /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				4C7D05C6B5ED4FB98AD95890 /* Gveret Levin AlefAlefAlef-Regular.ttf */,
-				AF9B27ED24E94AF3BB237104 /* DanaYadAlefAlefAlef-Normal.otf */,
-				2CEB70A3EC9F4EDBA1E4ADFB /* Alef-regular.ttf */,
-				EF61F7B2BCE6492098F018B2 /* DavidLibre-Regular.ttf */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				413D584547A6C1BC8B1D047F /* Pods-IssieDice.debug.xcconfig */,
-				13FF2C055BC8939741672C61 /* Pods-IssieDice.release.xcconfig */,
+				3B4392A12AC88292D35C810B /* Pods-IssieDice.debug.xcconfig */,
+				5709B34CF0A7D63546082F79 /* Pods-IssieDice.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		D48535E375384D39913DF463 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				EDC7E11F06AD4700B2BA16F2 /* DanaYadAlefAlefAlef-Normal.otf */,
+				FA234884889045EBBC1D5FA4 /* Alef-regular.ttf */,
+				A224F8C7F19B4B9B9DE5FA3F /* DavidLibre-Regular.ttf */,
+				121E18C7C5E2433CB8CC9075 /* Gveret Levin AlefAlefAlef-Regular.ttf */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -136,13 +136,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "IssieDice" */;
 			buildPhases = (
-				08406F71E8197FE4D6125D79 /* [CP] Check Pods Manifest.lock */,
+				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				54A6DD9E23BE6DFC21295CB9 /* [CP] Embed Pods Frameworks */,
-				F0EA39EF6D8EAB0EDE649DF3 /* [CP] Copy Pods Resources */,
+				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
+				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -162,7 +162,7 @@
 				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1620;
+						LastSwiftMigration = 1630;
 					};
 				};
 			};
@@ -191,12 +191,11 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
-				6C2FA963210F2AE05B97F262 /* PrivacyInfo.xcprivacy in Resources */,
-				06DBE279806E463EADF2FA62 /* Gveret Levin AlefAlefAlef-Regular.ttf in Resources */,
-				6AEB8AD92D84D52B003F4C8F /* IssieDice.xcdatamodeld in Resources */,
-				83F6237A0FB74AF9BBEAFFA8 /* DanaYadAlefAlefAlef-Normal.otf in Resources */,
-				E782CF5585B5489D991FD751 /* Alef-regular.ttf in Resources */,
-				9A8CAFB098374D40AB626A40 /* DavidLibre-Regular.ttf in Resources */,
+				A8F849A1C6F7DBA8BB5496AA /* PrivacyInfo.xcprivacy in Resources */,
+				C7BF44EB6F2646C1AE71FC6D /* DanaYadAlefAlefAlef-Normal.otf in Resources */,
+				8572BACA5F2E475B9DB399D2 /* Alef-regular.ttf in Resources */,
+				4CABC0D1506E4FBEA2D1D242 /* DavidLibre-Regular.ttf in Resources */,
+				3547298851334AAF9FB4D62B /* Gveret Levin AlefAlefAlef-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,7 +218,24 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		08406F71E8197FE4D6125D79 /* [CP] Check Pods Manifest.lock */ = {
+		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -241,28 +257,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		54A6DD9E23BE6DFC21295CB9 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F0EA39EF6D8EAB0EDE649DF3 /* [CP] Copy Pods Resources */ = {
+		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -270,13 +265,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-IssieDice/Pods-IssieDice-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -290,9 +281,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6AEB8AD62D84CAF7003F4C8F /* TemplateMigrator.m in Sources */,
-				6AEB8AD32D84CA01003F4C8F /* TemplateMigrator.swift in Sources */,
+				6A798ECE2DB4221100F6545E /* IssieDice.xcdatamodeld in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				6A798ED12DB4227800F6545E /* TemplateMigrator.m in Sources */,
+				6A798ED22DB4227800F6545E /* TemplateMigrator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,11 +293,11 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 413D584547A6C1BC8B1D047F /* Pods-IssieDice.debug.xcconfig */;
+			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-IssieDice.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = IssieDice/Info.plist;
@@ -322,10 +314,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.issieshapiro.IssieDice;
 				PRODUCT_NAME = IssieDice;
-				REGISTER_APP_GROUPS = NO;
+				REGISTER_APP_GROUPS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
@@ -340,11 +331,11 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 13FF2C055BC8939741672C61 /* Pods-IssieDice.release.xcconfig */;
+			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-IssieDice.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				INFOPLIST_FILE = IssieDice/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = IssieDice;
@@ -360,10 +351,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.issieshapiro.IssieDice;
 				PRODUCT_NAME = IssieDice;
-				REGISTER_APP_GROUPS = NO;
+				REGISTER_APP_GROUPS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
@@ -424,17 +414,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers/platform/ios",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
@@ -455,11 +434,13 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
-				SWIFT_VERSION = 5.0;
 				USE_HERMES = true;
 			};
 			name = Debug;
@@ -506,17 +487,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers/platform/ios",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
-					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
@@ -536,10 +506,12 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -569,14 +541,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
-		6AEB8AD82D84D52B003F4C8F /* IssieDice.xcdatamodeld */ = {
+		6A798ECC2DB4221100F6545E /* IssieDice.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				6AEB8AD72D84D52B003F4C8F /* IssieDice.xcdatamodel */,
+				6A798ECD2DB4221100F6545E /* IssieDice.xcdatamodel */,
 			);
-			currentVersion = 6AEB8AD72D84D52B003F4C8F /* IssieDice.xcdatamodel */;
+			currentVersion = 6A798ECD2DB4221100F6545E /* IssieDice.xcdatamodel */;
 			path = IssieDice.xcdatamodeld;
 			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
 		};
 /* End XCVersionGroup section */
 	};

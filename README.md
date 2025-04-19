@@ -1,43 +1,22 @@
- cameraDidMount: (camera) => {
-                if (camera.props.active) {
-                    //console.log("XX",
-                    let t = (0, react_native_1.findNodeHandle)(this);
-                    let c = (0, react_native_1.findNodeHandle)(camera);
-                    setTimeout(()=>
-                    react_native_1.NativeModules.VRTCameraModule.setSceneCamera(t,c),100);
-                }
-            },
 
 
-Mockups:
 
-https://xd.adobe.com/view/43e02c8a-ebee-4495-aff9-042b85e213b6-16b3
-https://xd.adobe.com/view/2787b739-50b8-4610-b19a-fcadc5c5f1ff-72d4/
+# new react-native version
+- babel.config.js
+- copy src
+- copy patches
+- copy assets
+- fonts:
+  - react-native.config.js
+  - copy assets/fonts
+  - `npx react-native-asset`
+- copy design-resources
+- merge metro.config.js
+## XCode
+- add "Supported destination" (mac, iPad)
+- minimum deployment 16, 11.5
+- App category: "education"
+- Copy AppIcon
+- Copy IssieDice model (copy the file and add it to proj)
 
-//text input crash
-https://github.com/facebook/react-native/pull/49320/files
 
-
-fonts:
-add in assets/fonts
-`npx react-native-asset`
-
-https://github.com/software-mansion/react-native-screens/issues/2652    
-
-Blend:
-export with modifiers
-
-
-camera-kit:
-CKCameraViewComponentView.mm
-
-    // id scanBarcode = CKConvertFollyDynamicToId(newProps.scanBarcode);
-    // if (scanBarcode != nil) {
-    //     _view.scanBarcode = scanBarcode;
-    if (_view.scanBarcode != newProps.scanBarcode) {
-        _view.scanBarcode = newProps.scanBarcode;
-        [changedProps addObject:@"scanBarcode"];
-    }
-    // id showFrame = CKConvertFollyDynamicToId(newProps.showFrame);
-    // if (showFrame != nil) {
-    //     _view.showFrame = showFrame;

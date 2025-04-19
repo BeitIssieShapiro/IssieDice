@@ -40,23 +40,23 @@ export async function playBundledAudio(soundAsset: any, volume:number = 1.0) {
       // Stop any previous playback
       await audioRecorderPlayer.stopPlayer();
     
-      const sound = new Sound(soundAsset, (error) => {
-        if (error) {
-          console.error('Failed to load the sound', error);
-          return;
-        }
-        // Set the playback volume (0.0 to 1.0).
-        sound.setVolume(volume);
+    //   const sound = new Sound(soundAsset, (error) => {
+    //     if (error) {
+    //       console.error('Failed to load the sound', error);
+    //       return;
+    //     }
+    //     // Set the playback volume (0.0 to 1.0).
+    //     sound.setVolume(volume);
         
-        // Play the sound without stopping any other sound.
-        sound.play((success) => {
-          if (!success) {
-            console.error('Sound playback failed');
-          }
-          // Optionally, release the resource once playback is finished.
-          sound.release();
-        });
-      });
+    //     // Play the sound without stopping any other sound.
+    //     sound.play((success) => {
+    //       if (!success) {
+    //         console.error('Sound playback failed');
+    //       }
+    //       // Optionally, release the resource once playback is finished.
+    //       sound.release();
+    //     });
+    //   });
     } catch (error) {
       console.error("Error playing bundled audio:", error);
       return false;

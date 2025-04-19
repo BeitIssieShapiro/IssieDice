@@ -1,32 +1,13 @@
-/**
- * @format
- */
-
-import { AppRegistry, LogBox } from 'react-native';
-import { name as appName } from './app.json';
-import App from './src/main';
-import { Init } from './src/profile';
-import React from "react";
+import {AppRegistry} from 'react-native';
 import { GlobalContext } from './src/global-context';
-import { EditText } from './src/edit-text';
-import { EditDice } from './src/edit-dice';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { InitCrashCatch } from './src/crash-catch';
-import App2 from './src/app2';
-
-LogBox.ignoreLogs([
-    "Missing required parameter"
-]);
-
-
 Init();
 
 InitCrashCatch();
 
 export const audioRecorderPlayer = new AudioRecorderPlayer();
-
 
 const AppWithCtx = (props) => (
     <GlobalContext.Provider value={{
@@ -44,5 +25,8 @@ const AppWithCtx = (props) => (
     </GlobalContext.Provider>
 )
 
+import {name as appName} from './app.json';
+import App from './src/main';
+import { Init } from './src/profile';
 
 AppRegistry.registerComponent(appName, () => AppWithCtx);

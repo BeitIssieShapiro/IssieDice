@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function App2() {
+export default function App() {
     const ref = useRef<TextInput>()
 
     useEffect(() => {

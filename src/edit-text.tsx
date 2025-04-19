@@ -94,54 +94,8 @@ export const EditText: React.FC<EditTextProps> = ({
                         allowFontScaling={false}
                     />
                 </View>
-                {!textOnly && <View style={styles.stylesHost}>
-                    {/* Font Selection */}
-                    <View style={styles.colorSelectHost}>
-                        <Text allowFontScaling={false} style={styles.styleLabel}>{translate("FontName")}</Text>
-
-                        <Dropdown
-                            style={{ width: 150, justifyContent: "flex-start", marginStart: 10 }}
-                            itemTextStyle={{ fontSize: 20 }}
-                            selectedTextStyle={{ fontSize: 20 }}
-                            data={FONTS}
-                            maxHeight={300}
-                            labelField="label"
-                            valueField="value"
-                            value={fontName}
-                            onChange={item => {
-                                setFontName(item.value);
-                            }}
-                        />
-                    </View>
-
-                    {/* Font Size Selection */}
-                    <NumberSelector min={10} max={60} title={translate("FontSize")} value={fontSize} style={styles.fontSelector}
-                        onDown={() => setFoneSize(fontSize - 2)}
-                        onUp={() => setFoneSize(fontSize + 2)}
-                        titleStyle={styles.styleLabel}
-                    />
 
 
-                    <TouchableOpacity style={styles.colorSelectHost}
-                        onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} >
-                        <Text allowFontScaling={false} style={styles.styleLabel}>{translate("TextColor")}</Text>
-                        <View style={[styles.colorCircle, { backgroundColor: color }]} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.colorSelectHost}
-                        onPress={() => setOpenColorPicker(({ color: backgroundColor, onSelect: c => setBackgroundColor(c) }))} >
-                        <Text allowFontScaling={false} style={styles.styleLabel}>{translate("BGColor")}</Text>
-                        <View style={[styles.colorCircle, { backgroundColor: backgroundColor }]} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}
-                        onPress={() => setIsBold(!isBold)}>
-                        {isBold ?
-                            <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                            <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
-                        }
-                        <Text allowFontScaling={false} style={styles.styleLabel} >{translate("Bold")}</Text>
-                    </TouchableOpacity>
-                </View>}
 
 
                 <View style={styles.buttonRow}>
