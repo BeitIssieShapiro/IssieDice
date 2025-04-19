@@ -134,11 +134,11 @@ export const RecordButton = ({
     const animatedCircleStyle = useAnimatedStyle(() => {
         const currentSize = INITIAL_SIZE - INITIAL_SIZE * progress.value;
 
-        const backgroundColor = interpolateColor(
-            progress.value,
-            [0, 1],
-            ['#FF0000', '#000000'] // Red to Black
-        );
+        // const backgroundColor = interpolateColor(
+        //     progress.value,
+        //     [0, 1],
+        //     ['#FF0000', '#000000'] // Red to Black
+        // );
 
         return {
             width: currentSize,

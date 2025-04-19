@@ -13,6 +13,8 @@ import { EditDice } from './src/edit-dice';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { InitCrashCatch } from './src/crash-catch';
+import App2 from './src/app2';
 
 LogBox.ignoreLogs([
     "Missing required parameter"
@@ -20,6 +22,8 @@ LogBox.ignoreLogs([
 
 
 Init();
+
+InitCrashCatch();
 
 export const audioRecorderPlayer = new AudioRecorderPlayer();
 

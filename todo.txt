@@ -3,6 +3,8 @@ todo:
 - implement About
 - Changes to camera - make npm-patch
 - zoom in camera?
+- back instead of X in edit-dice
+
 
 
 

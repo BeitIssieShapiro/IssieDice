@@ -12,7 +12,7 @@ import {
 
 } from "react-native";
 import { isRTL, translate } from "./lang";
-import { FadeInView, IconButton, LabeledIconButton, NumberSelector } from "./components";
+import { FadeInView, IconButton, LabeledIconButton, NumberSelector, Spacer } from "./components";
 import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconIonic from 'react-native-vector-icons/Ionicons';
@@ -155,8 +155,28 @@ export const EditFace: React.FC<EditFaceProps> = ({
         // <FadeInView height={550 + KBHeight}
         <View
             style={[styles.container]}>
+            <View style={styles.titleContainer}>
+                <Text allowFontScaling={false} style={styles.title}>{translate("EditFace")}</Text>
+                <View style={styles.buttons}>
+                <IconButton width={80} text={translate("OK")} onPress={() => {
+                    const faceInfo = {
+                        text: text.length > 0 ? {
+                            text,
+                            fontName,
+                            fontBold: isBold,
+                            fontSize,
+                            color,
+                        } : undefined,
+                        backgroundUri: backgroundImage,
+                        backgroundColor,
+                        audioUri,
+                    } as FaceInfo
+                    onDone(faceInfo);
 
-            <Text allowFontScaling={false} style={styles.title}>{translate("EditFace")}</Text>
+                }} />
+                <IconButton width={80} text={translate("Cancel")} onPress={onClose} />
+                </View>
+            </View>
 
             <View style={{ marginBottom: 10 }}>
                 {busy && <View style={styles.busy}>
@@ -190,7 +210,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 }} open={openColorPicker != undefined}
             />
 
-            <FontPicker open={showFonts != undefined} height={400} onClose={() => setShowFonts(undefined)}
+            <FontPicker height={showFonts != undefined ? 400 : 0} onClose={() => setShowFonts(undefined)}
                 onSelect={fontName => {
                     showFonts?.onSelect(fontName);
                     setShowFonts(undefined);
@@ -243,25 +263,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 />
             </View>
 
-            <View style={styles.buttonRow}>
-                <IconButton width={80} text={translate("OK")} onPress={() => {
-                    const faceInfo = {
-                        text: text.length > 0 ? {
-                            text,
-                            fontName,
-                            fontBold: isBold,
-                            fontSize,
-                            color,
-                        } : undefined,
-                        backgroundUri: backgroundImage,
-                        backgroundColor,
-                        audioUri,
-                    } as FaceInfo
-                    onDone(faceInfo);
-
-                }} />
-                <IconButton width={80} text={translate("Cancel")} onPress={onClose} />
-            </View>
+           
         </View>
     );
 };
@@ -356,7 +358,7 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
             ]}
             placeholderTextColor="gray"
             multiline={true}
-            value={text}
+            defaultValue={text}
             autoCapitalize="none"
             autoCorrect={false}
 
@@ -371,20 +373,18 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
                 {/* Font Selection */}
                 <View style={styles.colorSelectHost}>
                     <Text allowFontScaling={false} style={styles.styleLabel}>{translate("FontName")}</Text>
-                    <Pressable style={{flexDirection:"row", width:300, alignItems:"center", justifyContent:"flex-start"}}
-                    
-                    onPress={() => setOpenFontPicker({
-                        fontName, onSelect: (fontName) => setFontName(fontName)
-                    })}>
+                    <Pressable style={{ flexDirection: "row", width: 300, alignItems: "center", justifyContent: "flex-start" }}
+
+                        onPress={() => setOpenFontPicker({
+                            fontName, onSelect: (fontName) => setFontName(fontName)
+                        })}>
                         <Icon name="edit" size={30} />
                         <Text allowFontScaling={false}
-                            style={{ fontFamily: fontName, fontSize: 22, marginInlineStart:15 }}
+                            style={{ fontFamily: fontName, fontSize: 22, marginInlineStart: 15 }}
                         >{fontName ? FONTS.find(f => f.value === fontName)?.label :
                             translate("NoFont")}</Text>
-                        
+
                     </Pressable>
-
-
                 </View>
 
                 {/* Font Size Selection */}
@@ -461,17 +461,43 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.4,
         shadowRadius: 15,
     },
+    titleContainer: {
+        backgroundColor: "lightgrey",
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        height: 80,
+        fontSize: 25,
+        borderRadius: 5,
+        margin: 10,
+        width: "95%"
+    },
+    title: {
+        width:"100%",
+        textAlign:"center",
+        fontSize: 35,
+    },
+    buttons: {
+        position:"absolute",
+        right: 0,
+        flexDirection: "row",
+        justifyContent: "center",
+        marginTop: 10,
+    },
+    button: {
+        padding: 10,
+        backgroundColor: "#ddd",
+        borderRadius: 5,
+        width: 150,
+        alignItems: "center",
+    },
     faceEditSection: {
         height: 200,
         width: "100%",
         borderColor: "lightgray",
         margin: 3,
         alignItems: "center"
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: "bold",
-        marginBottom: 10,
     },
     label: {
         fontSize: 26,
@@ -512,19 +538,7 @@ const styles = StyleSheet.create({
         margin: 5,
         borderRadius: 5,
     },
-    buttonRow: {
-        flexDirection: "row",
-        justifyContent: "center",
-        width: "100%",
-        marginTop: 10,
-    },
-    button: {
-        padding: 10,
-        backgroundColor: "#ddd",
-        borderRadius: 5,
-        width: 150,
-        alignItems: "center",
-    },
+    
     colorCircle: {
         width: 40, height: 40,
         borderRadius: 20,

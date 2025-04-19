@@ -14,7 +14,6 @@ export const FONTS = [
 ];
 
 export interface FontPickerProps {
-    open: boolean;
     height: number;
     onClose: () => void;
     onSelect: (fontName: string | undefined) => void;
@@ -22,7 +21,6 @@ export interface FontPickerProps {
 }
 
 export const FontPicker: React.FC<FontPickerProps> = ({
-    open,
     height,
     onClose,
     onSelect,
@@ -36,7 +34,7 @@ export const FontPicker: React.FC<FontPickerProps> = ({
 
     return (
         <FadeInView
-            height={open ? height : 0}
+            height={height}
             style={[styles.container, { bottom: 0, left: 0, right: 0 }]}
         >
             <Pressable onPress={onClose} style={styles.closeButton}>
@@ -44,7 +42,6 @@ export const FontPicker: React.FC<FontPickerProps> = ({
             </Pressable>
             <View style={styles.header}>
                 <Text allowFontScaling={false} style={styles.title}>{translate("SelectFont")}</Text>
-
             </View>
             <ScrollView style={styles.scroll}>
                 {fonts.map((item) => (

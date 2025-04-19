@@ -83,7 +83,7 @@ export const EditText: React.FC<EditTextProps> = ({
                             { fontFamily: fontName }
                         ]}
                         placeholderTextColor="gray"
-                        value={text}
+                        defaultValue={text}
                         autoCapitalize="none"
                         autoCorrect={false}
 

@@ -74,6 +74,8 @@ const styles = StyleSheet.create({
     },
     countdownText: {
         margin: 10,
+        paddingRight: 10,
+        paddingLeft: 10,
         fontSize: 20,
         borderRadius:12,
         //width: 250,
