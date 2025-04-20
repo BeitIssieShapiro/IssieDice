@@ -1,0 +1,28 @@
+diff --git a/node_modules/react-native-sound/sound.js b/node_modules/react-native-sound/sound.js
+index c9bcbaf..da36e08 100644
+--- a/node_modules/react-native-sound/sound.js
++++ b/node_modules/react-native-sound/sound.js
+@@ -37,17 +37,17 @@ function setAndroidVolumes(sound) {
+ }
+ 
+ function Sound(filename, basePath, onError, options) {
+-  var asset = resolveAssetSource(filename);
+-  if (asset) {
+-    this._filename = asset.uri;
+-    onError = basePath;
+-  } else {
++  // var asset = resolveAssetSource(filename);
++  // if (asset) {
++  //   this._filename = asset.uri;
++  //   onError = basePath;
++  // } else {
+     this._filename = basePath ? basePath + '/' + filename : filename;
+ 
+     if (IsAndroid && !basePath && isRelativePath(filename)) {
+       this._filename = filename.toLowerCase().replace(/\.[^.]+$/, '');
+     }
+-  }
++  //}
+ 
+   this.registerOnPlay = function() {
+     if (this.onPlaySubscription != null) {
