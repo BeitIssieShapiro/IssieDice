@@ -32,13 +32,13 @@ import { useSharedValue } from "react-native-worklets-core"
 import { Dice, Profile, Templates, templatesList } from "./profile";
 import { animateYaw, computeFloorBounds, computeVerticalFov, darkenHexColor, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
 import { createDieShape, createFloor, createWall } from "./scene-elements";
-import { playAudio, playBundledAudio } from "./audio";
+import { playAudio, playBundledAudio, Sounds } from "./audio";
 
 
 const DiceModel = require("../assets/dice-empty.glb");
 //const FloorModel = require("../assets/floor.glb");
 const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
-const dieCollisionSound = require("../assets/dice-sound.mp3");
+
 
 LogBox.ignoreLogs([
     //"has already", 
@@ -303,7 +303,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                         lastTime = performance.now();
                         const volume = Math.min(1, Math.abs(impactVelocity) / 10);
                         console.log("collide", impactVelocity)
-                        playBundledAudio(dieCollisionSound, volume)
+                        playBundledAudio(Sounds.collision, volume)
                     }
                 })
                 world.addBody(body);

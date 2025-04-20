@@ -5,13 +5,22 @@ import Animated, {
     withRepeat,
     Easing,
     useAnimatedReaction,
-    interpolateColor,
 } from 'react-native-reanimated';
 import { audioRecorderPlayer } from '../index.js';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { RecordBackType } from 'react-native-audio-recorder-player';
 import Sound from 'react-native-sound';
 Sound.setCategory('Playback');
+import * as RNFS from 'react-native-fs';
+import path from 'path';
+
+interface AudioAsset { name: string, asset: any, sound?: Sound }
+export const Sounds: { [key: string]: AudioAsset } = {
+    collision: {
+        name: "collision",
+        asset: require("../assets/dice-sound.mp3")
+    }
+}
 
 interface RecordButtonProps {
     size: number,
@@ -35,33 +44,41 @@ export async function playAudio(uri: string) {
     }
 }
 
-export async function playBundledAudio(soundAsset: any, volume:number = 1.0) {
+export async function playBundledAudio(asset: AudioAsset, volume: number = 1.0) {
     try {
-      // Stop any previous playback
-      await audioRecorderPlayer.stopPlayer();
-    
-    //   const sound = new Sound(soundAsset, (error) => {
-    //     if (error) {
-    //       console.error('Failed to load the sound', error);
-    //       return;
-    //     }
-    //     // Set the playback volume (0.0 to 1.0).
-    //     sound.setVolume(volume);
-        
-    //     // Play the sound without stopping any other sound.
-    //     sound.play((success) => {
-    //       if (!success) {
-    //         console.error('Sound playback failed');
-    //       }
-    //       // Optionally, release the resource once playback is finished.
-    //       sound.release();
-    //     });
-    //   });
+        // Stop any previous playback
+        await audioRecorderPlayer.stopPlayer();
+        if (!asset.sound) {
+            const fileName = path.join(RNFS.TemporaryDirectoryPath, asset.name + ".mp3");
+            const src = Image.resolveAssetSource(asset.asset);
+            let downloadInfo = await RNFS.downloadFile({
+                fromUrl: src.uri,
+                toFile: fileName
+            });
+            await downloadInfo.promise;
+            const soundLoads = new Promise<void>((resolve, reject) => {
+                asset.sound = new Sound(fileName, undefined, (error) => {
+                    if (error) {
+                        console.log("Error loading sound", error);
+                    }
+                    resolve();
+                })
+            })
+
+            await soundLoads;
+        }
+        if (asset.sound) {
+            // Set the playback volume (0.0 to 1.0).
+            asset.sound.setVolume(volume);
+
+            // Play the sound without stopping any other sound.
+            asset.sound.play();
+        }
     } catch (error) {
-      console.error("Error playing bundled audio:", error);
-      return false;
+        console.error("Error playing bundled audio:", error);
+        return false;
     }
-  }
+}
 
 export const RecordButton = ({
     size,
