@@ -6,10 +6,10 @@ import ReactAppDependencyProvider
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
-
+  
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
-
+  
   
   
   
@@ -20,19 +20,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
-
+    
     reactNativeDelegate = delegate
     reactNativeFactory = factory
-
+    
     window = UIWindow(frame: UIScreen.main.bounds)
-
+    var initialProps = [:] as [AnyHashable : Any]
+    if let url = launchOptions?[.url] as? URL {
+      initialProps = ["url": url.absoluteString]
+    }
+    
     factory.startReactNative(
       withModuleName: "IssieDice",
       in: window,
+      initialProperties: initialProps,
       launchOptions: launchOptions
     )
-
+    
     return true
+  }
+  
+  
+  func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    return RCTLinkingManager.application(app, open: url, options: options)
   }
 }
 
