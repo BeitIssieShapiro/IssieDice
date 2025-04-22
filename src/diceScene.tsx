@@ -105,7 +105,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     );
     const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
     const diceInfoRef = useRef<Dice[]>(profile.dice);
-    const [diceSize, setDiceSize] = useState<number>(profile.size);
+    const [diceSize, setDiceSize] = useState<number>(profile.size + 2);
     const [revision, setRevision] = useState<number>(-1);
     const [sceneActive, setSceneActive] = useState<number>(0);
     const [log, setLog] = useState<string>("")
@@ -154,7 +154,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         'worklet'
         if (shadowMaterial == null) return undefined
 
-        const entity = renderableManager.createPlane(shadowMaterial, 10, 0.0001, 10)
+        const entity = renderableManager.createPlane(shadowMaterial, 1000, 0.0001, 1000)
         renderableManager.setReceiveShadow(entity, true)
         return entity
     }, [renderableManager, shadowMaterial])
@@ -239,7 +239,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     useEffect(() => {
         const winSizeFactor = 900 / currWindowSize.height;
-        const scale = .5 * winSizeFactor * 5 / 2;
+        const scale = .5 * winSizeFactor * diceSize / 2;
+        console.log("Scale", scale)
 
         const isDotArray: boolean[] = [false, false, false, false]
         worldDiceRef.current = diceInfoRef.current
@@ -261,8 +262,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 body.quaternion.setFromEuler(0, Math.PI, -Math.PI / 2)
                 //-Math.PI/2,0,Math.PI/2
-                if (die.template != Templates.Dots && die.template != Templates.Colors) {
-                    body.addEventListener("sleep", () => {
+                body.addEventListener("sleep", () => {
+                    console.log("On dice sleep")
+                    if (die.template != Templates.Dots && die.template != Templates.Colors) {
+
                         const { face, euler } = getTopFace(body);
                         setFaceUp(prev => {
                             return prev.map((orig, cubeIndex) => cubeIndex == i ? face - 1 : orig);
@@ -283,17 +286,25 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                             animateYaw(body, cx, cz, cy, cy + dy, 400);
 
-
                             setTimeout(() => setSceneActive(prev => {
                                 sceneActiveRef.current = prev - 1;
                                 return prev - 1
                             }), 400);
                             body.allowSleep = true;
                         } else {
+                            console.log("face not settles, don't sleep")
                             body.allowSleep = false;
                         }
-                    });
-                }
+                    } else {
+                        // colors and dots
+                        setTimeout(() => setSceneActive(prev => {
+                            sceneActiveRef.current = prev - 1;
+                            return prev - 1
+                        }), 400);
+                        body.allowSleep = true;
+                    }
+                });
+
                 let lastTime = -1
                 body.addEventListener('collide', (e: any) => {
                     if (sceneActiveRef.current <= 0) return;
@@ -412,6 +423,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         "worklet"
         const winSizeFactor = 900 / currWindowSize.height;
         const scale = .5 * winSizeFactor * diceSize / 2;
+        console.log("render callback", scale, diceSize, currWindowSize)
         const hideTransform = transformManager.createIdentityMatrix().translate([-1000, 0, 0]);
         for (let i = 0; i < 4; i++) {
             const entity = generalEntity[i];
@@ -450,13 +462,15 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             <FilamentView style={{ flex: 1 }} renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined} >
 
                 <DefaultLight />
-                {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
-                {/* <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
+                {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} />
+                <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
                     //falloffRadius={bounds.right}
                     position={[0, 100, 100]} //direction={[0,0,0]}
                 /> */}
 
-                <Skybox colorInHex={safeColor(darkenHexColor(profile.tableColor, 0.35))}
+                <Skybox 
+                    colorInHex={safeColor(darkenHexColor(profile.tableColor, 0.35))}
+                    //colorInHex={safeColor(profile.tableColor)}
                     showSun={false}
                     envIntensity={0}
                 />
@@ -488,8 +502,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 {/* <Model source={FloorModel} receiveShadow={true}>
                   
                 </Model> */}
-                {/* 
-                <Model source={DiceModel}
+
+                {/* <Model source={DiceModel}
                     translate={[bounds.left, 0, bounds.top]}
 
                 />
