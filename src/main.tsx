@@ -18,20 +18,19 @@ import { CountdownEditButton } from "./settings-btn";
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
 
-export default function App({migratedDice}:{migratedDice:string[]}) {
+export default function App({ migratedDice }: { migratedDice: string[] }) {
   const [windowSize, setWindowSize] = useState<WinSize>({ width: 500, height: 500 });
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const [revision, setRevision] = useState<number>(0);
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
-  const [inRecovery, setInRecovery] = useState<boolean>(false);
   const [cameraTilt, setCameraTilt] = useState<number>(0);
   const [migrateDice, setMigrateDice] = useState<string[]>([]);
+  const [inRecovery, setInRecovery] = useState<boolean>(false);
 
   const [importInProgress, setImportInProgress] = useState<{
     message: string;
     precent: number;
   } | undefined>();
-  const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const context = useContext(GlobalContext);
 
@@ -79,7 +78,7 @@ export default function App({migratedDice}:{migratedDice:string[]}) {
 
     importPackage(url)
       .then(() => Alert.alert("SuccessfulImport"))
-      .catch(err=>Alert.alert(translate("ImportError"), err))
+      .catch(err => Alert.alert(translate("ImportError"), err))
       .finally(() => setImportInProgress(undefined))
 
   }
@@ -97,24 +96,7 @@ export default function App({migratedDice}:{migratedDice:string[]}) {
 
   const sceneRef = useRef<DiceSceneMethods>(undefined);
 
-  const handleThrowDice = () => {
-    if (inRecoveryRef.current && profile?.recoveryTime) {
-      return;
-    }
-    if (profile && profile.recoveryTime > 0) {
-      inRecoveryRef.current = setTimeout(() => {
-        if (inRecoveryRef.current != undefined) {
-          clearTimeout(inRecoveryRef.current);
-          inRecoveryRef.current = undefined;
-          setInRecovery(false);
-        }
-      }, profile?.recoveryTime! * 1000);
-      setInRecovery(true);
-    }
 
-
-    sceneRef.current?.rollDice();
-  };
 
   const updateDiceScene = (profile: Profile) => {
 
@@ -136,15 +118,17 @@ export default function App({migratedDice}:{migratedDice:string[]}) {
         <Icon name={"setting"} color={"white"} size={35} />
       </TouchableOpacity> */}
 
-      <CountdownEditButton iconSize={35} onComplete={()=>setOpenSettings(true)} top={ Math.max(35, 15 + insets.top) }/>
+      {/** indicator to a lock */}
+      {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), zIndex: 1000 }]} />}
+
+
+      <CountdownEditButton iconSize={35} onComplete={() => setOpenSettings(true)} top={Math.max(35, 15 + insets.top)} />
 
       {migrateDice.length > 0 && <MigrateDice migrateDice={migrateDice} setMigrateDice={setMigrateDice}
         winWidth={windowSize.width} />}
 
       {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => setOpenSettings(false)} />}
       <>
-        {/** indicator to a lock */}
-        {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), zIndex: 1000 }]} />}
 
         {/** Progress */}
         {importInProgress && <View style={styles.progressBarHost}>
@@ -152,15 +136,14 @@ export default function App({migratedDice}:{migratedDice:string[]}) {
           <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
         </View>}
 
-        {!openSettings && !inRecovery && <TouchableOpacity style={styles.overlay}
+        {/* {!openSettings && !inRecovery && <TouchableOpacity style={styles.overlay}
           onPress={handleThrowDice}
           activeOpacity={1}
-        >
+        />} */}
 
-
-        </TouchableOpacity>}
         {profile && <FilamentScene>
           <DiceScene
+            setInRecovery={setInRecovery}
             ref={sceneRef}
             freeze={openSettings}
             initialImpulse={initialImpulse}

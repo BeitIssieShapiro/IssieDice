@@ -1,5 +1,12 @@
 todo:
-- floor color (use plane instead of skybox)
+V- click on dice do not roll it, but play audio if exists
+V- background accuracy - even instead of a wheel
+- new setting for all dice - silent or not
+V- on reload, it does not show the selected dice (bug)
+- shadow
+
+
+
 - implement About
 - Changes to camera - make npm-patch
 - zoom in camera?

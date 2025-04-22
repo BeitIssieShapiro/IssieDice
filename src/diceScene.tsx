@@ -65,7 +65,8 @@ interface DiceSceneProps {
     initialTorque: number[];
     profile: Profile;
     windowSize: WinSize;
-    freeze: boolean
+    freeze: boolean;
+    setInRecovery: (inRecovery: boolean) => void;
 }
 export interface DiceSceneMethods {
     rollDice: () => void;
@@ -98,7 +99,7 @@ const FaceUpInit = [-1, -1, -1, -1];
 const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 
 
-export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize, freeze }: DiceSceneProps, ref: any) => {
+export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize, freeze, setInRecovery }: DiceSceneProps, ref: any) => {
     const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
     const [bounds, setBounds] = useState<{ left: number; right: number; bottom: number; top: number }>(
         computeFloorBounds(windowSize, cameraHeight, fov, 0)
@@ -169,7 +170,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         });
         // Optional: set broadphase and solver iterations
         world.broadphase = new CANNON.NaiveBroadphase();
-        world.solver.iterations = 20;
+        //world.solver.iterations = 20;
         // Create a default material/contact material for better collisions.
         const defaultMat = new CANNON.Material("default");
         world.defaultContactMaterial = new CANNON.ContactMaterial(
@@ -184,7 +185,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     const worldDiceRef = useRef<{ body: CANNON.Body }[]>([]);
     const diceCount = useSharedValue(0);
-    const isDotDice = useSharedValue([false, false, false, false]);
     const backgroundColorRef = useSharedValue<Float4>([0, 1, 0, 1]);
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
@@ -326,7 +326,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 };
             });
         diceCount.value = worldDiceRef.current.length;
-        isDotDice.value = isDotArray;
+        // render all dice at rest
+        setSceneActive(worldDiceRef.current.length);
+        setTimeout(() => setSceneActive(0), 200)
+
 
         const disposeables: CANNON.Body[] = [];
 
@@ -452,14 +455,63 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         //     //matInstance.setTransparencyMode("twoPassesTwoSides")
         // }
 
-    }, [dicePosition, diceRotation, generalEntity, transformManager, diceCount, isDotDice, diceSize])
+    }, [dicePosition, diceRotation, generalEntity, transformManager, diceCount, diceSize])
 
+    const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const throwTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+    const handleThrowDice = () => {
+        if (inRecoveryRef.current && profile?.recoveryTime) {
+            return;
+        }
+
+        if (throwTimerRef.current) {
+            clearTimeout(throwTimerRef.current);
+            throwTimerRef.current = undefined;
+        }
+
+        throwTimerRef.current = setTimeout(() => {
+            console.log("scene clicked - throw the dice")
+
+            if (profile && profile.recoveryTime > 0) {
+                inRecoveryRef.current = setTimeout(() => {
+                    if (inRecoveryRef.current != undefined) {
+                        clearTimeout(inRecoveryRef.current);
+                        inRecoveryRef.current = undefined;
+                        setInRecovery(false);
+                    }
+                }, profile?.recoveryTime! * 1000);
+                setInRecovery(true);
+            }
+            ref.current?.rollDice();
+        }, 50)
+    }
+
+    const handleDiceClicked = (dieInfo: Dice, index: number) => {
+        // first cancel any on going throw dice awaiting
+        if (throwTimerRef.current) {
+            clearTimeout(throwTimerRef.current);
+            throwTimerRef.current = undefined;
+        }
+
+        const body = worldDiceRef.current[index];
+        const { face } = getTopFace(body.body);
+        console.log("cube-pressed", index, face)
+
+        if (face > 0) {
+            if (dieInfo.faces?.at(face - 1)?.audioUri) {
+                playAudio(dieInfo.faces[face - 1]!.audioUri!);
+            }
+
+        }
+    }
 
     return (
         <>
             <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-            <FilamentView style={{ flex: 1 }} renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined} >
+            <FilamentView style={{ flex: 1, backgroundColor: profile.tableColor }} renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined}
+                onTouchStart={handleThrowDice}>
 
                 <DefaultLight />
                 {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} />
@@ -468,32 +520,21 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     position={[0, 100, 100]} //direction={[0,0,0]}
                 /> */}
 
-                <Skybox 
+                {/* <Skybox 
                     colorInHex={safeColor(darkenHexColor(profile.tableColor, 0.35))}
                     //colorInHex={safeColor(profile.tableColor)}
                     showSun={false}
                     envIntensity={0}
-                />
+                /> */}
 
 
                 {activeDice
                     .filter(die => die.active)
                     .map((dieInfo, i) => (worldDiceRef.current &&
-                        <ModelRenderer key={i + "-" + isDotDice.value[i]}
+                        <ModelRenderer key={i}
                             model={generalDiceModel[i]}
                             castShadow={true} receiveShadow={true}
-                            onPress={() => {
-                                const body = worldDiceRef.current[i];
-                                const { face } = getTopFace(body.body);
-                                console.log("cube-pressed", i, face)
-
-                                if (face > 0) {
-                                    if (dieInfo.faces?.at(face - 1)?.audioUri) {
-                                        playAudio(dieInfo.faces[face - 1]!.audioUri!);
-                                    }
-
-                                }
-                            }}
+                            onPress={() => handleDiceClicked(dieInfo, i)}
                         >
                             {texture[i] && <EntitySelector byName="Cube"
                                 textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
