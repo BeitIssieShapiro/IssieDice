@@ -1,5 +1,5 @@
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Dice, SettingsKeys, templatesList } from "./profile";
+import { Dice, templatesList } from "./models";
 import { isRTL, translate } from "./lang";
 import { IconButton, Spacer } from "./components";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';

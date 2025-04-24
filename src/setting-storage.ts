@@ -1,4 +1,4 @@
-import { storage } from './profile';
+import { storage } from "./settings-storage";
 
 
 

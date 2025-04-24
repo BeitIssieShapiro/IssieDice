@@ -50,7 +50,6 @@ export async function requestAudioPermission() {
   return true; // iOS auto-allows if you declared NSMicrophoneUsageDescription
 }
 
-export const ignore = () => { };
 
 
 

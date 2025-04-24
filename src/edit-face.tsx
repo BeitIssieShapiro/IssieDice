@@ -18,9 +18,7 @@ import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconIonic from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/AntDesign';
 import { BTN_COLOR } from "./settings";
-import { Dropdown } from "react-native-element-dropdown";
 import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize } from "./edit-dice";
-import { FaceInfo, getTempFileName } from "./profile";
 import { SelectFromGallery } from "./image-select";
 import { CameraOverlay } from "./CameraOverlay";
 import { SearchImage } from "./search-image";
@@ -60,6 +58,8 @@ interface FontPickerProps {
 
 import { TabView, TabBar } from 'react-native-tab-view';
 import { FontPicker, FONTS } from "./font-picker";
+import { FaceInfo } from "./models";
+import { getTempFileName } from "./disk";
 
 const routes = [
     { key: 'bg', title: translate('FaceBackgroundTab') },

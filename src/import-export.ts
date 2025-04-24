@@ -1,0 +1,180 @@
+import * as RNFS from "react-native-fs";
+
+import { fTranslate } from "./lang";
+import { Profile, Templates } from "./models";
+import { existsFolder, getCustomTypePath, getProfilePath, listCustomDice, listProfiles, loadFaceImages, loadProfileFile, readTexture, saveProfileFile } from "./profile";
+import { doNothing, getTempFileName, loadFile, writeFile } from "./disk";
+import { ensureAndroidCompatible, joinPaths } from "./utils";
+import { unzip, zip } from "react-native-zip-archive";
+
+export async function exportDice(name: string): Promise<string> {
+    const metaDataFile = getTempFileName("json");
+    const metaData = {
+        version: "1.0",
+        type: "dice",
+        name
+    }
+
+    const files = [];
+    const exists = await RNFS.exists(getCustomTypePath(name));
+    if (!exists) {
+        return "";
+    }
+
+    const faceInfos = await loadFaceImages(name);
+    for (const faceInfo of faceInfos) {
+        if (faceInfo.backgroundUri) {
+            files.push(ensureAndroidCompatible(faceInfo.backgroundUri));
+        }
+        if (faceInfo.infoUri) {
+            files.push(ensureAndroidCompatible(faceInfo.infoUri));
+        }
+        if (faceInfo.audioUri) {
+            files.push(ensureAndroidCompatible(faceInfo.audioUri))
+        }
+    }
+
+    const diceMaterialUri = await readTexture(name)
+    if (diceMaterialUri.length > 0) {
+        files.push(ensureAndroidCompatible(diceMaterialUri));
+    }
+
+    files.push(ensureAndroidCompatible(metaDataFile));
+    await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
+
+    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
+    // delete if exists before
+    await RNFS.unlink(targetFile).catch(doNothing);
+
+    return zip(files, targetFile).then(path => {
+        return ensureAndroidCompatible(path);
+    });
+}
+
+interface ExportProfileResponse {
+    profileZip: string;
+    diceZips: string[];
+    diceNames: string[];
+}
+
+export async function exportProfile(name: string, alreadyIncludedCubes: string[], returnInOne = false): Promise<ExportProfileResponse | string> {
+    const metaDataFile = getTempFileName("json");
+
+    const p = await loadProfileFile(name);
+
+    const metaData = {
+        version: "1.0",
+        type: "profile",
+        name,
+        ...p,
+    }
+    await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
+
+    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".zip"));
+    // delete if exists before
+    await RNFS.unlink(targetFile).catch(doNothing);
+
+    const profileZip = await zip([ensureAndroidCompatible(metaDataFile)], targetFile);
+    const diceZips = [];
+    const diceNames = [];
+    for (const dice of p.dice) {
+        if (alreadyIncludedCubes.includes(dice.template) || dice.template.startsWith(Templates.prefix)) continue;
+        diceNames.push(dice.template);
+        const dieZip = await exportDice(dice.template)
+        if (dieZip.length > 0) {
+            diceZips.push(dieZip);
+        }
+    }
+
+    if (returnInOne) {
+        const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
+
+        return zip([profileZip, ...diceZips], targetFile).then(path => {
+            return ensureAndroidCompatible(path);
+        });
+    }
+
+    return {
+        profileZip,
+        diceZips,
+        diceNames,
+    };
+}
+
+export async function exportAll(): Promise<string> {
+    const files = [];
+    const diceList = await listCustomDice(true);
+    const diceNames = diceList.map(d => d.name);
+    for (const name of diceNames) {
+        const dieZip = await exportDice(name);
+        if (dieZip.length > 0) {
+            files.push(dieZip);
+        }
+    }
+
+    const profileList = await listProfiles();
+    for (const profileItem of profileList) {
+        files.push(
+            (await exportProfile(profileItem.name, diceNames) as ExportProfileResponse).profileZip
+        );
+    }
+
+    const date = new Date()
+    let fn = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + ' ' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
+    console.log("about to zip", files)
+    const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieDice Backup-" + fn + ".zip"));
+    await RNFS.unlink(targetPath).catch(doNothing);
+
+    return zip(files, targetPath).then(path => {
+        return ensureAndroidCompatible(path);
+    });
+}
+
+export async function importPackage(packagePath: string, overwrite = false, subFolder = "", failSilent = false) {
+    const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported", subFolder));
+    await RNFS.unlink(unzipTargetPath).catch(doNothing);
+    const unzipFolderPath = await unzip(packagePath, unzipTargetPath);
+
+    const items = await RNFS.readDir(ensureAndroidCompatible(unzipFolderPath));
+    const metaDataItem = items.find(f => f.name.endsWith(".json") && !f.name.startsWith("face"));
+    if (metaDataItem) {
+        const metadataStr = await loadFile(metaDataItem.path);
+        const md = JSON.parse(metadataStr);
+        if (md.type == "dice") {
+            const targetPath = getCustomTypePath(md.name)
+
+            if (!overwrite && await RNFS.exists(targetPath)) {
+                if (failSilent) return;
+                throw fTranslate("ImportDiceExist", md.name);
+            }
+
+            await RNFS.mkdir(targetPath);
+            for (const file of items.filter(item => item.name != metaDataItem.name)) {
+                await RNFS.moveFile(file.path, targetPath + "/" + file.name).catch(e => console.log("copy file on import failed", e));
+            }
+        } else if (md.type == "profile") {
+            const targetPath = getProfilePath(md.name);
+            if (!overwrite && await existsFolder(targetPath)) {
+                throw fTranslate("ImportProfileExist", md.name);
+            }
+
+            const p: Profile = {
+                dice: md.dice,
+                size: md.size,
+                recoveryTime: md.recoveryTime,
+                tableColor: md.tableColor,
+            }
+
+            await saveProfileFile(md.name, p, true);
+        } else {
+            throw "Unknown package type";
+        }
+    } else {
+        // list of zips
+        let i = 0;
+        for (const item of items) {
+            await importPackage(item.path, false, i++ + "", true);
+        }
+    }
+}
+

@@ -4,7 +4,7 @@ import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Aler
 
 import { DiceScene, DiceSceneMethods } from "./diceScene";
 import { SettingsUI } from "./settings";
-import { EmptyProfile, importPackage, migrateV1, Profile, readCurrentProfile } from "./profile";
+import {  getCurrentProfile, migrateV1 } from "./profile";
 import { GlobalContext } from "./global-context";
 import * as Progress from 'react-native-progress';
 import { isRTL, translate } from "./lang";
@@ -13,6 +13,8 @@ import { FilamentScene } from "react-native-filament";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MigrateDice } from "./migrate-dice";
 import { CountdownEditButton } from "./settings-btn";
+import { EmptyProfile, Profile } from "./models";
+import { importPackage } from "./import-export";
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
@@ -85,7 +87,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
 
   useEffect(() => {
     console.log("App reloading profile")
-    readCurrentProfile().then(p => {
+    getCurrentProfile().then(p => {
       setProfile(p);
       setTimeout(() => updateDiceScene(p), 100);
 

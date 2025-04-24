@@ -2,159 +2,14 @@ import * as RNFS from 'react-native-fs';
 import * as path from 'path';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
-import { MMKV } from 'react-native-mmkv';
-import { ensureAndroidCompatible, ignore, joinPaths } from './utils';
-import { fTranslate, translate } from './lang';
-import { FaceType } from './profile-picker';
-import { unzip, zip } from 'react-native-zip-archive';
-import { ImageSourcePropType } from 'react-native';
-import { FaceText } from './edit-face';
+import { ensureAndroidCompatible } from './utils';
+import { fTranslate } from './lang';
 import { NativeModules } from 'react-native';
+import { Dice, EmptyProfile, FaceInfo, List, Profile, Templates, templatesList } from './models';
+import { AlreadyExists, Folders, getCacheBusterSuffix, InvalidFileName, loadFile, loadJSON, saveJSON, writeFileWithCacheBuster } from './disk';
+import { SettingsKeys } from './settings-storage';
 
-export function doNothing() { }
-
-export const enum Folders {
-    Profiles = "profiles",
-    Dice = "dice",
-    DiceTemplates = "templates",
-    FaceType = "faceType",
-    CustomDice = "custom-dice"
-}
-
-
-
-export const SettingsKeys = {
-    CurrentProfileName: "CurrentProfileName",
-    DiceCount: "DiceCount",
-    DiceTemplates: "DiceTemplates",
-    DiceNames: "DiceNames",
-    DiceActive: "DiceActive",
-    DiceSize: "DiceSize",
-    RecoveryTime: "RecoveryTime",
-    TableColor: "TableColor",
-    LastColors: "LastColors",
-}
-
-
-export class AlreadyExists extends Error { }
-export class InvalidFileName extends Error { }
-
-export const InvalidCharachters = "<, >, :, \", /, \, |, ?, *,"
-
-export enum Templates {
-    prefix = "__",
-    Custom = "__custom",
-    Numbers = "__numbers",
-    Colors = "__colors",
-    Dots = "__dots",
-}
-
-export interface List {
-    key: string | Templates,
-    name: string;
-    image?: ImageSourcePropType;
-    faces?: FaceInfo[];
-    readOnly?: boolean;
-}
-
-export const templatesList = [
-    {
-        key: Templates.Numbers,
-        name: translate("Numbers"),
-        image: require("../assets/numbers.png"),
-        readOnly: true,
-    },
-    {
-        key: Templates.Colors,
-        name: translate("Colors"),
-        image: require("../assets/colors.png"),
-        readOnly: true,
-    },
-    {
-        key: Templates.Dots,
-        name: translate("Dots"),
-        image: require("../assets/dots.png"),
-        readOnly: true,
-    }
-]
-
-export const faceTypes = [
-    {
-        key: FaceType.Image,
-        name: translate("Image"),
-    },
-    {
-        key: FaceType.Camera,
-        name: translate("Camera"),
-    },
-    {
-        key: FaceType.Text,
-        name: translate("Text"),
-    },
-    {
-        key: FaceType.Search,
-        name: translate("Search"),
-    },
-
-]
-
-export interface Dice {
-    template: Templates;
-    active: boolean;
-    faces?: FaceInfo[] | undefined;
-    texture?: string;
-}
-
-export interface Profile {
-    dice: Dice[]
-    size: number;
-    recoveryTime: number;
-    tableColor: string;
-}
-
-export const EmptyProfile = {
-    dice: [
-        {
-            template: Templates.Dots,
-            active: true,
-        }
-    ],
-    size: 2,
-    recoveryTime: 15,
-    tableColor: "#00FF00"
-} as Profile;
-
-export const getRecordingFileName = (recName: string | number, forceFilePrefix?: boolean) => {
-    return ensureAndroidCompatible(joinPaths(RNFS.DocumentDirectoryPath, recName + ".mp4"), forceFilePrefix);
-}
-
-export let storage: MMKV;
-
-export async function Init() {
-
-    console.log("Initializing MMKV storage");
-    try {
-        storage = new MMKV({
-            id: 'IssieDiceStorage',
-        });
-        console.log("Initializing MMKV storage Success");
-
-    } catch (e) {
-        // https://github.com/mrousavy/react-native-mmkv/issues/776
-        console.log("Initializing MMKV failed", e);
-    }
-
-    const profilesPath = ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Profiles));
-    const buttonsPath = ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Dice));
-    let exists = await RNFS.exists(profilesPath);
-    if (!exists) {
-        await RNFS.mkdir(profilesPath);
-    }
-    exists = await RNFS.exists(buttonsPath);
-    if (!exists) {
-        await RNFS.mkdir(buttonsPath);
-    }
-}
+type NoName = "";
 
 export async function migrateV1(): Promise<string[]> {
     const migratedDice = [];
@@ -189,83 +44,82 @@ export async function migrateV1(): Promise<string[]> {
     return migratedDice;
 }
 
-export async function SaveProfile(name: string, profile: Profile, overwrite = false) {
-    if (!isValidFilename(name)) {
-        throw new InvalidFileName(name);
-    }
-    const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
+export function profileFilePath(name: string) {
+    return ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`));
+}
+
+export async function saveProfileFile(name: string, profile: Profile, overwrite = false) {
+    if (!isValidFilename(name)) throw new InvalidFileName(name);
+    const profilePath = profileFilePath(name);
     if (!overwrite) {
-        if (await RNFS.exists(ensureAndroidCompatible(profilePath))) {
+        if (await RNFS.exists(profilePath)) {
             throw new AlreadyExists(name);
         }
     }
-    const profileClean = { ...profile, dice: profile.dice.map(d => ({ template: d.template, active: d.active })) }
 
-    const str = JSON.stringify(profileClean, undefined, " ");
-    return RNFS.writeFile(ensureAndroidCompatible(profilePath), str, 'utf8');
+    const profileClean = { ...profile, dice: profile.dice.map(d => ({ template: d.template, active: d.active })) }
+    await saveJSON(profilePath, profileClean);
 }
 
-export async function renameProfile(previousName: string, newName: string, overwrite = false) {
-    const prevPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${previousName}.json`);
-    const newPath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${newName}.json`);
-    if (!overwrite && await RNFS.exists(ensureAndroidCompatible(newPath))) {
+export async function loadProfileFile(name: string): Promise<Profile> {
+    if (!name) return EmptyProfile;
+    return loadJSON<Profile>(profileFilePath(name), EmptyProfile);
+}
+
+
+export async function renameProfileFile(previousName: string, newName: string, overwrite = false) {
+    const prevPath = profileFilePath(previousName);
+    const newPath = profileFilePath(newName)
+    if (!overwrite && await RNFS.exists(newPath)) {
         throw new AlreadyExists(newName);
     }
 
     // only rename if file existed
-    if (await RNFS.exists(ensureAndroidCompatible(prevPath))) {
-        await RNFS.moveFile(ensureAndroidCompatible(prevPath), ensureAndroidCompatible(newPath));
+    if (await RNFS.exists(prevPath)) {
+        await RNFS.moveFile(prevPath, newPath);
     }
 }
 
-export async function deleteProfile(name: string) {
-    const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    return RNFS.unlink(ensureAndroidCompatible(profilePath));
+export async function deleteProfileFile(name: string) {
+    const profilePath = profileFilePath(name);
+    return RNFS.unlink(profilePath);
 }
 
 export async function verifyProfileNameFree(name: string) {
+    const profilePath = profileFilePath(name);
     console.log("verifyProfileNameFree", name)
-    const p = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    if (await RNFS.exists(ensureAndroidCompatible(p))) {
+    if (await RNFS.exists(profilePath)) {
         throw new AlreadyExists(name);
     }
     console.log("verifyProfileNameFree OK")
 }
 
-export async function LoadProfile(name: string) {
-
+export async function LoadProfileFileIntoSettings(name: string | NoName) {
     // First saves current (if named)
     const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
     if (currName.length) {
         console.log("Save profile", currName);
-        const currentProfile = await readCurrentProfile();
-        await SaveProfile(currName, currentProfile, true);
+        const currentProfile = await getCurrentProfile();
+        await saveProfileFile(currName, currentProfile, true);
     }
 
     if (name == "") {
         // create new profile
-        await clearProfile()
+        await clearProfileInSettings()
         return;
     }
 
-    const p: Profile = await (readProfile(name));
-    return writeCurrentProfile(p, name);
-}
-
-export async function readProfile(name: string): Promise<Profile> {
-    const profilePath = path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
-    const fileContents = await RNFS.readFile(ensureAndroidCompatible(profilePath), 'utf8');
-    const p: Profile = JSON.parse(fileContents);
-    return p;
+    const p: Profile = await loadProfileFile(name);
+    return loadProfileIntoSettings(p, name);
 }
 
 
-export async function clearProfile() {
-    writeCurrentProfile(EmptyProfile, "");
+export async function clearProfileInSettings() {
+    loadProfileIntoSettings(EmptyProfile, "");
 }
 
 
-async function writeCurrentProfile(p: Profile, name: string) {
+async function loadProfileIntoSettings(p: Profile, name: string) {
     const diceTemplateType = [];
     const diceActive = [];
 
@@ -284,18 +138,20 @@ async function writeCurrentProfile(p: Profile, name: string) {
     Settings.set(SettingsKeys.DiceSize, p.size);
     Settings.set(SettingsKeys.RecoveryTime, p.recoveryTime);
     Settings.set(SettingsKeys.TableColor, p.tableColor);
+    Settings.set(SettingsKeys.SoundEnabled, p.soundEnabled);
 
     Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
     Settings.setArray(SettingsKeys.DiceActive, diceActive);
 }
 
-export async function readCurrentProfile(): Promise<Profile> {
+export async function getCurrentProfile(): Promise<Profile> {
     const numOfDice = Settings.getNumber(SettingsKeys.DiceCount, 1);
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
     const diceActive = Settings.getArray<boolean>(SettingsKeys.DiceActive, "boolean", [true, true, true, true]);
     const size = Settings.getNumber(SettingsKeys.DiceSize, 2);
     const recoveryTime = Settings.getNumber(SettingsKeys.RecoveryTime, EmptyProfile.recoveryTime);
     const tableColor = Settings.getString(SettingsKeys.TableColor, EmptyProfile.tableColor);
+    const soundEnabled = Settings.getBoolean(SettingsKeys.SoundEnabled, true);
 
     const dice = [] as Dice[];
 
@@ -319,7 +175,8 @@ export async function readCurrentProfile(): Promise<Profile> {
         dice,
         size,
         recoveryTime,
-        tableColor
+        tableColor,
+        soundEnabled
     };
 }
 
@@ -331,7 +188,7 @@ export function getProfilePath(name: string): string {
     return `${RNFS.DocumentDirectoryPath}/${Folders.Profiles}/${name}`;
 }
 
-async function loadProfiles(): Promise<List[]> {
+export async function listProfiles(): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.Profiles}`).then(async (files) => {
         const list: List[] = [];
         for (const file of files) {
@@ -351,7 +208,7 @@ async function loadProfiles(): Promise<List[]> {
     });
 }
 
-async function loadCustomDice(ommitFaces = false): Promise<List[]> {
+export async function listCustomDice(ommitFaces = false): Promise<List[]> {
     return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(async (folders) => {
         const list: List[] = [];
         for (const folder of folders) {
@@ -366,14 +223,6 @@ async function loadCustomDice(ommitFaces = false): Promise<List[]> {
         console.log("Fail browsing custom dices", e);
         return [];
     });
-}
-
-export interface FaceInfo {
-    backgroundUri?: string;
-    infoUri?: string;
-    backgroundColor?: string
-    text?: FaceText;
-    audioUri?: string
 }
 
 export async function loadFaceImages(name: string): Promise<FaceInfo[]> {
@@ -416,19 +265,15 @@ export async function readTexture(name: string): Promise<string> {
     return "";
 }
 
-export async function saveDataUrlAs(dataUrl: string, filePath: string) {
-    RNFS.writeFile(filePath, dataUrl, "base64");
-}
-
 
 export async function ListElements(folder: Folders): Promise<List[]> {
     if (folder == Folders.DiceTemplates) {
-        const customDice = await loadCustomDice();
+        const customDice = await listCustomDice();
         customDice.sort((a, b) => a.name.localeCompare(b.name));
 
         return [...templatesList, ...customDice];
     } else if (folder == Folders.Profiles) {
-        return loadProfiles();
+        return listProfiles();
     }
     return [];
 }
@@ -461,10 +306,9 @@ export async function renameDiceFolder(currName: string, newName: string) {
     Settings.setArray(SettingsKeys.DiceTemplates, newList);
 
     // Check all profile and change dice name if includes the old dice name
-    const allProfiles = await loadProfiles();
+    const allProfiles = await listProfiles();
     for (const profileListItem of allProfiles) {
-        const profileString = await loadFile(getProfilePath(profileListItem.key + ".json"));
-        const profile: Profile = JSON.parse(profileString);
+        const profile = await loadProfileFile(profileListItem.key);
         let modified = false;
         for (const die of profile.dice) {
             if (die.template == currName) {
@@ -474,8 +318,7 @@ export async function renameDiceFolder(currName: string, newName: string) {
         }
         if (modified) {
             //overwrite Profile after being modified
-            const newProfileString = JSON.stringify(profile, undefined, " ");
-            await writeFile(getProfilePath(profileListItem.key), newProfileString);
+            saveProfileFile(profileListItem.key, profile, true)
         }
     }
 }
@@ -485,10 +328,10 @@ export async function deleteDice(name: string) {
     await RNFS.unlink(srcPath);
 
     // Check all profile with the deleted die and change die to a default (dots)
-    const allProfiles = await loadProfiles();
+    const allProfiles = await listProfiles();
     for (const profileListItem of allProfiles) {
-        const profileString = await loadFile(getProfilePath(profileListItem.key + ".json"));
-        const profile: Profile = JSON.parse(profileString);
+        const profile = await loadProfileFile(profileListItem.key);
+
         let modified = false;
         for (const die of profile.dice) {
             if (die.template == name) {
@@ -498,300 +341,15 @@ export async function deleteDice(name: string) {
         }
         if (modified) {
             //overwrite Profile after being modified
-            const newProfileString = JSON.stringify(profile, undefined, " ");
-            await writeFile(getProfilePath(profileListItem.key), newProfileString);
-        }
-    }
-}
-
-
-export async function exportDice(name: string): Promise<string> {
-    const metaDataFile = getTempFileName("json");
-    const metaData = {
-        version: "1.0",
-        type: "dice",
-        name
-    }
-
-    const files = [];
-    const exists = await RNFS.exists(getCustomTypePath(name));
-    if (!exists) {
-        return "";
-    }
-
-    const faceInfos = await loadFaceImages(name);
-    for (const faceInfo of faceInfos) {
-        if (faceInfo.backgroundUri) {
-            files.push(ensureAndroidCompatible(faceInfo.backgroundUri));
-        }
-        if (faceInfo.infoUri) {
-            files.push(ensureAndroidCompatible(faceInfo.infoUri));
-        }
-        if (faceInfo.audioUri) {
-            files.push(ensureAndroidCompatible(faceInfo.audioUri))
-        }
-    }
-
-    const diceMaterialUri = await readTexture(name)
-    if (diceMaterialUri.length > 0) {
-        files.push(ensureAndroidCompatible(diceMaterialUri));
-    }
-
-    files.push(ensureAndroidCompatible(metaDataFile));
-    await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
-
-    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
-    // delete if exists before
-    await RNFS.unlink(targetFile).catch(ignore);
-
-    return zip(files, targetFile).then(path => {
-        return ensureAndroidCompatible(path);
-    });
-}
-
-interface ExportProfileResponse {
-    profileZip: string;
-    diceZips: string[];
-    diceNames: string[];
-}
-
-export async function exportProfile(name: string, alreadyIncludedCubes: string[], returnInOne = false): Promise<ExportProfileResponse | string> {
-    const metaDataFile = getTempFileName("json");
-
-    const p = await readProfile(name);
-
-    const metaData = {
-        version: "1.0",
-        type: "profile",
-        name,
-        ...p,
-    }
-    await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
-
-    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".zip"));
-    // delete if exists before
-    await RNFS.unlink(targetFile).catch(ignore);
-
-    const profileZip = await zip([ensureAndroidCompatible(metaDataFile)], targetFile);
-    const diceZips = [];
-    const diceNames = [];
-    for (const dice of p.dice) {
-        if (alreadyIncludedCubes.includes(dice.template) || dice.template.startsWith(Templates.prefix)) continue;
-        diceNames.push(dice.template);
-        const dieZip = await exportDice(dice.template)
-        if (dieZip.length > 0) {
-            diceZips.push(dieZip);
-        }
-    }
-
-
-
-    if (returnInOne) {
-        const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
-
-        return zip([profileZip, ...diceZips], targetFile).then(path => {
-            return ensureAndroidCompatible(path);
-        });
-    }
-
-    return {
-        profileZip,
-        diceZips,
-        diceNames,
-    };
-}
-
-export async function exportAll(): Promise<string> {
-    const files = [];
-    const diceList = await loadCustomDice(true);
-    const diceNames = diceList.map(d => d.name);
-    for (const name of diceNames) {
-        const dieZip = await exportDice(name);
-        if (dieZip.length > 0) {
-            files.push(dieZip);
-        }
-    }
-
-    const profileList = await loadProfiles();
-    for (const profileItem of profileList) {
-        files.push(
-            (await exportProfile(profileItem.name, diceNames) as ExportProfileResponse).profileZip
-        );
-    }
-
-    const date = new Date()
-    let fn = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + ' ' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
-    console.log("about to zip", files)
-    const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieDice Backup-" + fn + ".zip"));
-    await RNFS.unlink(targetPath).catch(ignore);
-
-    return zip(files, targetPath).then(path => {
-        return ensureAndroidCompatible(path);
-    });
-}
-
-export async function importPackage(packagePath: string, overwrite = false, subFolder = "", failSilent = false) {
-    const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported", subFolder));
-    await RNFS.unlink(unzipTargetPath).catch(ignore);
-    const unzipFolderPath = await unzip(packagePath, unzipTargetPath);
-
-    const items = await RNFS.readDir(ensureAndroidCompatible(unzipFolderPath));
-    const metaDataItem = items.find(f => f.name.endsWith(".json") && !f.name.startsWith("face"));
-    if (metaDataItem) {
-        const metadataStr = await loadFile(metaDataItem.path);
-        const md = JSON.parse(metadataStr);
-        if (md.type == "dice") {
-            const targetPath = getCustomTypePath(md.name)
-
-            if (!overwrite && await RNFS.exists(targetPath)) {
-                if (failSilent) return;
-                throw fTranslate("ImportDiceExist", md.name);
-            }
-
-            await RNFS.mkdir(targetPath);
-            for (const file of items.filter(item => item.name != metaDataItem.name)) {
-                await RNFS.moveFile(file.path, targetPath + "/" + file.name).catch(e => console.log("copy file on import failed", e));
-            }
-        } else if (md.type == "profile") {
-            const targetPath = getProfilePath(md.name);
-            if (!overwrite && await existsFolder(targetPath)) {
-                throw fTranslate("ImportProfileExist", md.name);
-            }
-
-            const p: Profile = {
-                dice: md.dice,
-                size: md.size,
-                recoveryTime: md.recoveryTime,
-                tableColor: md.tableColor,
-            }
-
-            await SaveProfile(md.name, p, true);
-        } else {
-            throw "Unknown package type";
-        }
-    } else {
-        // list of zips
-        let i = 0;
-        for (const item of items) {
-            await importPackage(item.path, false, i++ + "", true);
+            saveProfileFile(profileListItem.key, profile, true)
         }
     }
 }
 
 
 
-function loadFile(path: string) {
-    return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
-}
-
-export async function writeFileWithCacheBuster(targetPath: string, content: string, encoding: string | undefined = undefined) {
-    const { folder, fileName, extension } = splitFilePath(targetPath);
-    const cacheBusterPrefixPos = fileName.indexOf("$$");
-
-    if (!await RNFS.exists(folder)) {
-        await RNFS.mkdir(folder);
-    }
-    if (cacheBusterPrefixPos < 0) {
-        await RNFS.unlink(targetPath).catch(doNothing);
-    } else {
-        const baseFileName = fileName.substring(0, cacheBusterPrefixPos);
-        const files = await RNFS.readDir(folder);
-        for (const file of files) {
-            // delete any file with same base path
-            if (file.name.startsWith(baseFileName) && file.name.endsWith(extension)) {
-                await RNFS.unlink(file.path);
-            }
-        }
-    }
-    return writeFile(targetPath, content, undefined, encoding);
-}
 
 
-export async function writeFile(path: string, content: string, verifyFolderExists?: string, encoding?: string) {
-    if (verifyFolderExists) {
-        if (!await RNFS.exists(verifyFolderExists)) {
-            await RNFS.mkdir(verifyFolderExists);
-        }
-    }
-    return RNFS.writeFile(ensureAndroidCompatible(path), content, encoding)
-
-}
-
-function splitFilePath(targetPath: string): { folder: string; fileName: string; extension: string } {
-    const lastSlashIndex = targetPath.lastIndexOf("/");
-    let folder = "";
-    let fullName = targetPath;
-    if (lastSlashIndex !== -1) {
-        folder = targetPath.substring(0, lastSlashIndex);
-        fullName = targetPath.substring(lastSlashIndex + 1);
-    }
-    const lastDotIndex = fullName.lastIndexOf(".");
-    let fileName = fullName;
-    let extension = "";
-    if (lastDotIndex !== -1) {
-        fileName = fullName.substring(0, lastDotIndex);
-        extension = fullName.substring(lastDotIndex); // includes the dot, e.g. ".jpg"
-    }
-    return { folder, fileName, extension };
-}
-
-export const copyFileToFolder = async (sourcePath: string, targetPath: string, overwrite = true) => {
-
-    const { folder, fileName, extension } = splitFilePath(targetPath);
-    await RNFS.mkdir(folder);
-    if (overwrite) {
-        const cacheBusterPrefixPos = fileName.indexOf("$$");
-
-        if (cacheBusterPrefixPos < 0) {
-            await RNFS.unlink(targetPath).catch(doNothing);
-        } else {
-            const baseFileName = fileName.substring(0, cacheBusterPrefixPos);
-            const files = await RNFS.readDir(folder);
-            for (const file of files) {
-                // delete any file with same base path
-                if (file.name.startsWith(baseFileName) && file.name.endsWith(extension)) {
-                    await RNFS.unlink(file.path);
-                }
-            }
-        }
-    }
-    await RNFS.copyFile(sourcePath, targetPath);
-};
-
-export const deleteFile = async (filePath: string) => {
-    if (filePath.length == 0 || filePath.startsWith("http")) return;
-    try {
-        // Check if the file exists before attempting to delete it
-        const fileExists = await RNFS.exists(filePath);
-
-        if (fileExists) {
-            await RNFS.unlink(filePath); // Delete the file
-            console.log(`File deleted: ${filePath}`);
-        } else {
-            console.log('File does not exist');
-        }
-    } catch (e: any) {
-        console.log("error deleting file", filePath, e.message);
-    }
-}
-
-
-export function getTempFileName(ext: string) {
-    const date = new Date()
-    let fn = Math.random() + '-' + date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + 'T' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
-
-    return path.join(RNFS.TemporaryDirectoryPath, fn + "." + ext);
-}
-
-export async function getRandomFile(filePath: string, ext: string): Promise<string> {
-    const tempFileTime = getTempFileName(ext)
-    await RNFS.copyFile(filePath, tempFileTime);
-    return tempFileTime;
-}
-
-export function getCacheBusterSuffix(): string {
-    return "$$" + Math.floor(Math.random() * 1000000);
-}
 
 export async function getNextDieName(transKey: string): Promise<string> {
     let counter = 1;

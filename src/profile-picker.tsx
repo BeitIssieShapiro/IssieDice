@@ -1,11 +1,13 @@
 import { Fragment, useEffect, useState } from "react";
-import { Folders, List, ListElements, Templates } from "./profile";
+import { ListElements } from "./profile";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { FadeInView, IconButton } from "./components";
 import { DicePreview } from "./edit-dice";
 import { RadioButton } from "./radio-button";
+import { List, Templates } from "./models";
+import { Folders } from "./disk";
 
 
 function Seperator({ width }: { width: string }) {
@@ -203,12 +205,7 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
     </FadeInView>
 }
 
-export enum FaceType {
-    Image = "image",
-    Search = "search",
-    Camera = "camera",
-    Text = "text",
-}
+
 
 
 const styles = StyleSheet.create({

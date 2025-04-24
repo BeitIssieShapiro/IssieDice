@@ -29,7 +29,7 @@ import {
 
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
-import { Dice, Profile, Templates, templatesList } from "./profile";
+import { Dice, Profile, Templates, templatesList } from "./models";
 import { animateYaw, computeFloorBounds, computeVerticalFov, darkenHexColor, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
 import { createDieShape, createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio, Sounds } from "./audio";
@@ -309,6 +309,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 let lastTime = -1
                 body.addEventListener('collide', (e: any) => {
                     if (sceneActiveRef.current <= 0) return;
+                    if (!profile.soundEnabled) return;
 
                     const impactVelocity = e.contact.getImpactVelocityAlongNormal();
                     if (impactVelocity >= 2 && (lastTime < 0 || performance.now() - lastTime > 100)) {
@@ -346,7 +347,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             disposeables.map(d => world.removeBody(d));
 
         };
-    }, [world, bounds, diceInfo, worldDiceRef]);
+    }, [world, bounds, diceInfo, worldDiceRef, profile]);
 
 
     const dicePosition = [
@@ -507,7 +508,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     flex: 1,
                     backgroundColor: profile.tableColor
                 }}
-                // renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined}
+                renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined}
                 onTouchStart={handleViewClicked}>
 
                 <DefaultLight />

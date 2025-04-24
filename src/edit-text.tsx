@@ -9,11 +9,8 @@ import {
     FlatList,
 } from "react-native";
 import { translate } from "./lang";
-import { FadeInView, IconButton, NumberSelector } from "./components";
+import { IconButton } from "./components";
 import { MyColorPicker } from "./color-picker";
-import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
-import { BTN_COLOR } from "./settings";
-import { Dropdown } from "react-native-element-dropdown";
 import { FaceText } from "./edit-face";
 
 

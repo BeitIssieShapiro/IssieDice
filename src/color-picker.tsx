@@ -3,8 +3,8 @@ import { StyleSheet, Text, View } from "react-native";
 import Icon from 'react-native-vector-icons/AntDesign';
 import ColorPicker from 'react-native-wheel-color-picker'
 import { Settings } from './setting-storage';
-import { SettingsKeys } from "./profile";
 import { ColorButton, FadeInView } from "./components";
+import { SettingsKeys } from "./settings-storage";
 
 export const defaultFloorColor = "#5db7dd" //deep green
 

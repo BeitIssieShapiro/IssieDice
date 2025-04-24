@@ -1,9 +1,9 @@
-import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleSheet, Text, View } from "react-native"
 import { fTranslate, isRTL, translate } from "./lang";
 import { Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { copyFileToFolder, existsFolder, FaceInfo, Folders, getCacheBusterSuffix, getCustomTypePath, getNextDieName, InvalidCharachters, isValidFilename, loadFaceImages, renameDiceFolder, writeFile, writeFileWithCacheBuster, } from "./profile";
+import { existsFolder, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { unlink } from "react-native-fs";
@@ -13,6 +13,8 @@ import * as RNFS from 'react-native-fs';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { WinSize } from "./utils";
 import { playAudio } from "./audio";
+import { emptyFaceInfo, FaceInfo } from "./models";
+import { copyFileToFolder, getCacheBusterSuffix, InvalidCharachters, writeFileWithCacheBuster } from "./disk";
 
 
 interface EditDiceProps {
@@ -23,7 +25,6 @@ interface EditDiceProps {
 }
 
 
-const emptyFaceInfo: FaceInfo = {}
 
 export const FacePreviewSize = 150;
 export const FontFactor = FacePreviewSize / 70;

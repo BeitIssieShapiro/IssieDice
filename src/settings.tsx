@@ -1,22 +1,26 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { fTranslate, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
+import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import { IconButton, NumberSelector, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { AlreadyExists, deleteDice, deleteProfile, Dice, EmptyProfile, exportAll, exportDice, exportProfile, Folders, InvalidCharachters, InvalidFileName, isValidFilename, LoadProfile, Profile, readCurrentProfile, renameProfile, SaveProfile, SettingsKeys, Templates, verifyProfileNameFree } from "./profile";
+import { deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { DiePicker, ProfilePicker } from "./profile-picker";
 import { EditDice } from "./edit-dice";
 import { MyColorPicker } from "./color-picker";
 import { Alert } from "react-native";
-import prompt from "react-native-prompt-android";
 import Toast from "react-native-toast-message";
 import Share from 'react-native-share';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { safeColor } from "./utils";
 import { EditText } from "./edit-text";
-
+import { AlreadyExists, Folders, InvalidCharachters, InvalidFileName } from "./disk";
+import { EmptyProfile, Profile, Templates } from "./models";
+import { SettingsKeys } from "./settings-storage";
+import { exportAll, exportDice, exportProfile } from "./import-export";
 export const BTN_COLOR = "#6E6E6E";
 const disabledColor = "gray";
 
@@ -46,7 +50,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [profile, setProfile] = useState<Profile>(EmptyProfile);
 
     useEffect(() => {
-        readCurrentProfile().then(p => {
+        getCurrentProfile().then(p => {
             setProfile(p);
             setProfileName(Settings.getString(SettingsKeys.CurrentProfileName, ""));
             console.log("reload settings", p.dice.map(b => b.template))
@@ -90,6 +94,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
+    function handleSetSoundEnabled(newEnabled: boolean) {
+        Settings.set(SettingsKeys.SoundEnabled, newEnabled);
+        setRevision(old => old + 1);
+    }
+
     function setDiceTemplate(index: number, newTemplate: Templates) {
         let newDiceTemplates = profile.dice.map(b => b.template);
         newDiceTemplates[index] = newTemplate as Templates;
@@ -107,8 +116,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             // new profile
             if (!overwrite) {
                 return verifyProfileNameFree(name).then(async () => {
-                    const currentProfile = await readCurrentProfile();
-                    await SaveProfile(name, currentProfile, true);
+                    const currentProfile = await getCurrentProfile();
+                    await saveProfileFile(name, currentProfile, true);
                     Settings.set(SettingsKeys.CurrentProfileName, name);
                 });
             } else {
@@ -117,7 +126,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             setRevision(prev => prev + 1);
         } else {
             // rename profile
-            return renameProfile(previousName, name).then(() => {
+            return renameProfileFile(previousName, name).then(() => {
                 if (isCurrent) {
                     Settings.set(SettingsKeys.CurrentProfileName, name);
                     setRevision(prev => prev + 1);
@@ -143,10 +152,10 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         }
 
         if (isCurrent) {
-            await LoadProfile("");
+            await LoadProfileFileIntoSettings("");
             setTimeout(() => setRevision(prev => prev + 1), 100);
         }
-        await deleteProfile(name);
+        await deleteProfileFile(name);
         afterDelete();
     }
 
@@ -199,7 +208,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const closeProfile = async () => {
         const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
         if (currName.length > 0) {
-            await LoadProfile("");
+            await LoadProfileFileIntoSettings("");
             setTimeout(() => setRevision(prev => prev + 1), 100);
         }
     }
@@ -275,11 +284,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
 
-    function handleDeleteProfile (name: string, afterDelete: () => void): void {
+    function handleDeleteProfile(name: string, afterDelete: () => void): void {
         Alert.alert(translate("DeleteProfileTitle"), fTranslate("DeleteProfileAlert", name), [
             {
                 text: translate("Delete"), onPress: () => {
-                    deleteProfile(name);
+                    deleteProfileFile(name);
                     setRevision(prev => prev + 1);
                     afterDelete()
                 }
@@ -317,7 +326,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             onSelect={async (profileName) => {
                 console.log("select profile", profileName)
                 setProfileBusy(true);
-                LoadProfile(profileName)
+                LoadProfileFileIntoSettings(profileName)
                     .then(() => setRevision(prev => prev + 1))
                     .finally(() => setProfileBusy(false));
                 setOpenLoadProfile(false);
@@ -328,7 +337,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 name,
                 afterSave
             })}
-            onDelete={(name, afterDelete)=>handleDeleteProfile(name, afterDelete)}
+            onDelete={(name, afterDelete) => handleDeleteProfile(name, afterDelete)}
             onClose={() => setOpenLoadProfile(false)}
             onExport={handleExportProfile}
             isNarrow={isScreenNarrow}
@@ -463,6 +472,18 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                     {/* <IconButton text={translate("Change")} onPress={() => setOpenColorPicker(true)} /> */}
                 </View>
                 <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("TableColor")}:</Text>
+            </View>
+
+            {/* Sound Enabled */}
+            <View style={sectionStyle}>
+                <TouchableOpacity style={[{ alignItems: "center", marginEnd: 15, width: "33%" }]}
+                    onPress={() => handleSetSoundEnabled(!profile.soundEnabled)}>
+                    {profile.soundEnabled ?
+                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
+                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                    }
+                </TouchableOpacity>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("MakeSound")}:</Text>
             </View>
 
             {/* Dice Size */}

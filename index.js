@@ -3,6 +3,10 @@ import { GlobalContext } from './src/global-context';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { InitCrashCatch } from './src/crash-catch';
+import {name as appName} from './app.json';
+import App from './src/main';
+import { Init } from './src/settings-storage';
+
 Init();
 
 InitCrashCatch();
@@ -25,8 +29,5 @@ const AppWithCtx = (props) => (
     </GlobalContext.Provider>
 )
 
-import {name as appName} from './app.json';
-import App from './src/main';
-import { Init } from './src/profile';
 
 AppRegistry.registerComponent(appName, () => AppWithCtx);
