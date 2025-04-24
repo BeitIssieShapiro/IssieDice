@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert, Text, Dimensions } from "react-native";
 
 import { DiceScene, DiceSceneMethods } from "./diceScene";
-import Icon from 'react-native-vector-icons/AntDesign';
 import { SettingsUI } from "./settings";
 import { EmptyProfile, importPackage, migrateV1, Profile, readCurrentProfile } from "./profile";
 import { GlobalContext } from "./global-context";

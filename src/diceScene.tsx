@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { LogBox, Text, View } from "react-native";
+import { GestureResponderEvent, LogBox, Text, View } from "react-native";
 import {
     FilamentView,
     DefaultLight,
@@ -110,7 +110,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const [revision, setRevision] = useState<number>(-1);
     const [sceneActive, setSceneActive] = useState<number>(0);
     const [log, setLog] = useState<string>("")
-    const { engine, renderableManager, scene, transformManager } = useFilamentContext()
+    const { engine, renderableManager, scene, transformManager, view } = useFilamentContext()
     const [faceUp, setFaceUp] = useState<number[]>(FaceUpInit)
 
     const sceneActiveRef = useRef<number>(sceneActive);
@@ -132,7 +132,11 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     // const matInstance = floorEntity && renderableManager.getMaterialInstanceAt(floorEntity, 0);
 
     const generalDiceAsset = generalDiceModel.map(d => getAssetFromModel(d));
-    const generalEntity = generalDiceAsset.map(de => de?.getRenderableEntities()[0]);
+    const generalEntity = generalDiceAsset.map(de => de?.getRenderableEntities()[0]).map((e) => {
+        if (e) renderableManager.setCastShadow(e, true)
+        if (e) renderableManager.setReceiveShadow(e, true)
+        return e
+    });
 
 
     //#region Setup shadow plane
@@ -147,15 +151,14 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             material.setDefaultFloatParameter('strength', 0.2)
             return material
         }),
-        [engine, shadowMaterialBuffer]
-    )
+        [engine, shadowMaterialBuffer])
 
     // Create Shadow plane
     const shadowPlane = useWorkletMemo(() => {
         'worklet'
         if (shadowMaterial == null) return undefined
-
-        const entity = renderableManager.createPlane(shadowMaterial, 1000, 0.0001, 1000)
+        console.log("shadow plane loaded")
+        const entity = renderableManager.createPlane(shadowMaterial, 150, 0.1, 150)
         renderableManager.setReceiveShadow(entity, true)
         return entity
     }, [renderableManager, shadowMaterial])
@@ -194,7 +197,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 die.body.velocity.setZero();
                 die.body.angularVelocity.setZero();
 
-                die.body.position.set(getDieX(i, diceInfo.length, 1), 8 , -3);
+                die.body.position.set(getDieX(i, diceInfo.length, 1), 8, -3);
 
                 const force = 3 + 7 * Math.random();
                 die.body.applyImpulse(
@@ -430,7 +433,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             const entity = generalEntity[i];
 
             if (entity) {
-                const pos = [dicePosition[i].value[0], dicePosition[i].value[1], dicePosition[i].value[2]] as Float3
+                // adding scale to y: to make the bottom of cube be at y=0
+                const pos = [dicePosition[i].value[0], dicePosition[i].value[1] + scale, dicePosition[i].value[2]] as Float3
                 const angle = diceRotation[i].value.angle;
                 const axis = [diceRotation[i].value.axis[0], diceRotation[i].value.axis[1], diceRotation[i].value.axis[2]] as Float3;
 
@@ -448,59 +452,49 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             }
         }
 
-        // if (floorEntity) {
-        //     matInstance?.setFloat4Parameter('baseColorFactor', [backgroundColorRef.value[0], backgroundColorRef.value[1], backgroundColorRef.value[2], backgroundColorRef.value[3]]) // in sRGB
-        //     //matInstance.setTransparencyMode("twoPassesTwoSides")
-        // }
-
     }, [dicePosition, diceRotation, generalEntity, transformManager, diceCount, diceSize])
 
     const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
-    const throwTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    const handleThrowDice = () => {
+    const handleViewClicked = async (e: GestureResponderEvent) => {
+
+        const { locationX, locationY } = e.nativeEvent
+        const entity = await view.pickEntity(locationX, locationY)
+        if (entity != null) {
+            // dice clicked
+            const index = generalEntity.findIndex(ent => ent?.id == entity.id);
+            if (index >= 0) {
+                handleDiceClicked(index);
+                return;
+            }
+        }
         if (inRecoveryRef.current && profile?.recoveryTime) {
             return;
         }
 
-        if (throwTimerRef.current) {
-            clearTimeout(throwTimerRef.current);
-            throwTimerRef.current = undefined;
+        if (profile && profile.recoveryTime > 0) {
+            inRecoveryRef.current = setTimeout(() => {
+                if (inRecoveryRef.current != undefined) {
+                    clearTimeout(inRecoveryRef.current);
+                    inRecoveryRef.current = undefined;
+                    setInRecovery(false);
+                }
+            }, profile?.recoveryTime! * 1000);
+            setInRecovery(true);
         }
-
-        throwTimerRef.current = setTimeout(() => {
-            console.log("scene clicked - throw the dice")
-
-            if (profile && profile.recoveryTime > 0) {
-                inRecoveryRef.current = setTimeout(() => {
-                    if (inRecoveryRef.current != undefined) {
-                        clearTimeout(inRecoveryRef.current);
-                        inRecoveryRef.current = undefined;
-                        setInRecovery(false);
-                    }
-                }, profile?.recoveryTime! * 1000);
-                setInRecovery(true);
-            }
-            ref.current?.rollDice();
-        }, 50)
+        ref.current?.rollDice();
     }
 
-    const handleDiceClicked = (dieInfo: Dice, index: number) => {
-        // first cancel any on going throw dice awaiting
-        if (throwTimerRef.current) {
-            clearTimeout(throwTimerRef.current);
-            throwTimerRef.current = undefined;
-        }
-
+    const handleDiceClicked = (index: number) => {
+        const dieInfo = diceInfoRef.current[index];
         const body = worldDiceRef.current[index];
         const { face } = getTopFace(body.body);
-        console.log("cube-pressed", index, face)
+        console.log("Dice-clicked", index, face)
 
         if (face > 0) {
             if (dieInfo.faces?.at(face - 1)?.audioUri) {
                 playAudio(dieInfo.faces[face - 1]!.audioUri!);
             }
-
         }
     }
 
@@ -508,22 +502,22 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         <>
             <Text style={{ position: "absolute", top: 100, left: 100, zIndex: 1000 }}>{log}</Text>
 
-            <FilamentView style={{ flex: 1, backgroundColor: profile.tableColor }} renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined}
-                onTouchStart={handleThrowDice}>
+            <FilamentView
+                style={{
+                    flex: 1,
+                    backgroundColor: profile.tableColor
+                }}
+                // renderCallback={sceneActive != undefined && sceneActive > 0 && !freeze ? renderCallback : undefined}
+                onTouchStart={handleViewClicked}>
 
                 <DefaultLight />
-                {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} />
-                <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
+                {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
+                {/* <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
                     //falloffRadius={bounds.right}
-                    position={[0, 100, 100]} //direction={[0,0,0]}
+                    position={[0, 10, 100]} //direction={[0,0,0]}
                 /> */}
 
-                {/* <Skybox 
-                    colorInHex={safeColor(darkenHexColor(profile.tableColor, 0.35))}
-                    //colorInHex={safeColor(profile.tableColor)}
-                    showSun={false}
-                    envIntensity={0}
-                /> */}
+                
 
 
                 {activeDice
@@ -532,7 +526,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                         <ModelRenderer key={i}
                             model={generalDiceModel[i]}
                             castShadow={true} receiveShadow={true}
-                            onPress={() => handleDiceClicked(dieInfo, i)}
+                            //onPress={() => handleDiceClicked(dieInfo, i)}
                         >
                             {texture[i] && <EntitySelector byName="Cube"
                                 textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
@@ -543,9 +537,10 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 </Model> */}
 
                 {/* <Model source={DiceModel}
-                    translate={[bounds.left, 0, bounds.top]}
+                    translate={[-1, 1, -.3]}
 
-                />
+                /> */}
+                {/*}
                 <Model source={DiceModel}
                     translate={[bounds.right, 0, bounds.bottom]}
 
