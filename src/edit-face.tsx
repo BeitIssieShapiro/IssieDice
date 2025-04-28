@@ -12,12 +12,11 @@ import {
 
 } from "react-native";
 import { isRTL, translate } from "./lang";
-import { FadeInView, IconButton, LabeledIconButton, NumberSelector, Spacer } from "./components";
+import { ColumnChip, IconButton, LabeledIconButton, NumberSelector, ScreenTitle, Section, Spacer } from "./components";
 import { MyColorPicker } from "./color-picker";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconIonic from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/AntDesign';
-import { BTN_COLOR } from "./settings";
 import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize } from "./edit-dice";
 import { SelectFromGallery } from "./image-select";
 import { CameraOverlay } from "./CameraOverlay";
@@ -43,8 +42,7 @@ interface EditFaceProps {
     onClose: () => void;
     width: number;
     size: number;
-
-
+    windowSize: WinSize;
 }
 interface ColorPickerProps {
     color: string;
@@ -60,6 +58,9 @@ import { TabView, TabBar } from 'react-native-tab-view';
 import { FontPicker, FONTS } from "./font-picker";
 import { FaceInfo } from "./models";
 import { getTempFileName } from "./disk";
+import { colors, gStyles } from "./common-style";
+import { WinSize } from "./utils";
+import { Switch } from "@rneui/themed";
 
 const routes = [
     { key: 'bg', title: translate('FaceBackgroundTab') },
@@ -72,6 +73,7 @@ const routesRtl = routes.map((_, i) => routes[routes.length - i - 1])
 
 
 export const EditFace: React.FC<EditFaceProps> = ({
+    windowSize,
     initialFaceText,
     intialAudioUri,
     initialBackgroundColor,
@@ -149,57 +151,123 @@ export const EditFace: React.FC<EditFaceProps> = ({
             setEditImage(false);
         }} />
     }
-
+    const isLandscape = windowSize.height < windowSize.width;
+    console.log("edit face", isLandscape)
 
     return (
-        // <FadeInView height={550 + KBHeight}
-        <View
-            style={[styles.container]}>
-            <View style={styles.titleContainer}>
-                <Text allowFontScaling={false} style={styles.title}>{translate("EditFace")}</Text>
+        <View style={[gStyles.screenContainer]}>
+            <View style={[gStyles.screenTitle, { justifyContent: "center" }]}>
+                <Text allowFontScaling={false} style={gStyles.screenTitleText}>{translate("EditFace")}</Text>
                 <View style={styles.buttons}>
-                <IconButton width={80} text={translate("OK")} onPress={() => {
-                    const faceInfo = {
-                        text: text.length > 0 ? {
-                            text,
-                            fontName,
-                            fontBold: isBold,
-                            fontSize,
-                            color,
-                        } : undefined,
-                        backgroundUri: backgroundImage,
-                        backgroundColor,
-                        audioUri,
-                    } as FaceInfo
-                    onDone(faceInfo);
+                    <IconButton text={translate("Save")} onPress={() => {
+                        const faceInfo = {
+                            text: text.length > 0 ? {
+                                text,
+                                fontName,
+                                fontBold: isBold,
+                                fontSize,
+                                color,
+                            } : undefined,
+                            backgroundUri: backgroundImage,
+                            backgroundColor,
+                            audioUri,
+                        } as FaceInfo
+                        onDone(faceInfo);
 
-                }} />
-                <IconButton width={80} text={translate("Cancel")} onPress={onClose} />
+                    }} backgroundColor={colors.titleButtonsBG} />
+                    <IconButton text={translate("Cancel")} onPress={onClose} backgroundColor={colors.titleButtonsBG} />
                 </View>
             </View>
 
-            <View style={{ marginBottom: 10 }}>
-                {busy && <View style={styles.busy}>
-                    <ActivityIndicator />
-                </View>}
-                <FacePreview size={size}
-                    backgroundColor={backgroundColor}
-                    backgroundImage={backgroundImage}
-                    faceText={{
-                        fontName: fontName,
-                        fontBold: isBold,
-                        fontSize: fontSize,
-                        text: text || "",
-                        color,
-                    }}
-                    audioUri={audioUri}
-                    onAudioPress={() => audioUri && playAudio(audioUri)}
-                />
-                {backgroundImage && <View style={styles.cropButton}>
-                    <IconIonic size={35} name="crop" onPress={() => {
-                        setEditImage(true);
-                    }} /></View>}
+            <View style={[isLandscape ? { flexDirection: "row", justifyContent: "space-between" } : { flexDirection: "column", justifyContent: "center" }, { alignItems: "center" }]}>
+                {/* Preview  */}
+                <View style={{
+                    flexDirection: "column",
+                    padding: 10,
+                    width: (isLandscape ? windowSize.width - windowSize.height : "100%"),
+                    alignItems: "center",
+                }}>
+                    {busy && <View style={styles.busy}>
+                        <ActivityIndicator />
+                    </View>}
+                    <FacePreview size={size}
+                        backgroundColor={backgroundColor}
+                        backgroundImage={backgroundImage}
+                        faceText={{
+                            fontName: fontName,
+                            fontBold: isBold,
+                            fontSize: fontSize,
+                            text: text || "",
+                            color,
+                        }}
+                        audioUri={audioUri}
+                        onAudioPress={() => audioUri && playAudio(audioUri)}
+                    />
+                    <Text allowFontScaling={false} style={styles.label}>{translate("FacePreview")}</Text>
+
+
+                    {backgroundImage && <View style={styles.cropButton}>
+                        <IconIonic size={35} name="crop" onPress={() => {
+                            setEditImage(true);
+                        }} /></View>}
+                </View>
+
+                {isLandscape ?
+                    <View style={gStyles.verticalSeperator} /> :
+                    <View style={gStyles.horizontalSeperator} />
+                }
+
+                {/**Edit tabs */}
+                <View style={{
+                    height: 350, width: isLandscape ? windowSize.height : "100%",
+                    flexDirection: isRTL() ? "row-reverse" : "row",
+                    //alignItems: "center", justifyContent: "center" 
+                    //padding: 10,
+                }}>
+                    <TabView
+                        direction={isRTL() ? "ltr" : "ltr"}
+
+                        renderTabBar={props => (
+                            <TabBar
+                                {...props}
+                                indicatorStyle={{ backgroundColor: 'black', height: 4 }}
+                                style={{ backgroundColor: 'white' }}
+                                activeColor="black"
+                                inactiveColor="gray"
+                                options={{
+                                    bg: { labelStyle: styles.tabLabel },
+                                    text: { labelStyle: styles.tabLabel },
+                                    audio: { labelStyle: styles.tabLabel },
+                                }}
+                            />)}
+
+                        navigationState={{ index: tabIndex, routes: isRTL() ? routesRtl : routes }}
+                        renderScene={({ route, jumpTo }) => {
+                            switch (route.key) {
+                                case 'bg':
+                                    return <FaceBackgroud
+                                        backgroundColor={backgroundColor}
+                                        setBackgroundColor={setBackgroundColor}
+                                        setBackgroundImage={setBackgroundImage}
+                                        setBusy={setBusy}
+                                        onOpenSearch={() => setOpenSearch(true)}
+                                        onOpenCamera={() => setOpenCamera(true)}
+                                        onOpenColorPicker={(props: ColorPickerProps) => setOpenColorPicker(props)} />;
+                                case 'text':
+                                    return <FaceText size={size} text={text} setText={setText} fontName={fontName} setFontName={setFontName}
+                                        isBold={isBold} setIsBold={setIsBold} fontSize={fontSize} setFoneSize={setFoneSize}
+                                        color={color} setColor={setColor} setOpenColorPicker={setOpenColorPicker}
+                                        setOpenFontPicker={(props: FontPickerProps) => setShowFonts(props)} />;
+                                case 'audio':
+                                    return <FaceAudio setAudioUri={setAudioUri} />;
+                            }
+                        }}
+                        onIndexChange={setTabIndex}
+                        initialLayout={{ width }}
+                    />
+                </View>
             </View>
+            <View style={gStyles.horizontalSeperator} />
 
 
             <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={openColorPicker ? openColorPicker.color : "white"}
@@ -217,54 +285,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 }}
                 currentFont={fontName}
             />
-
-            <View style={{ height: 250, width: "100%", flexDirection: isRTL() ? "row-reverse" : "row", alignItems: "center", justifyContent: "center" }}>
-
-                <TabView
-                    direction={isRTL() ? "ltr" : "ltr"}
-
-                    renderTabBar={props => (
-                        <TabBar
-                            {...props}
-                            indicatorStyle={{ backgroundColor: 'black', height: 4 }}
-                            style={{ backgroundColor: 'transparent' }}
-                            activeColor="black"
-                            inactiveColor="gray"
-                            options={{
-                                bg: { labelStyle: styles.tabLabel },
-                                text: { labelStyle: styles.tabLabel },
-                                audio: { labelStyle: styles.tabLabel },
-                            }}
-                        />)}
-
-                    navigationState={{ index: tabIndex, routes: isRTL() ? routesRtl : routes }}
-                    renderScene={({ route, jumpTo }) => {
-                        switch (route.key) {
-                            case 'bg':
-                                return <FaceBackgroud
-                                    backgroundColor={backgroundColor}
-                                    setBackgroundColor={setBackgroundColor}
-                                    setBackgroundImage={setBackgroundImage}
-                                    setBusy={setBusy}
-                                    onOpenSearch={() => setOpenSearch(true)}
-                                    onOpenCamera={() => setOpenCamera(true)}
-                                    onOpenColorPicker={(props: ColorPickerProps) => setOpenColorPicker(props)} />;
-                            case 'text':
-                                return <FaceText size={size} text={text} setText={setText} fontName={fontName} setFontName={setFontName}
-                                    isBold={isBold} setIsBold={setIsBold} fontSize={fontSize} setFoneSize={setFoneSize}
-                                    color={color} setColor={setColor} setOpenColorPicker={setOpenColorPicker}
-                                    setOpenFontPicker={(props: FontPickerProps) => setShowFonts(props)} />;
-                            case 'audio':
-                                return <FaceAudio setAudioUri={setAudioUri} />;
-                        }
-                    }}
-                    onIndexChange={setTabIndex}
-                    initialLayout={{ width: width }}
-                />
-            </View>
-
-           
-        </View>
+        </View >
     );
 };
 
@@ -368,49 +389,44 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
             autoFocus
             allowFontScaling={false}
         />
-        <View style={{ flexDirection: "row" }}>
-            <View style={[styles.stylesHost, { width: "60%" }]}>
-                {/* Font Selection */}
-                <View style={styles.colorSelectHost}>
-                    <Text allowFontScaling={false} style={styles.styleLabel}>{translate("FontName")}</Text>
-                    <Pressable style={{ flexDirection: "row", width: 300, alignItems: "center", justifyContent: "flex-start" }}
+        <View style={{ flexDirection: "column", width: 500 }}>
+            {/* Font Selection */}
+            <Section title={translate("FontName") + ":"} component={
+                <Pressable style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}
 
-                        onPress={() => setOpenFontPicker({
-                            fontName, onSelect: (fontName) => setFontName(fontName)
-                        })}>
-                        <Icon name="edit" size={30} />
-                        <Text allowFontScaling={false}
-                            style={{ fontFamily: fontName, fontSize: 22, marginInlineStart: 15 }}
-                        >{fontName ? FONTS.find(f => f.value === fontName)?.label :
-                            translate("NoFont")}</Text>
+                    onPress={() => setOpenFontPicker({
+                        fontName, onSelect: (fontName) => setFontName(fontName)
+                    })}>
+                    <Text allowFontScaling={false}
+                        style={{ fontFamily: fontName, fontSize: 22, marginInlineStart: 15, width: 250 }}
+                    >{fontName ? FONTS.find(f => f.value === fontName)?.label :
+                        translate("NoFont")}
+                    </Text>
+                    <IconIonic name="list" size={30} />
 
-                    </Pressable>
-                </View>
+                </Pressable>}
+            />
 
-                {/* Font Size Selection */}
-                <NumberSelector min={10} max={60} title={translate("FontSize")} value={fontSize} style={styles.fontSelector}
-                    onDown={() => setFoneSize(fontSize - 2)}
-                    onUp={() => setFoneSize(fontSize + 2)}
-                    titleStyle={styles.styleLabel}
+            <View style={{ flexDirection: "row", height: 150, justifyContent: "space-around", marginTop:15}}>
+                {/* Font Size */}
+                <ColumnChip title={translate("FontSize")} component={
+                    <NumberSelector min={10} max={60} value={fontSize}
+                        onDown={() => setFoneSize(fontSize - 2)}
+                        onUp={() => setFoneSize(fontSize + 2)}
+                    />}
                 />
-            </View>
-            <View style={styles.verticalSeperator} />
-            <View style={[styles.stylesHost, { width: "25%" }]}>
 
-                <TouchableOpacity style={styles.colorSelectHost}
-                    onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} >
-                    <Text allowFontScaling={false} style={styles.styleLabel}>{translate("TextColor")}</Text>
-                    <View style={[styles.colorCircle, { backgroundColor: color }]} />
-                </TouchableOpacity>
+                {/** Color */}
+                <ColumnChip title={translate("Color")} component={
+                    <Pressable style={[styles.colorCircle, { backgroundColor: color, margin: 0, marginEnd: 0 }]}
+                        onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} />}
+                />
 
-                <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", marginEnd: 15, width: "33%" }}
-                    onPress={() => setIsBold(!isBold)}>
-                    {isBold ?
-                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 5, width: 30 }} /> :
-                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR, marginEnd: 5, width: 30 }} />
-                    }
-                    <Text allowFontScaling={false} style={styles.styleLabel} >{translate("Bold")}</Text>
-                </TouchableOpacity>
+                {/** Bold */}
+                <ColumnChip title={translate("Bold")} component={
+                    <Switch value={isBold} onValueChange={(isBold) => setIsBold(isBold)} />}
+                />
+
             </View>
         </View>
     </View>
@@ -474,13 +490,13 @@ const styles = StyleSheet.create({
         width: "95%"
     },
     title: {
-        width:"100%",
-        textAlign:"center",
+        width: "100%",
+        textAlign: "center",
         fontSize: 35,
     },
     buttons: {
-        position:"absolute",
-        right: 0,
+        position: "absolute",
+        right: 10,
         flexDirection: "row",
         justifyContent: "center",
         marginTop: 10,
@@ -493,7 +509,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     faceEditSection: {
-        height: 200,
+        height: 250,
         width: "100%",
         borderColor: "lightgray",
         margin: 3,
@@ -538,7 +554,7 @@ const styles = StyleSheet.create({
         margin: 5,
         borderRadius: 5,
     },
-    
+
     colorCircle: {
         width: 40, height: 40,
         borderRadius: 20,
@@ -553,18 +569,8 @@ const styles = StyleSheet.create({
         width: 240,
         height: 40
     },
-    stylesHost: {
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        margin: 10,
-    },
-    colorSelectHost: {
-        flexDirection: "row",
-        marginTop: 7,
-        marginBottom: 7,
-        alignItems: "center",
-        fontSize: 25
-    },
+
+
     styleLabel: {
         textAlign: "left",
         fontSize: 20,
@@ -618,13 +624,6 @@ const styles = StyleSheet.create({
     tabLabel: {
         fontSize: 18,
         fontWeight: "bold"
-    },
-    verticalSeperator: {
-        height: "100%",
-        width: 3,
-        backgroundColor: "lightgray",
-        margin: 7,
-
     }
 
 });

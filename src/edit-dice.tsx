@@ -1,6 +1,6 @@
 import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleSheet, Text, View } from "react-native"
 import { fTranslate, isRTL, translate } from "./lang";
-import { Spacer } from "./components";
+import { ScreenTitle, Spacer } from "./components";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { existsFolder, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder } from "./profile";
@@ -15,6 +15,7 @@ import { WinSize } from "./utils";
 import { playAudio } from "./audio";
 import { emptyFaceInfo, FaceInfo } from "./models";
 import { copyFileToFolder, getCacheBusterSuffix, InvalidCharachters, writeFileWithCacheBuster } from "./disk";
+import { gStyles } from "./common-style";
 
 
 interface EditDiceProps {
@@ -183,7 +184,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
     }
     console.log("facesInfo", facesInfo)
 
-    const isLandscape = windowSize.height < 760;
+    const isLandscape = windowSize.height < windowSize.width;
     const faceSize = !isLandscape ?
         Math.min(windowSize.width / 4, FacePreviewSize, 0.15 * windowSize.height) :
         windowSize.width / 8;
@@ -203,25 +204,25 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         </View>
     </View>)
 
-    return <View style={styles.container}>
-        <View style={styles.settingTitle}>
-            <Spacer w={35} />
-            <Text allowFontScaling={false} style={styles.settingTitleText}>{translate(name.length > 0 ? "EditDice" : "CreateDice")}</Text>
-            <Icon disabled={busy} name={"close"} color={"black"} size={35} onPress={onClose} />
-        </View>
-
-        {busy && <ActivityIndicator />}
-        <View style={{ width: "100%", flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "center", margin: 10 }}>
-            <View style={[styles.section, { flexDirection: isRTL() ? "row-reverse" : "row" }]} >
-                <Text allowFontScaling={false}  style={styles.sectionName}>{translate("DiceName")}:</Text>
-                <Text allowFontScaling={false}  style={styles.sectionValue}>{editedName}</Text>
-                <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
+    return <View style={gStyles.screenContainer}>
+        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} />
+        <View style={[gStyles.screenSubTitle, { flexDirection: (isRTL() ? "row-reverse" : "row") }]} >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text allowFontScaling={false} style={gStyles.screenSubTitleCaption}>{translate("DiceName")}:</Text>
+                <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" }]}>{editedName}</Text>
             </View>
-            {isLandscape && <DicePreview facesInfo={facesInfo} size={90} />}
+            <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
+        </View>
+        {busy && <ActivityIndicator />}
+        {/* {isLandscape && <DicePreview facesInfo={facesInfo} size={150} />} */}
+        <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", margin: 10 }}>
+            <DicePreview facesInfo={facesInfo} size={150} />
         </View>
 
 
-        {editFace >= 0 && <EditFace initialFaceText={facesInfo[editFace]?.text}
+        {editFace >= 0 && <EditFace
+            windowSize={windowSize}
+            initialFaceText={facesInfo[editFace]?.text}
             initialBackgroundImage={facesInfo[editFace]?.backgroundUri}
             initialBackgroundColor={facesInfo[editFace]?.backgroundColor}
             intialAudioUri={facesInfo[editFace]?.audioUri}
@@ -250,9 +251,6 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         <DiceLayout facesInfo={facesInfo} size={FacePreviewSize * 4} ref={diceLayoutRef} />
 
         <View style={styles.addFacesHost}>
-            {!isLandscape && <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", margin: 10 }}>
-                <DicePreview facesInfo={facesInfo} size={150} />
-            </View>}
             <View style={{ flexDirection: "column", width: "100%" }}>
                 {isLandscape ?
                     <View style={styles.faceRow}>

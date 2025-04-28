@@ -2,8 +2,9 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { fTranslate, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconIonicons from 'react-native-vector-icons/Ionicons';
 
-import { IconButton, NumberSelector, Spacer } from "./components";
+import { IconButton, NumberSelector, ScreenTitle, Section, Spacer } from "./components";
 import { useEffect, useState } from "react";
 import { deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
@@ -18,10 +19,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { safeColor } from "./utils";
 import { EditText } from "./edit-text";
 import { AlreadyExists, Folders, InvalidCharachters, InvalidFileName } from "./disk";
-import { EmptyProfile, Profile, Templates } from "./models";
+import { EmptyDice, EmptyProfile, isStaticDie, Profile, Templates } from "./models";
 import { SettingsKeys } from "./settings-storage";
 import { exportAll, exportDice, exportProfile } from "./import-export";
-export const BTN_COLOR = "#6E6E6E";
+import { colors, gStyles } from "./common-style";
+import { Switch } from "@rneui/themed";
 const disabledColor = "gray";
 
 
@@ -218,6 +220,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         marginHorizontal = { marginHorizontal: 5 };
     }
     const isScreenNarrow = windowSize.width < 500;
+    let diceInRow = windowSize.width > windowSize.height ? 4 : 2;
+    const cubeSettingSize = Math.max((windowSize.width - 2 * gStyles.sectionHost.marginHorizontal) / diceInRow - 10, 200)
     const onAbout = () => {
         // todo
     }
@@ -282,7 +286,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     }
 
 
-    const sectionStyle = [styles.section, marginHorizontal, { flexDirection: (isRTL() ? "row" : "row-reverse") }]
+
+
 
     function handleDeleteProfile(name: string, afterDelete: () => void): void {
         Alert.alert(translate("DeleteProfileTitle"), fTranslate("DeleteProfileAlert", name), [
@@ -312,7 +317,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     }
 
-    return <View style={[styles.container, { top: insets.top }]}>
+    return <View style={[gStyles.screenContainer, { top: insets.top }]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
@@ -369,7 +374,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
             onExport={handleExportDice}
             onDelete={(name, afterDelete) => handleDeleteDie(name, afterDelete)}
-            currentDie={openSelectTemplate >= 0 ? profile.dice[openSelectTemplate].template : Templates.Dots}
+            currentDie={openSelectTemplate >= 0 && openSelectTemplate < profile.dice.length ? profile.dice[openSelectTemplate].template : EmptyDice.template}
         />
 
         <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={profile.tableColor}
@@ -422,85 +427,40 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
         />}
 
-        {/** Title */}
-        <View style={styles.settingTitle}>
-            <Spacer w={35} />
-            <Text allowFontScaling={false} style={styles.settingTitleText}>{translate("Settings")}</Text>
-            <Icon name={"close"} color={"black"} size={35} onPress={onClose} />
+        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} />
+
+        {/* Profile Name */}
+        <View style={[gStyles.screenSubTitle, { flexDirection: (isRTL() ? "row" : "row-reverse") }]} >
+            <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
+                {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
+                {profileName.length > 0 ?
+                    <IconButton text={translate("Close")} onPress={closeProfile} /> :
+                    <IconButton text={translate("Create")} onPress={() =>
+                        setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
+                    } />
+                }
+                <IconButton text={translate("List")} onPress={() => setOpenLoadProfile(true)} />
+
+            </View>
+            <View style={{ flexDirection: isRTL() ? "row-reverse" : "row", alignItems: "center" }}>
+                <IconIonicons name="person-circle-outline" size={45} color={colors.titleBlue} />
+                <Text allowFontScaling={false} style={gStyles.screenSubTitleText}>{translate("ProfileName")}:</Text>
+                <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" },
+                profileName.length == 0 && { color: disabledColor }]}>
+                    {profileName.length > 0 ? profileName : translate("ProfileNoName")}
+                </Text>
+            </View>
         </View>
 
+        <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>
         <ScrollView style={styles.settingHost}>
-            {/** About */}
-            <TouchableOpacity style={sectionStyle} onPress={() => onAbout()}>
-                <Icon name="infocirlceo" color={BTN_COLOR} size={35} />
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("About")}</Text>
-            </TouchableOpacity>
-
-
-            {/* Profile Name */}
-            <View style={sectionStyle} >
-                <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
-                    {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
-                    <IconButton text={translate("List")} onPress={() => setOpenLoadProfile(true)} />
-                    {profileName.length > 0 ?
-                        <IconButton text={translate("Close")} onPress={closeProfile} /> :
-                        <IconButton text={translate("Create")} onPress={() =>
-                            setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
-                        } />
-                    }
-                </View>
-                <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
-                    <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("ProfileName")}:</Text>
-                    <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" },
-                    { color: profileName.length == 0 ? disabledColor : styles.textValue.color }]}>
-                        {profileName.length > 0 ? profileName : translate("ProfileNoName")}
-                    </Text>
-                </View>
-            </View>
-
-
-            {/* Recovery time */}
-            <NumberSelector style={sectionStyle} title={translate("RecoveryTime")} min={0} max={45} value={profile.recoveryTime}
-                onUp={() => handleSetRecoveryTime(profile.recoveryTime + 5)} onDown={() => handleSetRecoveryTime(profile.recoveryTime - 5)}
-                titleStyle={styles.sectionTitle} />
-
-
-            {/* Table Color */}
-            <View style={sectionStyle}>
-                <View style={{ flexDirection: "row" }}>
-                    <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.tableColor) }]} onTouchEnd={() => setOpenColorPicker(true)} />
-                    {/* <IconButton text={translate("Change")} onPress={() => setOpenColorPicker(true)} /> */}
-                </View>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("TableColor")}:</Text>
-            </View>
-
-            {/* Sound Enabled */}
-            <View style={sectionStyle}>
-                <TouchableOpacity style={[{ alignItems: "center", marginEnd: 15, width: "33%" }]}
-                    onPress={() => handleSetSoundEnabled(!profile.soundEnabled)}>
-                    {profile.soundEnabled ?
-                        <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                        <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
-                    }
-                </TouchableOpacity>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("MakeSound")}:</Text>
-            </View>
-
-            {/* Dice Size */}
-            <NumberSelector style={sectionStyle} title={translate("DiceSize")} min={1} max={5} value={profile.size}
-                onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} titleStyle={styles.sectionTitle} />
-
-            {/* Number of Dice */}
-            <NumberSelector style={sectionStyle} title={translate("NumberOfDice")} min={1} max={4} value={profile.dice.length}
-                onUp={() => changeNumOfButton(1)} onDown={() => changeNumOfButton(-1)} titleStyle={styles.sectionTitle} />
-
-            <View style={[styles.cubes, marginHorizontal]}>
+            <View style={[styles.cubes, { marginHorizontal: gStyles.sectionHost.marginHorizontal }]}>
                 {
-                    Array.from(Array(profile.dice.length).keys()).map((i: any) => (
+                    [0, 1, 2, 3].map((i: any) => (
                         <DiceSettings
-                            sectionStyle={sectionStyle}
+                            style={{ width: cubeSettingSize, height: cubeSettingSize * .8, marginBottom: 10 }}
                             key={i}
-                            dice={revision >= 0 ? profile.dice[i] : undefined}
+                            dice={revision >= 0 && profile.dice.length >= i + 1 ? profile.dice[i] : EmptyDice}
                             isBusy={diceBusy == i}
                             onSetActive={(newVal) => setDiceActive(i, newVal)}
                             onOpenLoadDice={() => setOpenSelectTemplate(i)
@@ -511,90 +471,80 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                             onEditName={() => { }}//handleButtonEditName(i)}
                             isLast={i == profile.dice.length - 1}
                             isScreenNarrow={isScreenNarrow}
+                            onEditDice={isStaticDie(profile.dice[i].template) ? undefined : () => {
+                                setOpenSelectTemplate(-1);
+                                setSetDieAfterCreate(-1);
+                                if (profile.dice.length > i) {
+                                    setEditOrCreateDice(profile.dice[i].template);
+                                }
+                            }}
                         />
 
                     ))
                 }
             </View>
 
-            {/* Backup Color */}
-            <View style={sectionStyle}>
-                <View style={{ flexDirection: "row" }}>
-                    <IconButton text={translate("BackupAll")} onPress={handleBackupAll} />
-                </View>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("Backup")}:</Text>
-            </View>
+            <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("GeneralSectionTitle")}</Text>
 
+            {/* Recovery time */}
+            <Section
+                component={<NumberSelector min={0} max={45} value={profile.recoveryTime}
+                    onUp={() => handleSetRecoveryTime(profile.recoveryTime + 5)} onDown={() => handleSetRecoveryTime(profile.recoveryTime - 5)}
+                />}
+                title={translate("RecoveryTime")}
+            />
+
+            {/* Table Color */}
+            <Section
+                component={
+                    <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.tableColor) }]} onTouchEnd={() => setOpenColorPicker(true)} />}
+                title={translate("TableColor")}
+            />
+
+            {/* Sound Enabled */}
+            <Section
+                component={
+                    <Switch
+                        value={profile.soundEnabled}
+                        onValueChange={(enabled) => handleSetSoundEnabled(enabled)}
+                        color={colors.switchColor}
+                    />}
+                title={translate("EnableSound")}
+            />
+
+            {/* Dice Size */}
+            <Section
+                component={<NumberSelector min={1} max={5} value={profile.size}
+                    onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} />}
+                title={translate("DiceSize")}
+            />
+
+            {/* Backup Color */}
+            <Section
+                component={<IconButton text={translate("BackupAll")} onPress={handleBackupAll} />}
+                title={translate("Backup")}
+            />
 
         </ScrollView >
     </View >
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        position: "absolute",
-        top: 0, left: 0,
-        width: "100%", height: "100%",
-        backgroundColor: "lightgray",
-        zIndex: 800
-    },
-    settingTitle: {
-        backgroundColor: "white",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        height: 80,
-        fontSize: 25,
-        borderRadius: 5,
-        margin: 10
-    },
-    settingTitleText: {
-        fontSize: 35,
-    },
     settingHost: {
         width: "100%",
         flex: 1,
         backgroundColor: "#F5F5F5",
         position: "relative"
     },
-    section: {
-        backgroundColor: "white",
-        height: 60,
-        padding: 8,
-        paddingHorizontal: 20,
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderRadius: 45,
-        marginTop: 10,
-        marginHorizontal: 40
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#0D3D63",
-    },
-    textValue: {
-        marginEnd: 10,
-        marginStart: 10,
-        fontSize: 20,
-        color: "black"
-    },
     colorCircle: {
         width: 40, height: 40,
         borderRadius: 20,
-        marginEnd: 20,
     },
     cubes: {
-        backgroundColor: "white",
-        padding: 20,
-        flexDirection: "column",
-        alignItems: "center",
-        borderRadius: 45,
-        marginTop: 15,
-        marginHorizontal: 40,
-        height: "auto"
+        marginTop: 10,
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
     },
     busy: {
         position: "absolute",

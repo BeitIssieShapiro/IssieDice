@@ -1,5 +1,5 @@
 import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { isRTL } from "./lang";
+import { isRTL, translate } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
 import MCIIcon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 
 import { useEffect, useRef, useState } from "react";
-import { BTN_COLOR } from "./settings";
+import { gStyles } from "./common-style";
 
 
 export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black" }:
@@ -23,14 +23,14 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
     const IconElem = type == "Ionicon" ? IconIonicons :
         (type == "MCI" ? MCIIcon : IconAnt);
 
-    return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center" , width:70}}>
-        <IconElem name={icon} size={size} color={color}/>
-        <Text allowFontScaling={false} style={{color:"black", fontSize:18 }}>{label}</Text>
+    return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: 70 }}>
+        <IconElem name={icon} size={size} color={color} />
+        <Text allowFontScaling={false} style={gStyles.labeledIconText}>{label}</Text>
     </Pressable>
 }
 
-export function IconButton({ icon, onPress, text, type, backgroundColor, width }:
-    { icon?: string, text?: string, width?: number, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
+export function IconButton({ icon, onPress, text, type, backgroundColor }:
+    { icon?: string, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
     const IconElem = type == "Ionicon" ? IconIonicons :
         (type == "MCI" ? MCIIcon : IconAnt);
 
@@ -39,7 +39,7 @@ export function IconButton({ icon, onPress, text, type, backgroundColor, width }
     !text && { borderWidth: 0 }]} onPress={onPress} >
 
         {icon && <IconElem name={icon} style={styles.icon} />}
-        {!!text && <Text allowFontScaling={false} style={{ width, fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign: icon ? "left" : "center" }}>{text}</Text>}
+        {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign: icon ? "left" : "center" }}>{text}</Text>}
     </TouchableOpacity>
 }
 
@@ -88,24 +88,18 @@ export function ColorButton({ callback, color, size, icon, index, iconColor }: a
     </TouchableOpacity>
 }
 export interface NumberSelectorProps {
-    title: string;
-    style: any;
     min: number;
     max: number;
     value: number;
     onUp: () => void;
     onDown: () => void;
-    titleStyle: any;
 }
-export function NumberSelector({ style, title, min, max, value, onUp, onDown, titleStyle }: NumberSelectorProps) {
+export function NumberSelector({ min, max, value, onUp, onDown }: NumberSelectorProps) {
     return (
-        <View style={style}>
-            <View style={styles.numberSelector}>
-                <IconAnt name="minuscircleo" color={value == min ? "lightgray" : BTN_COLOR} size={35} onPress={value > min ? onDown : undefined} />
-                <Text allowFontScaling={false} style={{ fontSize: 30, marginHorizontal: 10 }}>{value}</Text>
-                <IconAnt name="pluscircleo" color={value == max ? "lightgray" : BTN_COLOR} size={35} onPress={value < max ? onUp : undefined} />
-            </View>
-            <Text allowFontScaling={false} style={titleStyle}>{title}</Text>
+        <View style={styles.numberSelector}>
+            <IconAnt name="minuscircleo" color={value == min ? "lightgray" : gStyles.iconBtnColor.color} size={30} onPress={value > min ? onDown : undefined} />
+            <Text allowFontScaling={false} style={{ fontSize: 27, marginHorizontal: 10 }}>{value}</Text>
+            <IconAnt name="pluscircleo" color={value == max ? "lightgray" : gStyles.iconBtnColor.color} size={30} onPress={value < max ? onUp : undefined} />
         </View>
     )
 }
@@ -144,6 +138,30 @@ export const FadeInView = (props: any) => {
     );
 }
 
+export function ScreenTitle({ title, onClose, onAbout }: { title: string, onClose: () => void, onAbout?: () => void }) {
+    return <View style={gStyles.screenTitle}>
+        {onAbout ?
+            <IconAnt name={"infocirlceo"} color={gStyles.screenTitleText.color} size={35} onPress={onAbout} /> :
+            <Spacer h={10} />}
+        <Text allowFontScaling={false} style={gStyles.screenTitleText}>{title}</Text>
+        <IconAnt name={"close"} color={gStyles.screenTitleText.color} size={35} onPress={onClose} />
+    </View>
+}
+
+export function Section({ title, component }: { title: string, component: any }) {
+    return <View style={[gStyles.sectionHost, { direction: isRTL() ? "rtl" : "ltr" }]}>
+        <Text allowFontScaling={false} style={{ fontSize: 25 }}>{title}</Text>
+        {component}
+    </View>
+}
+
+export function ColumnChip({ title, component }: { title: string, component: any }) {
+    return <View style={[gStyles.vchip]}>
+        {component}
+        <Text allowFontScaling={false} style={[gStyles.vchipText, gStyles.labeledIconText]}>{title}</Text>
+    </View>
+}
+
 const styles = StyleSheet.create({
 
     icon: {
@@ -170,8 +188,8 @@ const styles = StyleSheet.create({
     numberSelector: {
         display: "flex",
         flexDirection: "row",
-        alignItems: "center",
         height: "100%"
     },
+
 });
 

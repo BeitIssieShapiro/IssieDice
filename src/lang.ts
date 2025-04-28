@@ -6,7 +6,7 @@ const deviceLanguageRaw = bestLanguage;
 const supportedLanguages = ['he', 'en', 'ar'];
 
 // Extract the first two characters of the language code (e.g., 'en', 'he')
-const deviceLanguage = //"en"
+const deviceLanguage = //"he"
     deviceLanguageRaw.split(/[-_]/)[0];
 
 // Check if the detected language is supported, otherwise default to 'en'
@@ -22,7 +22,10 @@ const strings = {
         "Settings": "Settings",
         "About": "About",
         "DiceName": "Dice Name",
+        "DiceSectionTitle": "Dice",
+        "GeneralSectionTitle": "General",
         "ActiveDice": "Active Dice",
+        "EnableSound": "Dice Sound",
         "ImportInProgress": "Import in progress...",
         "ImportError": "Import Error",
         "SuccessfulImport": "Import successful",
@@ -124,15 +127,18 @@ const strings = {
         "FaceBackgroundTab": "Background",
         "FaceTextTab": "Text",
         "FaceAudioTab": "Audio",
-        "SelectFont":"Select Font",
+        "SelectFont": "Select Font",
     },
     "he": {
         "ImportError": "תקלה ביבוא",
         "ButtonTitle": "כפתור {1}",
         "Settings": "הגדרות",
         "About": "אודות",
+        "DiceSectionTitle": "קוביות",
+        "GeneralSectionTitle": "כללי",
         "DiceName": "שם קובייה",
         "ActiveDice": "קובייה פעילה",
+        "EnableSound": "צליל קוביות",
         "ImportInProgress": "הייבוא מתבצע...",
         "SuccessfulImport": "הייבוא הסתיים בהצלחה",
         "Load": "טעינה",
@@ -234,7 +240,7 @@ const strings = {
         "FaceBackgroundTab": "רקע",
         "FaceTextTab": "טקסט",
         "FaceAudioTab": "הקלטה",
-        "SelectFont":"בחירת פונט",
+        "SelectFont": "בחירת פונט",
     },
     "ar": {
         "ButtonTitle": "زر {1}",

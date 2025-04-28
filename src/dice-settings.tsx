@@ -1,17 +1,16 @@
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Dice, templatesList } from "./models";
+import { Dice, EmptyDice, templatesList } from "./models";
 import { isRTL, translate } from "./lang";
 import { IconButton, Spacer } from "./components";
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
-import IconMI from 'react-native-vector-icons/MaterialIcons';
-import IconAnt from 'react-native-vector-icons/AntDesign';
-import { BTN_COLOR } from "./settings";
 import { DicePreview } from "./edit-dice";
 import { Settings } from "./setting-storage";
-
+import { colors, gStyles } from "./common-style";
+import { Switch } from "@rneui/themed";
+import IconAnt from 'react-native-vector-icons/AntDesign';
 
 interface DiceSettingsProps {
-    sectionStyle: any;
+    style: any;
     dice: Dice;
     isBusy: boolean;
     onOpenLoadDice: () => void;
@@ -20,46 +19,53 @@ interface DiceSettingsProps {
     onImageSearchOpen: () => void;
     onSelectTemplate: () => void;
     onEditName: () => void;
+    onEditDice?: () => void;
     isLast: boolean;
     isScreenNarrow: boolean;
 }
 
-export function DiceSettings({ sectionStyle, dice, isBusy, onSetActive,
+export function DiceSettings({ style, dice, isBusy, onSetActive,onEditDice,
     onOpenLoadDice, onSaveDice, onImageSearchOpen, onSelectTemplate, isLast, isScreenNarrow }: DiceSettingsProps) {
 
-    const templ = templatesList.find(t => t.key == dice.template);
+    console.log("dice-temp", dice.template)
+    let templ = templatesList.find(t => t.key == dice.template)!;
+
     const dirStyle: any = { flexDirection: (isRTL() ? "row-reverse" : "row") }
 
-    return <View style={[{ width: "100%", flexDirection: "column" }]}>
-        <View style={[styles.section, dirStyle]}>
-            <View style={dirStyle}>
-                <Text allowFontScaling={false} style={styles.sectionTitle}>{translate("DiceName")}:</Text>
-                <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" }]}>
-                    {templ ? templ.name : dice.template}
-                </Text>
-            </View>
-            <IconButton icon="cube-outline" text={translate("List")} onPress={() => onOpenLoadDice()} type="Ionicon" />
+    return <View style={[gStyles.card, style]}>
+        <View style={[gStyles.cardTitle, dirStyle]}>
+            <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" }]}>
+                {templ ? templ.name : dice.template}
+            </Text>
+            <Switch
+                value={dice.active}
+                onValueChange={(active) => onSetActive(active)}
+                color={colors.switchColor}
+            />
         </View>
-        <View style={[styles.section, dirStyle]} >
-            <TouchableOpacity style={[{  alignItems: "center", marginEnd: 15, width: "33%" }, dirStyle]}
+        <View style={gStyles.cardBody}>
+
+            {/* <IconButton icon="cube-outline" text={translate("List")} onPress={() => onOpenLoadDice()} type="Ionicon" /> */}
+            {/* <TouchableOpacity style={[{ alignItems: "center", marginEnd: 15, width: "33%" }, dirStyle]}
                 onPress={() => onSetActive(!dice.active)}>
                 {dice.active ?
-                    <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: BTN_COLOR }} /> :
-                    <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: BTN_COLOR }} />
+                    <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: gStyles.iconBtnColor.color }} /> :
+                    <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: gStyles.iconBtnColor.color }} />
                 }
                 <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("ActiveDice")}</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
+            <Spacer h={20} />
 
-
-            {/* {templ?.icon && <Image source={templ.icon} style={styles.previewIcon} />} */}
             {dice.faces && dice.faces.length > 0 ?
-                 <DicePreview facesInfo={dice.faces} size={styles.previewIcon.width} />:
-                 <DicePreview facesInfo={templ?.image} size={styles.previewIcon.width} />
+                <DicePreview facesInfo={dice.faces} size={style.width/3} /> :
+                <DicePreview facesInfo={templ?.image} size={style.width/3} />
             }
-            <View style={{ height: 10, width: styles.previewIcon.width }} />
         </View>
-        {!isLast && <View style={styles.horizontalSeperator} />}
+        <View style={[gStyles.cardFooter, {justifyContent:isRTL()?"flex-end":"flex-start"}]}>
+            <IconButton icon="list" text={translate("List")} onPress={() => onOpenLoadDice()} type="Ionicon"/>
+            {onEditDice && <IconAnt name="edit" size={35} onPress={onEditDice} />}
+        </View>
     </View>
 
 }
@@ -75,16 +81,7 @@ const styles = StyleSheet.create({
         color: "black",
         marginEnd: 20,
     },
-    verticalSeperator: {
-        width: 2,
-        height: "100%",
-        backgroundColor: "lightgray",
-    },
-    horizontalSeperator: {
-        height: 2,
-        width: "100%",
-        backgroundColor: "lightgray",
-    },
+    
     buttonPreview: {
         alignItems: "center",
         justifyContent: "center",
@@ -99,26 +96,14 @@ const styles = StyleSheet.create({
         width: 65,
         height: 65
     },
-    section: {
-        backgroundColor: "white",
-        flexDirection: "row",
-        height: 70,
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderRadius: 45,
-        marginTop: 10,
-    },
+    
     numberSelector: {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
         height: "100%"
     },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#0D3D63",
-    },
+   
     textValue: {
         marginEnd: 10,
         marginStart: 10,

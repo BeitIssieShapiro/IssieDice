@@ -6,10 +6,10 @@ import { Settings } from './setting-storage';
 import { ColorButton, FadeInView } from "./components";
 import { SettingsKeys } from "./settings-storage";
 
-export const defaultFloorColor = "#5db7dd" //deep green
+export const defaultFloorColor = '#0F870D' //deep green
 
 export const availableColorPicker = [
-    '#000000', '#FEE100', '#0F870D', defaultFloorColor, '#2958AF', '#D62796', '#E7E7E7', '#DA3242'
+    '#000000', '#FEE100', defaultFloorColor, "#5db7dd", '#2958AF', '#D62796', '#E7E7E7', '#DA3242'
 ]
 
 

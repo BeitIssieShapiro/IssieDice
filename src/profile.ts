@@ -5,7 +5,7 @@ import { Platform, Settings as RNSettings } from 'react-native'
 import { ensureAndroidCompatible } from './utils';
 import { fTranslate } from './lang';
 import { NativeModules } from 'react-native';
-import { Dice, EmptyProfile, FaceInfo, List, Profile, Templates, templatesList } from './models';
+import { Dice, EmptyDice, EmptyProfile, FaceInfo, List, Profile, Templates, templatesList } from './models';
 import { AlreadyExists, Folders, getCacheBusterSuffix, InvalidFileName, loadFile, loadJSON, saveJSON, writeFileWithCacheBuster } from './disk';
 import { SettingsKeys } from './settings-storage';
 
@@ -145,7 +145,7 @@ async function loadProfileIntoSettings(p: Profile, name: string) {
 }
 
 export async function getCurrentProfile(): Promise<Profile> {
-    const numOfDice = Settings.getNumber(SettingsKeys.DiceCount, 1);
+    const numOfDice = 4 // Settings.getNumber(SettingsKeys.DiceCount, 1);
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
     const diceActive = Settings.getArray<boolean>(SettingsKeys.DiceActive, "boolean", [true, true, true, true]);
     const size = Settings.getNumber(SettingsKeys.DiceSize, 2);
@@ -160,7 +160,7 @@ export async function getCurrentProfile(): Promise<Profile> {
         if (diceTemplateType.length > i && !diceTemplateType[i].startsWith(Templates.prefix)) {
             faces = await loadFaceImages(diceTemplateType[i]);
         }
-        const template = diceTemplateType.length > i && diceTemplateType[i] ? diceTemplateType[i] as Templates : Templates.Numbers;
+        const template = diceTemplateType.length > i && diceTemplateType[i] ? diceTemplateType[i] as Templates : EmptyDice.template;
         dice.push({
             template,
             active: diceActive.length > i && diceActive[i] != undefined ? diceActive[i] : true,

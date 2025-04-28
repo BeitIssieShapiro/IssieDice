@@ -1,5 +1,6 @@
 import { ImageSourcePropType } from "react-native";
 import { translate } from "./lang";
+import { defaultFloorColor } from "./color-picker";
 
 // models.ts
 export enum Templates {
@@ -9,6 +10,12 @@ export enum Templates {
     Colors = "__colors",
     Dots = "__dots",
 }
+
+export function isStaticDie(template: Templates): boolean {
+    return template.startsWith(Templates.prefix);
+}
+
+
 
 export interface FaceText {
     text: string;
@@ -49,11 +56,16 @@ export interface Profile {
     soundEnabled: boolean
 }
 
+export const EmptyDice: Dice = {
+    template: Templates.Dots,
+    active: false,
+};
+
 export const EmptyProfile: Profile = {
-    dice: [{ template: Templates.Dots, active: true }],
+    dice: [{...EmptyDice, active:true}, EmptyDice, EmptyDice, EmptyDice],
     size: 2,
     recoveryTime: 15,
-    tableColor: "#00FF00",
+    tableColor: defaultFloorColor,
     soundEnabled: true
 };
 
