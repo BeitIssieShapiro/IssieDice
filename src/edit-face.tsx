@@ -4,7 +4,6 @@ import {
     View,
     Text,
     TextInput,
-    TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
     Keyboard,
@@ -190,26 +189,29 @@ export const EditFace: React.FC<EditFaceProps> = ({
                     {busy && <View style={styles.busy}>
                         <ActivityIndicator />
                     </View>}
-                    <FacePreview size={size}
-                        backgroundColor={backgroundColor}
-                        backgroundImage={backgroundImage}
-                        faceText={{
-                            fontName: fontName,
-                            fontBold: isBold,
-                            fontSize: fontSize,
-                            text: text || "",
-                            color,
-                        }}
-                        audioUri={audioUri}
-                        onAudioPress={() => audioUri && playAudio(audioUri)}
-                    />
+                    <View>
+                        {backgroundImage && <View style={styles.cropButton}>
+                            <IconIonic size={35} name="crop" onPress={() => {
+                                setEditImage(true);
+                            }} /></View>}
+                        <FacePreview size={size}
+                            backgroundColor={backgroundColor}
+                            backgroundImage={backgroundImage}
+                            faceText={{
+                                fontName: fontName,
+                                fontBold: isBold,
+                                fontSize: fontSize,
+                                text: text || "",
+                                color,
+                            }}
+                            audioUri={audioUri}
+                            onAudioPress={() => audioUri && playAudio(audioUri)}
+                        />
+                    </View>
                     <Text allowFontScaling={false} style={styles.label}>{translate("FacePreview")}</Text>
 
 
-                    {backgroundImage && <View style={styles.cropButton}>
-                        <IconIonic size={35} name="crop" onPress={() => {
-                            setEditImage(true);
-                        }} /></View>}
+
                 </View>
 
                 {isLandscape ?
@@ -407,7 +409,7 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
                 </Pressable>}
             />
 
-            <View style={{ flexDirection: "row", height: 150, justifyContent: "space-around", marginTop:15}}>
+            <View style={{ flexDirection: "row", height: 150, justifyContent: "space-around", marginTop: 15 }}>
                 {/* Font Size */}
                 <ColumnChip title={translate("FontSize")} component={
                     <NumberSelector min={10} max={60} value={fontSize}
@@ -593,11 +595,7 @@ const styles = StyleSheet.create({
         right: -40,
         bottom: 0,
     },
-    playButton: {
-        position: "absolute",
-        right: 0,
-        top: 0,
-    },
+
     roundButton: {
         margin: 10,
         width: 45,
@@ -607,22 +605,11 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center"
     },
-    dropdown: {
-        width: 240,
-        direction: isRTL() ? "rtl" : "ltr",
-        marginStart: 10,
-    },
-    itemContainer: {
-        padding: 10,
-        flexDirection: "row",
-        alignItems: "center",
 
-    },
-    itemText: {
-        fontSize: 20,
-    },
+
+
     tabLabel: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: "bold"
     }
 

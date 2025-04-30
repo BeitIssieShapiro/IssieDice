@@ -8,7 +8,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 
 import { useEffect, useRef, useState } from "react";
-import { gStyles } from "./common-style";
+import { colors, gStyles } from "./common-style";
+import { BlurView } from "@react-native-community/blur";
 
 
 export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black" }:
@@ -34,7 +35,7 @@ export function IconButton({ icon, onPress, text, type, backgroundColor }:
     const IconElem = type == "Ionicon" ? IconIonicons :
         (type == "MCI" ? MCIIcon : IconAnt);
 
-    return <TouchableOpacity style={[styles.iconButton, { flexDirection: isRTL() ? "row-reverse" : "row" },
+    return <TouchableOpacity style={[styles.iconButton, { flexDirection: "row", direction: isRTL() ? "rtl" : "ltr" },
     backgroundColor && { backgroundColor },
     !text && { borderWidth: 0 }]} onPress={onPress} >
 
@@ -105,9 +106,11 @@ export function NumberSelector({ min, max, value, onUp, onDown }: NumberSelector
 }
 
 
+const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
+
 export const FadeInView = (props: any) => {
     const fadeAdmin = useRef(new Animated.Value(0)).current;
-    const [hide, setHide] = useState(false)
+    const [hide, setHide] = useState(true)
     useEffect(() => {
         setHide(false)
 
@@ -127,30 +130,44 @@ export const FadeInView = (props: any) => {
     if (hide) {
         return (<View />);
     }
-    return (<Animated.View
-        style={[props.style, {
-            overflow: props.overflow || "hidden",
-            //opacity: fadeAdmin,         // Bind opacity to animated value
-        }, props.width ? { width: fadeAdmin } : { height: fadeAdmin }]}
-    >
-        {props.children}
-    </Animated.View>
+    return (<View style={{ ...StyleSheet.absoluteFillObject }}>
+        {/* <View style={{...StyleSheet.absoluteFillObject, backgroundColor:"black", opacity:.2, zIndex:1000}}></View> */}
+        {(props.width > 0 || props.height > 0) && <AnimatedBlurView
+            onTouchEnd={props.onClose && props.onClose}
+            blurAmount={5}
+            blurType="light"
+            style={{ ...StyleSheet.absoluteFillObject, zIndex: 1000 }}
+            reducedTransparencyFallbackColor="white"
+
+        />}
+        <Animated.View
+            style={[props.style, {
+                overflow: props.overflow || "hidden",
+                //opacity: fadeAdmin,         // Bind opacity to animated value
+            }, props.width ? { width: fadeAdmin } : { height: fadeAdmin }]}
+        >
+            {props.children}
+        </Animated.View>
+    </View>
     );
 }
 
-export function ScreenTitle({ title, onClose, onAbout }: { title: string, onClose: () => void, onAbout?: () => void }) {
+export function ScreenTitle({ title, onClose, onAbout, iconName = "close" }: { title: string, onClose: () => void, onAbout?: () => void, iconName?: string }) {
     return <View style={gStyles.screenTitle}>
         {onAbout ?
             <IconAnt name={"infocirlceo"} color={gStyles.screenTitleText.color} size={35} onPress={onAbout} /> :
             <Spacer h={10} />}
         <Text allowFontScaling={false} style={gStyles.screenTitleText}>{title}</Text>
-        <IconAnt name={"close"} color={gStyles.screenTitleText.color} size={35} onPress={onClose} />
+        <IconAnt name={iconName} color={gStyles.screenTitleText.color} size={35} onPress={onClose} />
     </View>
 }
 
-export function Section({ title, component }: { title: string, component: any }) {
-    return <View style={[gStyles.sectionHost, { direction: isRTL() ? "rtl" : "ltr" }]}>
-        <Text allowFontScaling={false} style={{ fontSize: 25 }}>{title}</Text>
+export function Section({ title, component, iconName, marginHorizontal }: { title: string, component: any, iconName?: string, marginHorizontal: number }) {
+    return <View style={[gStyles.sectionHost, { direction: isRTL() ? "rtl" : "ltr", marginHorizontal }]}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {iconName && <MCIIcon name={iconName} color={colors.sectionIconColor} size={35} style={{ marginInlineEnd: 10 }} />}
+            <Text allowFontScaling={false} style={{ fontSize: 25 }}>{title}</Text>
+        </View>
         {component}
     </View>
 }

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { ListElements } from "./profile";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { FadeInView, IconButton } from "./components";
@@ -8,6 +8,7 @@ import { DicePreview } from "./edit-dice";
 import { RadioButton } from "./radio-button";
 import { List, Templates } from "./models";
 import { Folders } from "./disk";
+import { colors, gStyles } from "./common-style";
 
 
 function Seperator({ width }: { width: string }) {
@@ -45,13 +46,11 @@ interface ProfilePickerProps {
     isNarrow?: boolean;
 }
 
-export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate, 
-    currentProfile, 
-    loadButton, editButton, isNarrow, onExport, exportButton }: ProfilePickerProps) {
+export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate,
+    currentProfile,
+    onExport }: ProfilePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
-
-    const isDicePicker = folder == Folders.DiceTemplates;
 
     useEffect(() => {
         if (open) {
@@ -61,21 +60,16 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
         }
     }, [open, exclude, revision]);
 
-    const dirStyle: any = { flexDirection: isRTL() ? "row-reverse" : "row" };
-
-    return <FadeInView height={open ? height : 0}
-        style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
-        <View style={styles.titleHost}>
-            {onCreate && <Icon name="pluscircleo" size={50} onPress={() => onCreate()} />}
-            <Text allowFontScaling={false} style={{ fontSize: 28, margin: 25 }}>{
-                folder == Folders.Profiles ?
-                    translate("SelectProfileTitle") : translate("SelectDiceTitle")
+    return <FadeInView height={open ? height : 0} style={[gStyles.pickerView]} onClose={onClose}>
+        <View style={[gStyles.pickerTitleHost, { direction: isRTL() ? "rtl" : "ltr" }]}>
+            <Text allowFontScaling={false} style={gStyles.pickerTitleText} >{
+                translate("SelectProfileTitle")
             }</Text>
-        </View>
-        <Seperator width="90%" />
-        <View style={styles.closeButton}>
             <Icon name="close" size={45} onPress={onClose} />
         </View>
+
+        <View style={gStyles.horizontalSeperator} />
+
         {!list || list.length == 0 ?
             <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
             <ScrollView style={[styles.listScroll, { direction: isRTL() ? "rtl" : "ltr" }]}>
@@ -104,7 +98,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
 
                             </View>
                         </View>
-                        <Seperator width="100%" />
+                        <View style={gStyles.horizontalSeperator} />
                     </View>
 
                 ))}
@@ -129,7 +123,6 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
-
     useEffect(() => {
         if (open) {
             ListElements(Folders.DiceTemplates).then(list => {
@@ -138,71 +131,77 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
         }
     }, [open, revision]);
 
+    const dir: ViewStyle = { direction: isRTL() ? "rtl" : "ltr" };
 
-    return <FadeInView height={open ? height : 0}
-        style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
-        <View style={styles.titleHost}>
-            {onCreate && // New Die Icon
-                <Pressable style={{position:"absolute", left:"20%"}} onPress={() => onCreate()}>
-                    <DicePreview facesInfo={[
-                        {backgroundColor:"white"},
-                        {backgroundColor:"white"},
-                        {backgroundColor:"white"},
-                        ]} size={65}/>
-                    <Icon name="plus" size={25}  style={{
-                        position:"absolute",
-                        left:-6,
-                        top:40,
-                        width: 27, height: 27,
-                        backgroundColor:"white",
-                        
-                    }}/>
-                </Pressable>}
-            <Text allowFontScaling={false} style={{ fontSize: 28, margin: 25 }}>{
+    return <FadeInView height={open ? height : 0} onClose={onClose}
+        style={[gStyles.pickerView]}>
+        <View style={[gStyles.pickerTitleHost, dir]}>
+            <Text allowFontScaling={false} style={gStyles.pickerTitleText}>{
                 translate("SelectDiceTitle")
             }</Text>
+            <View style={[{ flexDirection: "row", alignItems: "center" }, dir]}>
+                {onCreate && <IconButton icon="plus" onPress={() => onCreate()} text={translate("Create")} />}
+                <Icon name="close" size={45} onPress={onClose} />
+            </View>
+            {
+                // <Pressable style={{position:"absolute", left:"20%"}} onPress={() => onCreate()}>
+                //     <DicePreview facesInfo={[
+                //         {backgroundColor:"white"},
+                //         {backgroundColor:"white"},
+                //         {backgroundColor:"white"},
+                //         ]} size={35}/>
+                //     <Icon name="plus" size={25}  style={{
+                //         position:"absolute",
+                //         left:-6,
+                //         top:40,
+                //         width: 27, height: 27,
+                //         backgroundColor:"white",
+
+                //     }}/>
+                // </Pressable>}
+            }
+
         </View>
-        <Seperator width="90%" />
-        <View style={styles.closeButton}>
-            <Icon name="close" size={45} onPress={onClose} />
-        </View>
-        {!list || list.length == 0 ?
-            <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
-            <ScrollView style={[styles.listScroll, { direction: isRTL() ? "rtl" : "ltr" }]}>
-                {list.map(item => (
-                    <View key={item.key} style={styles.itemHost}>
-                        <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row" }]}>
-                            <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
-                                <RadioButton selected={currentDie == item.key} />
-                                <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
-                                    {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
-                                    {item && !item.image && <DicePreview size={45} facesInfo={item.faces!} />}
-                                    <Text
-                                        allowFontScaling={false}
-                                        numberOfLines={1}
-                                        ellipsizeMode="tail"
-                                        style={{
-                                            textAlign: (isRTL() ? "right" : "left"),
-                                            fontSize: 28, paddingLeft: 10, paddingRight: 10,
-                                            paddingTop: 10, paddingBottom: 10,
-                                        }}>{item.name}</Text>
+        <View style={[gStyles.horizontalSeperator, { marginBottom: 10 }]} />
+
+        {
+            !list || list.length == 0 ?
+                <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{translate("NoItemsFound")}</Text> :
+                <ScrollView style={[styles.listScroll, { direction: isRTL() ? "rtl" : "ltr" }]}>
+                    {list.map(item => (
+                        <View key={item.key} style={styles.itemHost}>
+                            <View style={[styles.itemRow, isRTL() ? { flexDirection: "row" } : { flexDirection: "row" }]}>
+                                <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
+                                    <RadioButton selected={currentDie == item.key} />
+                                    <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
+                                        {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
+                                        {item && !item.image && <DicePreview size={45} facesInfo={item.faces!} />}
+                                        <Text
+                                            allowFontScaling={false}
+                                            numberOfLines={1}
+                                            ellipsizeMode="tail"
+                                            style={{
+                                                textAlign: (isRTL() ? "right" : "left"),
+                                                fontSize: 28, paddingLeft: 10, paddingRight: 10,
+                                                paddingTop: 10, paddingBottom: 10,
+                                            }}>{item.name}</Text>
+                                    </View>
+                                </Pressable>
+                                <View style={{ flexDirection: "row-reverse", width: "40%" }}>
+                                    {onDelete && !item.readOnly && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onEdit && !item.readOnly && <IconButton icon="edit" onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onExport && !item.readOnly && <IconButton icon="share-social-outline"
+                                        type="Ionicon" onPress={() => onExport(item.key)} />}
+
                                 </View>
-                            </Pressable>
-                            <View style={{ flexDirection: "row-reverse", width: "40%" }}>
-                                {onDelete && !item.readOnly && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onEdit && !item.readOnly && <IconButton icon="edit" onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onExport && !item.readOnly && <IconButton icon="share-social-outline"
-                                    type="Ionicon" onPress={() => onExport(item.key)} />}
-
                             </View>
+                            <View style={gStyles.horizontalSeperator} />
                         </View>
-                        <Seperator width="100%" />
-                    </View>
 
-                ))}
-            </ScrollView>
+                    ))}
+                </ScrollView>
         }
-    </FadeInView>
+    </FadeInView >
 }
 
 
@@ -212,27 +211,10 @@ const styles = StyleSheet.create({
     closeButton: {
         position: "absolute",
         right: 10,
-        top: 10,
-        zIndex: 100
     },
-    pickerView: {
-        flexDirection: 'column',
-        position: 'absolute',
-        //backgroundColor: '#EBEBEB',
-        backgroundColor: "white",
-        zIndex: 99999,
-        left: 0,
-        borderColor: 'gray',
-        borderBottomColor: "transparent",
-        borderWidth: 1,
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        paddingTop: 2,
-        alignItems: 'center',
-        shadowColor: 'black',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.35,
-        shadowRadius: 3.84,
+    createButton: {
+        position: "absolute",
+        right: 60
     },
     itemHost: {
         width: "95%",
@@ -260,10 +242,5 @@ const styles = StyleSheet.create({
         width: 45,
         height: 45,
     },
-    titleHost: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent:"center",
-        width:"100%"
-    }
+
 });

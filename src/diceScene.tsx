@@ -10,20 +10,13 @@ import {
     useModel,
     ModelRenderer,
     getAssetFromModel,
-    FrameInfo,
-    BoxShape,
-    Skybox,
     useBuffer,
     useDisposableResource,
     useWorkletCallback,
     useWorkletMemo,
     useEntityInScene,
-    Model,
     FilamentModel,
-    Entity,
     EntitySelector,
-    Light,
-    EnvironmentalLight,
     Float4
 } from "react-native-filament";
 

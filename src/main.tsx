@@ -4,7 +4,7 @@ import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Aler
 
 import { DiceScene, DiceSceneMethods } from "./diceScene";
 import { SettingsUI } from "./settings";
-import {  getCurrentProfile, migrateV1 } from "./profile";
+import { getCurrentProfile, migrateV1 } from "./profile";
 import { GlobalContext } from "./global-context";
 import * as Progress from 'react-native-progress';
 import { isRTL, translate } from "./lang";
@@ -120,10 +120,13 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
       </TouchableOpacity> */}
 
       {/** indicator to a lock */}
-      {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), zIndex: 1000 }]} />}
+      {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), left: 5 + insets.left, zIndex: 1000 }]} />}
 
 
-      <CountdownEditButton iconSize={35} onComplete={() => setOpenSettings(true)} top={Math.max(35, 15 + insets.top)} />
+      <CountdownEditButton iconSize={35} onComplete={() => setOpenSettings(true)} style={{
+        top: Math.max(20, 15 + insets.top),
+        right: Math.max(15, 5 + insets.right)
+      }} />
 
       {migrateDice.length > 0 && <MigrateDice migrateDice={migrateDice} setMigrateDice={setMigrateDice}
         winWidth={windowSize.width} />}
@@ -179,12 +182,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "red"
   },
-  viroContainer: {
-    backgroundColor: "red",
-  },
-  settingsButton: {
-    position: "absolute", right: 15, zIndex: 600
-  },
+
   progressBarHost: {
     position: 'absolute',
     shadowColor: '#000',

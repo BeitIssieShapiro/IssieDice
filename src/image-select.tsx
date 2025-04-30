@@ -1,7 +1,6 @@
 import { StyleSheet } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
-import RNFS from 'react-native-fs';
-import { copyFileToFolder } from "./profile";
+import { copyFileToFolder } from "./disk";
 
 
 export async function SelectFromGallery(targetFile: string) {

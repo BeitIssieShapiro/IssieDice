@@ -215,13 +215,12 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         }
     }
 
-    let marginHorizontal = {}
-    if (windowSize.width < 450) {
-        marginHorizontal = { marginHorizontal: 5 };
-    }
+
+
     const isScreenNarrow = windowSize.width < 500;
     let diceInRow = windowSize.width > windowSize.height ? 4 : 2;
-    const cubeSettingSize = Math.max((windowSize.width - 2 * gStyles.sectionHost.marginHorizontal) / diceInRow - 10, 200)
+    const marginHorizontal = isScreenNarrow ? 5 : 40;
+    const cubeSettingSize = Math.max((windowSize.width - insets.left - insets.right - 2 * marginHorizontal) / diceInRow - 10, 150)
     const onAbout = () => {
         // todo
     }
@@ -317,7 +316,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     }
 
-    return <View style={[gStyles.screenContainer, { top: insets.top }]}>
+    return <View style={[gStyles.screenContainer, { top: insets.top, left: insets.left }]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
@@ -352,7 +351,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         {/** Cube Picker */}
         <DiePicker
             open={openSelectTemplate > -1}
-            height={windowSize.height * .6}
+            height={windowSize.height * .8}
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
                 setOpenSelectTemplate(-1);
@@ -427,11 +426,26 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
         />}
 
-        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} />
+        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} iconName="check" />
 
         {/* Profile Name */}
-        <View style={[gStyles.screenSubTitle, { flexDirection: (isRTL() ? "row" : "row-reverse") }]} >
-            <View style={{ flexDirection: isRTL() ? "row-reverse" : "row" }}>
+        <View style={[gStyles.screenSubTitle, {
+            flexDirection: isScreenNarrow ? "column" : "row",
+            direction: isRTL() ? "rtl" : "ltr",
+
+        },
+        isScreenNarrow && { height: 120 }
+        ]} >
+
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconIonicons name="person-circle-outline" size={45} color={colors.titleBlue} />
+                <Text allowFontScaling={false} style={gStyles.screenSubTitleText}>{translate("ProfileName")}:</Text>
+                <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" },
+                profileName.length == 0 && { color: disabledColor }]}>
+                    {profileName.length > 0 ? profileName : translate("ProfileNoName")}
+                </Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
                 {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
                 {profileName.length > 0 ?
                     <IconButton text={translate("Close")} onPress={closeProfile} /> :
@@ -442,35 +456,20 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 <IconButton text={translate("List")} onPress={() => setOpenLoadProfile(true)} />
 
             </View>
-            <View style={{ flexDirection: isRTL() ? "row-reverse" : "row", alignItems: "center" }}>
-                <IconIonicons name="person-circle-outline" size={45} color={colors.titleBlue} />
-                <Text allowFontScaling={false} style={gStyles.screenSubTitleText}>{translate("ProfileName")}:</Text>
-                <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" },
-                profileName.length == 0 && { color: disabledColor }]}>
-                    {profileName.length > 0 ? profileName : translate("ProfileNoName")}
-                </Text>
-            </View>
         </View>
 
-        <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>
+        {!isScreenNarrow && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>}
         <ScrollView style={styles.settingHost}>
-            <View style={[styles.cubes, { marginHorizontal: gStyles.sectionHost.marginHorizontal }]}>
+            <View style={[styles.cubes, { marginHorizontal }]}>
                 {
                     [0, 1, 2, 3].map((i: any) => (
                         <DiceSettings
-                            style={{ width: cubeSettingSize, height: cubeSettingSize * .8, marginBottom: 10 }}
+                            width={cubeSettingSize}
+                            height={cubeSettingSize * .8}
                             key={i}
                             dice={revision >= 0 && profile.dice.length >= i + 1 ? profile.dice[i] : EmptyDice}
-                            isBusy={diceBusy == i}
                             onSetActive={(newVal) => setDiceActive(i, newVal)}
-                            onOpenLoadDice={() => setOpenSelectTemplate(i)
-                            }
-                            onSaveDice={() => { }} //handleSaveButton(profile.buttons[i].name, i)}
-                            onImageSearchOpen={() => { }}//setImageSearchOpen(i)}
-                            onSelectTemplate={() => setOpenSelectTemplate(i)}
-                            onEditName={() => { }}//handleButtonEditName(i)}
-                            isLast={i == profile.dice.length - 1}
-                            isScreenNarrow={isScreenNarrow}
+                            onOpenLoadDice={() => setOpenSelectTemplate(i)}
                             onEditDice={isStaticDie(profile.dice[i].template) ? undefined : () => {
                                 setOpenSelectTemplate(-1);
                                 setSetDieAfterCreate(-1);
@@ -484,10 +483,12 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 }
             </View>
 
-            <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("GeneralSectionTitle")}</Text>
+            {!isScreenNarrow && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("GeneralSectionTitle")}</Text>}
 
             {/* Recovery time */}
             <Section
+                marginHorizontal={marginHorizontal}
+                iconName="timer-outline"
                 component={<NumberSelector min={0} max={45} value={profile.recoveryTime}
                     onUp={() => handleSetRecoveryTime(profile.recoveryTime + 5)} onDown={() => handleSetRecoveryTime(profile.recoveryTime - 5)}
                 />}
@@ -496,6 +497,9 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             {/* Table Color */}
             <Section
+                marginHorizontal={marginHorizontal}
+
+                iconName="format-color-fill"
                 component={
                     <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.tableColor) }]} onTouchEnd={() => setOpenColorPicker(true)} />}
                 title={translate("TableColor")}
@@ -503,6 +507,9 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             {/* Sound Enabled */}
             <Section
+                marginHorizontal={marginHorizontal}
+
+                iconName="volume-high"
                 component={
                     <Switch
                         value={profile.soundEnabled}
@@ -514,6 +521,9 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             {/* Dice Size */}
             <Section
+                marginHorizontal={marginHorizontal}
+
+                iconName="dice-3-outline"
                 component={<NumberSelector min={1} max={5} value={profile.size}
                     onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} />}
                 title={translate("DiceSize")}
@@ -521,6 +531,9 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             {/* Backup Color */}
             <Section
+                marginHorizontal={marginHorizontal}
+
+                iconName="briefcase-upload-outline"
                 component={<IconButton text={translate("BackupAll")} onPress={handleBackupAll} />}
                 title={translate("Backup")}
             />

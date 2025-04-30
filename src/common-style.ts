@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 
 export const colors = {
     titleBlue: "#193C73",
+    sectionIconColor:"#4FA1D1",
     switchColor: "#193C73",
     titleButtonsBG:  "#F5F5F5",
 }
@@ -146,5 +147,42 @@ export const gStyles = StyleSheet.create({
     labeledIconText: {
         color: "black", 
         fontSize: 18
+    },
+    pickerView: {
+        flexDirection: 'column',
+        position: 'absolute',
+        backgroundColor: "white",
+        zIndex: 99999,
+        borderBottomColor: "transparent",
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        paddingTop: 2,
+        alignItems: 'center',
+        width: "95%",
+        left: "2.5%",
+        bottom: 0,
+        boxShadow: [{
+            offsetX: 3,
+            offsetY: -3,
+            color: "#D6D6D6",
+            blurRadius: 4,
+            spreadDistance: 3
+        }],
+    },
+    pickerTitleHost: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        height: 90,
+        paddingLeft: 25,
+        paddingRight: 25,
+    },
+    pickerTitleText: {
+        fontSize: 28,
+        margin: 25,
+        fontWeight: "bold",
+        color: colors.titleBlue,
+        
     }
 });

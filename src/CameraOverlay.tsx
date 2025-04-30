@@ -4,7 +4,6 @@ import { Camera, CameraApi, CameraType } from 'react-native-camera-kit';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { translate } from './lang';
 import { IconButton } from './components';
-import { Touchable } from 'react-native';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface CameraOverlayProps {

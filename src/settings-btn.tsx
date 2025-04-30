@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { Pressable, View, Text, StyleSheet, ViewStyle } from 'react-native';
 import IconAntDesign from 'react-native-vector-icons/AntDesign';
 import { fTranslate } from './lang';
 
 interface CountdownEditButtonProps {
     onComplete: () => void;
     iconSize?: number;
-    top: number;
+    style:ViewStyle
 }
 
 export const CountdownEditButton: React.FC<CountdownEditButtonProps> = ({
     onComplete,
-    top,
+    style,
     iconSize = 30,
 }) => {
     // countdown: null means no countdown active.
@@ -54,7 +54,7 @@ export const CountdownEditButton: React.FC<CountdownEditButtonProps> = ({
         <Pressable
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
-            style={[styles.button, { top }]}
+            style={[styles.button, style]}
         >
             <IconAntDesign name="setting" size={iconSize} color={"white"} />
             {countdown !== null && (

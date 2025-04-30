@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react"
-import { copyFileToFolder, FaceInfo, getCacheBusterSuffix, getCustomTypePath, loadFaceImages } from "./profile";
+import {  getCustomTypePath, loadFaceImages } from "./profile";
 import { DiceLayout, FacePreviewSize } from "./edit-dice";
 import { Settings, StyleSheet, Text, View } from "react-native";
 import { isRTL, translate } from "./lang";
 import * as Progress from 'react-native-progress';
+import { FaceInfo } from "./models";
+import { copyFileToFolder, getCacheBusterSuffix } from "./disk";
 
 export function MigrateDice({ migrateDice, setMigrateDice, winWidth }:
     { migrateDice: string[], setMigrateDice: React.Dispatch<React.SetStateAction<string[]>>, winWidth: number }) {
     const [currMigratedIndex, setCurrMigrateIndex] = useState<number>(-1);
     const [migarteDiceInfo, setMigrateDiceInfo] = useState<FaceInfo[][]>([]);
 
-    const diceLayoutRef = useRef<any>();
+    const diceLayoutRef = useRef<any>(undefined);
 
     function migrateOneDie(index: number) {
         console.log("save texture of migrated", index, migrateDice[index]);

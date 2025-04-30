@@ -205,9 +205,9 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
     </View>)
 
     return <View style={gStyles.screenContainer}>
-        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} />
+        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} iconName="check"/>
         <View style={[gStyles.screenSubTitle, { flexDirection: (isRTL() ? "row-reverse" : "row") }]} >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", direction:isRTL()?"rtl":"ltr" }}>
                 <Text allowFontScaling={false} style={gStyles.screenSubTitleCaption}>{translate("DiceName")}:</Text>
                 <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" }]}>{editedName}</Text>
             </View>
@@ -416,40 +416,6 @@ const styles = StyleSheet.create({
         width: "100%", height: "100%",
         backgroundColor: "lightgray",
         zIndex: 1100
-    },
-    settingTitle: {
-        backgroundColor: "white",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        height: 80,
-        fontSize: 25,
-        borderRadius: 5,
-        margin: 10
-    },
-    section: {
-        flexDirection: "row",
-        backgroundColor: "white",
-        height: 60,
-        width: "80%",
-        padding: 8,
-        paddingHorizontal: 20,
-        alignItems: "center",
-        justifyContent: "space-between",
-        borderRadius: 45,
-        marginTop: 10,
-        marginHorizontal: 40
-    },
-    sectionName: {
-        fontSize: 25,
-        fontWeight: "bold",
-    },
-    sectionValue: {
-        fontSize: 25,
-    },
-    settingTitleText: {
-        fontSize: 35,
     },
     addFacesHost: {
         flexDirection: "row",
