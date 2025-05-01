@@ -61,6 +61,10 @@ export const EmptyDice: Dice = {
     active: false,
 };
 
+export interface Bounds {
+     left: number; right: number; bottom: number; top: number 
+}
+
 export const EmptyProfile: Profile = {
     dice: [{...EmptyDice, active:true}, EmptyDice, EmptyDice, EmptyDice],
     size: 2,

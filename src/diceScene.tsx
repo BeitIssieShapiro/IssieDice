@@ -22,7 +22,7 @@ import {
 
 import * as CANNON from "cannon-es";
 import { useSharedValue } from "react-native-worklets-core"
-import { Dice, Profile, Templates, templatesList } from "./models";
+import { Bounds, Dice, Profile, Templates, templatesList } from "./models";
 import { animateYaw, computeFloorBounds, computeVerticalFov, darkenHexColor, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
 import { createDieShape, createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio, Sounds } from "./audio";
@@ -95,7 +95,7 @@ const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize, freeze, setInRecovery }: DiceSceneProps, ref: any) => {
     const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
 
-    const [bounds, setBounds] = useState<{ left: number; right: number; bottom: number; top: number }>(
+    const [bounds, setBounds] = useState<Bounds>(
         computeFloorBounds(windowSize, cameraHeight, fov, 0)
     );
     const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
@@ -172,9 +172,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     useEntityInScene(scene, shadowPlane)
 
-
     const worldRef = useRef<CANNON.World | null>(null);
-    if (!worldRef.current) {
+    useEffect(() => {
         const world = new CANNON.World({
             gravity: new CANNON.Vec3(0, -45, 0),
         });
@@ -190,13 +189,17 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         );
         world.allowSleep = true;
         worldRef.current = world;
-    }
-    const world = worldRef.current!;
-
+        return () => {
+            worldRef.current = null;
+        };
+    }, [])
 
     const worldDiceRef = useRef<{ body: CANNON.Body }[]>([]);
+    const floorAndWallsRef = useRef<CANNON.Body[]>([]);
+
     const diceCount = useSharedValue(0);
     const backgroundColorRef = useSharedValue<Float4>([0, 1, 0, 1]);
+    const freezeAfterRenderTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: () => {
@@ -216,6 +219,11 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
                 die.body.allowSleep = true;
             })
+            if (freezeAfterRenderTimerRef.current) {
+                clearTimeout(freezeAfterRenderTimerRef.current);
+                freezeAfterRenderTimerRef.current = undefined;
+            }
+
             setSceneActive(worldDiceRef.current.length);
             sceneActiveRef.current = worldDiceRef.current.length;
 
@@ -248,8 +256,36 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     }, [currWindowSize])
 
     useEffect(() => {
+        if (!worldRef.current) return;
+        createDice();
+    }, [worldRef.current, diceInfo, worldDiceRef, profile]);
+
+    useEffect(() => {
+        if (!worldRef.current) return;
+        createFloorAndWalls(bounds);
+    }, [bounds, diceInfo]);
+
+
+    function createFloorAndWalls(bounds: Bounds) {
         const scale = getDiceScale()
-        console.log("Scale", scale)
+        const world = worldRef.current!
+        // dispose existing if any
+        floorAndWallsRef.current.map(d => world.removeBody(d));
+        floorAndWallsRef.current = [];
+
+        floorAndWallsRef.current.push(createFloor(world));
+        floorAndWallsRef.current.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.top / scale])); //back
+        floorAndWallsRef.current.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.bottom / scale])); //front
+        floorAndWallsRef.current.push(createWall(world, [wallThickness, 50, 50], [bounds.left / scale, 0, 0])); //left
+        floorAndWallsRef.current.push(createWall(world, [wallThickness, 50, 50], [bounds.right / scale, 0, 0])); //right
+    }
+
+    function createDice() {
+        if (!worldRef.current) return;
+
+        worldDiceRef.current.map(die => worldRef.current!.removeBody(die.body));
+
+        const scale = getDiceScale()
 
         worldDiceRef.current = diceInfoRef.current
             .filter(die => die.active)
@@ -320,7 +356,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                         playBundledAudio(Sounds.collision, volume)
                     }
                 })
-                world.addBody(body);
+                worldRef.current!.addBody(body);
 
                 return {
                     body
@@ -329,24 +365,12 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         diceCount.value = worldDiceRef.current.length;
         // render all dice at rest
         setSceneActive(worldDiceRef.current.length);
-        setTimeout(() => setSceneActive(0), 200)
 
-        const disposeables: CANNON.Body[] = [];
-
-        disposeables.push(createFloor(world));
-
-        disposeables.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.top / scale])); //back
-        disposeables.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.bottom / scale])); //front
-        disposeables.push(createWall(world, [wallThickness, 50, 50], [bounds.left / scale, 0, 0])); //left
-        disposeables.push(createWall(world, [wallThickness, 50, 50], [bounds.right / scale, 0, 0])); //right
-
-        return () => {
-            worldDiceRef.current?.map(die => world.removeBody(die.body));
-            disposeables.map(d => world.removeBody(d));
-
-        };
-    }, [world, bounds, diceInfo, worldDiceRef, profile]);
-
+        freezeAfterRenderTimerRef.current = setTimeout(() => {
+            freezeAfterRenderTimerRef.current = undefined;
+            setSceneActive(0)
+        }, 200)
+    }
 
     const dicePosition = [
         useSharedValue<Float3>([0, 0, 0]),
@@ -399,7 +423,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             const dt = (currentTime - lastTime) / 1000;
             lastTime = currentTime;
             const dtClamped = Math.min(dt, 1 / 30);
-            world.step(1 / 60, dtClamped, 3);
+            worldRef.current?.step(1 / 60, dtClamped, 3);
 
             worldDiceRef.current?.map((die, i) => {
                 const { x, y, z } = die.body.position;
@@ -418,7 +442,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         }
         frameId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(frameId);
-    }, [world, freeze]);
+    }, [worldRef.current, freeze]);
 
 
 
