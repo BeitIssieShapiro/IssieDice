@@ -218,6 +218,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
 
     const isScreenNarrow = windowSize.width < 500;
+    const isMobile = isScreenNarrow || windowSize.height < 500;
     let diceInRow = windowSize.width > windowSize.height ? 4 : 2;
     const marginHorizontal = isScreenNarrow ? 5 : 40;
     const cubeSettingSize = Math.max((windowSize.width - insets.left - insets.right - 2 * marginHorizontal) / diceInRow - 10, 150)
@@ -458,7 +459,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             </View>
         </View>
 
-        {!isScreenNarrow && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>}
+        {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>}
         <ScrollView style={styles.settingHost}>
             <View style={[styles.cubes, { marginHorizontal }]}>
                 {
@@ -483,7 +484,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 }
             </View>
 
-            {!isScreenNarrow && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("GeneralSectionTitle")}</Text>}
+            {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("GeneralSectionTitle")}</Text>}
 
             {/* Recovery time */}
             <Section

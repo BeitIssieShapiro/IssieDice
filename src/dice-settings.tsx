@@ -21,7 +21,7 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
     console.log("dice-temp", dice.template)
     let templ = templatesList.find(t => t.key == dice.template)!;
 
-    const isMobile = width < 300;
+    const isMobile = width < 300 || height < 300;
 
     const dirStyle: any = { flexDirection: (isRTL() ? "row-reverse" : "row") }
 

@@ -67,7 +67,7 @@ const strings = {
         "OK": "OK",
         "Close": "Close",
         "List": "List",
-        "Save":"Save",
+        "Save": "Save",
         "SelectColor": "Select Color",
         "Select": "Select",
         "Edit": "Edit",
@@ -167,7 +167,7 @@ const strings = {
         "ShareSuccessful": "הקובץ נשלח בהצלחה",
         "ActionCancelled": "הפעולה בוטלה",
         "Create": "יצירה",
-        "Save":"שמירה",
+        "Save": "שמירה",
         "SetProfileName": "הזנת שם לפרופיל החדש",
         "RenameProfile": "שנה שם לפרופיל",
         "ProfileExists": "פרופיל בשם '{1}' כבר קיים.",
@@ -359,7 +359,13 @@ const strings = {
         "OpenIn": "فتح خلال {1} ثانية",
         "FaceBackgroundTab": "خلفية",
         "FaceTextTab": "نص",
-        "FaceAudioTab": "تسجيل"
+        "FaceAudioTab": "تسجيل",
+        "DiceSectionTitle": "النرد",
+        "GeneralSectionTitle": "عام",
+        "FacePreview": "معاينة الوجه",
+        "EnableSound": "تمكين صوت النرد",
+        "Save": "حفظ",
+        "SelectFont": "اختيار الخط"
     }
 };
 

@@ -94,12 +94,14 @@ const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 
 export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize, freeze, setInRecovery }: DiceSceneProps, ref: any) => {
     const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
+
     const [bounds, setBounds] = useState<{ left: number; right: number; bottom: number; top: number }>(
         computeFloorBounds(windowSize, cameraHeight, fov, 0)
     );
     const [diceInfo, setDiceInfo] = useState<Dice[]>(profile.dice);
     const diceInfoRef = useRef<Dice[]>(profile.dice);
-    const [diceSize, setDiceSize] = useState<number>(profile.size + 2);
+    const [diceSize, setDiceSize] = useState<number>(profile.size);
+
     const [revision, setRevision] = useState<number>(-1);
     const [sceneActive, setSceneActive] = useState<number>(0);
     const [log, setLog] = useState<string>("")
@@ -108,6 +110,18 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     const sceneActiveRef = useRef<number>(sceneActive);
 
+
+    const getDiceScale = useCallback(() => {
+        "worklet"
+        const winSizeFactor = 900 / currWindowSize.height;
+        let scale = .5 * winSizeFactor * (diceSize + 2) / 2;
+
+        const width = Math.min(currWindowSize.height, currWindowSize.width);
+        if (width < 600) {
+            scale = scale * (width / 900);
+        }
+        return scale;
+    }, [currWindowSize, diceSize]);
 
     // useEffect(() => {
     //     setTimeout(() => setSceneActive(0), 1000)
@@ -179,18 +193,20 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     }
     const world = worldRef.current!;
 
+
     const worldDiceRef = useRef<{ body: CANNON.Body }[]>([]);
     const diceCount = useSharedValue(0);
     const backgroundColorRef = useSharedValue<Float4>([0, 1, 0, 1]);
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: () => {
+            const scale = getDiceScale();
             worldDiceRef.current?.forEach((die, i) => {
                 // Reset any existing velocities
                 die.body.velocity.setZero();
                 die.body.angularVelocity.setZero();
 
-                die.body.position.set(getDieX(i, diceInfo.length, 1), 8, -3);
+                die.body.position.set(getDieX(i % 2, Math.min(2, diceInfo.length), scale), 8, i < 2 ? -3 : 0);
 
                 const force = 3 + 7 * Math.random();
                 die.body.applyImpulse(
@@ -206,7 +222,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
             setFaceUp(FaceUpInit);
         },
         update: (profile) => {
-            setDiceSize(profile.size + 2);
+            setDiceSize(profile.size);
             const info = profile.dice
             setDiceInfo(info)
             diceInfoRef.current = info;
@@ -226,30 +242,22 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     }));
 
     useEffect(() => {
-        const b = computeFloorBounds(currWindowSize, cameraHeight, fov, 0);
+        const b = computeFloorBounds(currWindowSize, cameraHeight - 2 * getDiceScale(), fov, 0);
         console.log("Bounds calculated", b)
         setBounds(b)
     }, [currWindowSize])
 
     useEffect(() => {
-        const winSizeFactor = 900 / currWindowSize.height;
-        const scale = .5 * winSizeFactor * diceSize / 2;
+        const scale = getDiceScale()
         console.log("Scale", scale)
 
-        const isDotArray: boolean[] = [false, false, false, false]
         worldDiceRef.current = diceInfoRef.current
             .filter(die => die.active)
             .map((die, i) => {
-                // Create a dynamic dice body (a 1x1x1 box)
-                // const body = new CANNON.Body({
-                //     mass: 1,
-                //     shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-                // });
                 const body = createDieShape();
-                // Initial position above ground.
-                //body.quaternion.setFromEuler(0,45,90)
 
-                body.position.set(getDieX(i, diceInfoRef.current.length, 1), 1.5, 0);
+                // Initial position above ground.
+                body.position.set(getDieX(i % 2, Math.min(2, diceInfoRef.current.length), scale) - scale / 2, 1.5, i < 2 ? 0 : scale * 2);
                 body.sleepSpeedLimit = 0.1;
                 body.sleepTimeLimit = 1;
                 body.allowSleep = true;
@@ -314,8 +322,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 })
                 world.addBody(body);
 
-                isDotArray[i] = die.template == Templates.Dots;
-
                 return {
                     body
                 };
@@ -324,7 +330,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         // render all dice at rest
         setSceneActive(worldDiceRef.current.length);
         setTimeout(() => setSceneActive(0), 200)
-
 
         const disposeables: CANNON.Body[] = [];
 
@@ -419,8 +424,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     const renderCallback: RenderCallback = useCallback(() => {
         "worklet"
-        const winSizeFactor = 900 / currWindowSize.height;
-        const scale = .5 * winSizeFactor * diceSize / 2;
+        const scale = getDiceScale();
         console.log("render callback", scale, diceSize, currWindowSize)
         const hideTransform = transformManager.createIdentityMatrix().translate([-1000, 0, 0]);
         for (let i = 0; i < 4; i++) {
@@ -511,7 +515,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                     position={[0, 10, 100]} //direction={[0,0,0]}
                 /> */}
 
-                
+
 
 
                 {activeDice
@@ -520,7 +524,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                         <ModelRenderer key={i}
                             model={generalDiceModel[i]}
                             castShadow={true} receiveShadow={true}
-                            //onPress={() => handleDiceClicked(dieInfo, i)}
+                        //onPress={() => handleDiceClicked(dieInfo, i)}
                         >
                             {texture[i] && <EntitySelector byName="Cube"
                                 textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
