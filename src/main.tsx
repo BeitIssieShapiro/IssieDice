@@ -21,8 +21,8 @@ const initialTorque = [.15, .08, -.08];
 
 export default function App({ migratedDice }: { migratedDice: string[] }) {
   const [windowSize, setWindowSize] = useState<WinSize>({ width: 500, height: 500 });
-  const [openSettings, setOpenSettings] = useState<boolean>(false);
-  const [revision, setRevision] = useState<number>(0);
+  const [openSettings, setOpenSettings] = useState<number>(0);
+  const [revision, setRevision] = useState<number>(1);
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
   const [cameraTilt, setCameraTilt] = useState<number>(0);
   const [migrateDice, setMigrateDice] = useState<string[]>([]);
@@ -89,20 +89,12 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
     console.log("App reloading profile")
     getCurrentProfile().then(p => {
       setProfile(p);
-      setTimeout(() => updateDiceScene(p), 100);
+      setTimeout(() => sceneRef.current?.update(p), 100);
 
     })
   }, [revision]);
 
-
   const sceneRef = useRef<DiceSceneMethods>(undefined);
-
-
-
-  const updateDiceScene = (profile: Profile) => {
-
-    sceneRef.current?.update(profile);
-  };
 
   const insets = useSafeAreaInsets();
 
@@ -113,17 +105,11 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
       setWindowSize(wz);
     }}>
 
-      {/* <TouchableOpacity style={[styles.settingsButton, { top: Math.max(35, 15 + insets.top) }]}
-        onPress={() => setOpenSettings(true)}
-      >
-        <Icon name={"setting"} color={"white"} size={35} />
-      </TouchableOpacity> */}
-
       {/** indicator to a lock */}
       {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), left: 5 + insets.left, zIndex: 1000 }]} />}
 
 
-      <CountdownEditButton iconSize={35} onComplete={() => setOpenSettings(true)} style={{
+      <CountdownEditButton iconSize={35} onComplete={() => setOpenSettings(revision)} style={{
         top: Math.max(20, 15 + insets.top),
         right: Math.max(15, 5 + insets.right)
       }} />
@@ -131,7 +117,13 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
       {migrateDice.length > 0 && <MigrateDice migrateDice={migrateDice} setMigrateDice={setMigrateDice}
         winWidth={windowSize.width} />}
 
-      {openSettings && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => setOpenSettings(false)} />}
+      {openSettings>0 && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => {
+        if (revision != openSettings) {
+          console.log("settings changed", revision, openSettings)
+          setRevision(prev => prev + 1);
+        }
+        setOpenSettings(0)
+      }} />}
       <>
 
         {/** Progress */}
@@ -149,7 +141,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
           <DiceScene
             setInRecovery={setInRecovery}
             ref={sceneRef}
-            freeze={openSettings}
+            freeze={openSettings > 0}
             initialImpulse={initialImpulse}
             initialTorque={initialTorque}
             profile={revision >= 0 && profile ? profile : EmptyProfile}

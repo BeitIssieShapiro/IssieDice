@@ -92,7 +92,7 @@ const FaceUpInit = [-1, -1, -1, -1];
 const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 
 
-export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, windowSize, freeze, setInRecovery }: DiceSceneProps, ref: any) => {
+export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecovery }: DiceSceneProps, ref: any) => {
     const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
 
     const [bounds, setBounds] = useState<Bounds>(
@@ -123,9 +123,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         return scale;
     }, [currWindowSize, diceSize]);
 
-    // useEffect(() => {
-    //     setTimeout(() => setSceneActive(0), 1000)
-    // }, [])
+
 
     const generalDiceModel: FilamentModel[] = [
         useModel(DiceModel),
@@ -133,10 +131,6 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
         useModel(DiceModel),
         useModel(DiceModel)
     ];
-    // const floorModel = useModel(FloorModel);
-    // const floorAsset = getAssetFromModel(floorModel);
-    // const floorEntity = floorAsset?.getRenderableEntities()[0];
-    // const matInstance = floorEntity && renderableManager.getMaterialInstanceAt(floorEntity, 0);
 
     const generalDiceAsset = generalDiceModel.map(d => getAssetFromModel(d));
     const generalEntity = generalDiceAsset.map(de => de?.getRenderableEntities()[0]).map((e) => {
@@ -209,7 +203,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 die.body.velocity.setZero();
                 die.body.angularVelocity.setZero();
 
-                die.body.position.set(getDieX(i % 2, Math.min(2, diceInfo.length), scale), 8, i < 2 ? -3 : 0);
+                die.body.position.set(getDieX(i % 2, Math.min(2, diceInfo.length), scale / 2), 8, i < 2 ? -2 : 0);
 
                 const force = 3 + 7 * Math.random();
                 die.body.applyImpulse(
@@ -257,8 +251,9 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
     useEffect(() => {
         if (!worldRef.current) return;
+        console.log("re-create dice", profile.dice.length)
         createDice();
-    }, [worldRef.current, diceInfo, worldDiceRef, profile]);
+    }, [worldRef.current, diceInfo, worldDiceRef, profile, revision]);
 
     useEffect(() => {
         if (!worldRef.current) return;
@@ -275,7 +270,8 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
 
         floorAndWallsRef.current.push(createFloor(world));
         floorAndWallsRef.current.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.top / scale])); //back
-        floorAndWallsRef.current.push(createWall(world, [50, 50, wallThickness], [0, 0, bounds.bottom / scale])); //front
+        //front is only 10 m high to avoid falling outside of walls
+        floorAndWallsRef.current.push(createWall(world, [50, 10, wallThickness], [0, 0, bounds.bottom / scale])); //front
         floorAndWallsRef.current.push(createWall(world, [wallThickness, 50, 50], [bounds.left / scale, 0, 0])); //left
         floorAndWallsRef.current.push(createWall(world, [wallThickness, 50, 50], [bounds.right / scale, 0, 0])); //right
     }
@@ -283,7 +279,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     function createDice() {
         if (!worldRef.current) return;
 
-        worldDiceRef.current.map(die => worldRef.current!.removeBody(die.body));
+        worldDiceRef.current.forEach(die => worldRef.current!.removeBody(die.body));
 
         const scale = getDiceScale()
 
@@ -293,7 +289,11 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
                 const body = createDieShape();
 
                 // Initial position above ground.
-                body.position.set(getDieX(i % 2, Math.min(2, diceInfoRef.current.length), scale) - scale / 2, 1.5, i < 2 ? 0 : scale * 2);
+                body.position.set(
+                    getDieX(i % 2, Math.min(2, diceCount.value), scale / 2) -scale/4 , // X
+                    scale/2, // Z
+                    diceCount.value < 3 ? 0 : (i < 2 ? -scale/2 : scale/2)  //Y
+                );
                 body.sleepSpeedLimit = 0.1;
                 body.sleepTimeLimit = 1;
                 body.allowSleep = true;
@@ -449,7 +449,7 @@ export const DiceScene = forwardRef(({ initialImpulse, initialTorque, profile, w
     const renderCallback: RenderCallback = useCallback(() => {
         "worklet"
         const scale = getDiceScale();
-        console.log("render callback", scale, diceSize, currWindowSize)
+        //console.log("render callback", scale, diceSize, currWindowSize)
         const hideTransform = transformManager.createIdentityMatrix().translate([-1000, 0, 0]);
         for (let i = 0; i < 4; i++) {
             const entity = generalEntity[i];

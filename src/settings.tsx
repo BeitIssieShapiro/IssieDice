@@ -56,20 +56,12 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             setProfile(p);
             setProfileName(Settings.getString(SettingsKeys.CurrentProfileName, ""));
             console.log("reload settings", p.dice.map(b => b.template))
-
-            onChange()
+            if (revision > 0) {
+                onChange()
+            }
         });
     }, [revision]);
 
-
-    function changeNumOfButton(delta: number) {
-        const current = Settings.getNumber(SettingsKeys.DiceCount, 1);
-        let newVal = current + delta;
-        if (newVal < 1) return;
-        if (newVal > 4) return;
-        Settings.set(SettingsKeys.DiceCount, newVal);
-        setRevision(old => old + 1);
-    }
 
     function setDiceActive(index: number, newVal: boolean) {
         let newDiceActive = profile.dice.map(b => b.active);
