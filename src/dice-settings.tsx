@@ -18,7 +18,6 @@ interface DiceSettingsProps {
 
 export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onOpenLoadDice }: DiceSettingsProps) {
 
-    console.log("dice-temp", dice.template)
     let templ = templatesList.find(t => t.key == dice.template)!;
 
     const isMobile = width < 300 || height < 300;

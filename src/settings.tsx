@@ -40,7 +40,6 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined);
     const [setDieAfterCreate, setSetDieAfterCreate] = useState<number>(-1);
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
-    const [diceBusy, setDiceBusy] = useState<number>(-1);
     const [busy, setBusy] = useState<boolean>(false);
     const [openSelectTemplate, setOpenSelectTemplate] = useState<number>(-1);
     const [showEditProfileName, setShowEditProfileName] = useState<{ name: string, afterSave?: () => void } | undefined>(undefined);

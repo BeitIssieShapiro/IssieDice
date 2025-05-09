@@ -17,7 +17,7 @@ export async function migrateV1(): Promise<string[]> {
     if (Platform.OS == "ios") {
         const shouldMigrate = RNSettings.get("MigrateV1");
         if (shouldMigrate != false) {
-            console.log("Migrating old dice templates")
+            console.log("Migrating old dice templates", shouldMigrate)
             const { TemplateMigrator } = NativeModules;
 
             const customDice = await TemplateMigrator.migrateCustomTemplates();
@@ -39,6 +39,9 @@ export async function migrateV1(): Promise<string[]> {
                 }
             }
             console.log("Done migrating old dice templates", customDice.length);
+            if (customDice.length == 0) {
+                RNSettings.set({"MigrateV1": false});
+            }
         }
     }
     return migratedDice;
@@ -158,7 +161,13 @@ export async function getCurrentProfile(): Promise<Profile> {
     for (let i = 0; i < numOfDice; i++) {
         let faces: FaceInfo[] = []
         if (diceTemplateType.length > i && !diceTemplateType[i].startsWith(Templates.prefix)) {
-            faces = await loadFaceImages(diceTemplateType[i]);
+            try {
+                faces = await loadFaceImages(diceTemplateType[i]);
+            } catch (e) {
+                console.log("Error loading faces", e);
+                dice.push(EmptyDice)
+                continue;
+            }
         }
         const template = diceTemplateType.length > i && diceTemplateType[i] ? diceTemplateType[i] as Templates : EmptyDice.template;
         dice.push({
@@ -343,6 +352,19 @@ export async function deleteDice(name: string) {
             //overwrite Profile after being modified
             saveProfileFile(profileListItem.key, profile, true)
         }
+    }
+
+    // check current profile:
+    const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
+    let modified = false;
+    for (let i=0;i<  diceTemplateType.length;i++) {
+        if (diceTemplateType[i] == name) {
+            diceTemplateType[i] = EmptyDice.template;
+            modified = true;
+        }
+    }
+    if (modified) {
+        Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
     }
 }
 

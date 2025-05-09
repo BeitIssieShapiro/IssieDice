@@ -46,17 +46,20 @@ export const FontPicker: React.FC<FontPickerProps> = ({
             <View style={gStyles.horizontalSeperator} />
 
             <ScrollView style={styles.scroll}>
-                {fonts.map((item) => (
-                    <Pressable key={item.value || item.label} onPress={() => onSelect(item.value)}>
+                {fonts.map((item) => {
+                    const fontFamily = item.value;
+
+                    return (
+                    <Pressable key={fontFamily || item.label} onPress={() => onSelect(fontFamily)}>
                         <View style={styles.itemContainer}>
-                            {currentFont === item.value && (
+                            {currentFont === fontFamily && (
                                 <IconIonic name="checkmark-outline" color="blue" size={20} />
                             )}
                             <Text
                                 style={[
                                     styles.itemText,
-                                    { fontFamily: item.value },
-                                    currentFont === item.value && styles.selectedText,
+                                    { fontFamily },
+                                    currentFont === fontFamily && styles.selectedText,
                                 ]}
                                 numberOfLines={1}
                                 ellipsizeMode="tail"
@@ -66,7 +69,7 @@ export const FontPicker: React.FC<FontPickerProps> = ({
 
                         </View>
                     </Pressable>
-                ))}
+                )})}
             </ScrollView>
         </FadeInView>
     );

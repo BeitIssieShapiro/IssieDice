@@ -2,20 +2,57 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <!-- 1) The unique identifier for your file type -->
+      <key>UTTypeIdentifier</key>
+      <string>com.issieshapiro.issiedice.dice</string>
+
+      <!-- 2) A human-readable description -->
+      <key>UTTypeDescription</key>
+      <string>IssieDice Package</string>
+
+      <!-- 3) Declare that it “is a” ZIP so the system can unpack it -->
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.zip-archive</string>
+      </array>
+
+      <!-- 4) What extension & MIME to tag it with -->
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <string>dice</string>
+        <key>public.mime-type</key>
+        <string>application/zip</string>
+      </dict>
+    </dict>
+  </array>
+  
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
       <key>CFBundleTypeName</key>
-      <string>IssieDice dice and profiles zip packages</string>
+      <string>IssieDice Package</string>
+
+      <!-- Point to your UTI -->
       <key>LSItemContentTypes</key>
       <array>
-        <string>public.zip-archive</string>
-        <string>public.file-url</string>
+        <string>com.issieshapiro.issiedice.dice</string>
       </array>
+
+      <!-- YOU MUST include this -->
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+
+      <!-- Optional: makes you the “Owner” rank so you show up first -->
       <key>LSHandlerRank</key>
-      <string>Alternate</string>
+      <string>Owner</string>
     </dict>
   </array>
+  
   <key>LSSupportsOpeningDocumentsInPlace</key>
   <true/>
   <key>CFBundleDevelopmentRegion</key>

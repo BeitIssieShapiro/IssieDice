@@ -205,9 +205,9 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
     </View>)
 
     return <View style={gStyles.screenContainer}>
-        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} iconName="check"/>
+        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} iconName="check" />
         <View style={[gStyles.screenSubTitle, { flexDirection: (isRTL() ? "row-reverse" : "row") }]} >
-            <View style={{ flexDirection: "row", alignItems: "center", direction:isRTL()?"rtl":"ltr" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", direction: isRTL() ? "rtl" : "ltr" }}>
                 <Text allowFontScaling={false} style={gStyles.screenSubTitleCaption}>{translate("DiceName")}:</Text>
                 <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" }]}>{editedName}</Text>
             </View>
@@ -228,7 +228,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
             intialAudioUri={facesInfo[editFace]?.audioUri}
             onClose={() => setEditFace(-1)}
             onDone={(faceInfo) => {
-                console.log("onDone", faceInfo)
+                console.log("onDone",editFace, faceInfo, facesInfo)
                 handleFaceInfoChange(editFace, faceInfo, facesInfo);
                 setEditFace(-1);
             }}
@@ -379,15 +379,17 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
     },
         style
     ]}>
-        <View style={[styles.textFaceTextContainer,
-        { backgroundColor: !backgroundColor || backgroundColor == "" ? DefaultFaceBackgroundColor : backgroundColor, width: FacePreviewSize, height: FacePreviewSize },
-        scale != 1 ? {
-            transform: [
-                { scaleX: scale },
-                { scaleY: scale }
-            ]
-        } : {}
-        ]}>
+        <Pressable
+            onPress={(audioUri && onAudioPress) ? () => onAudioPress() : undefined}
+            style={[styles.textFaceTextContainer,
+            { backgroundColor: !backgroundColor || backgroundColor == "" ? DefaultFaceBackgroundColor : backgroundColor, width: FacePreviewSize, height: FacePreviewSize },
+            scale != 1 ? {
+                transform: [
+                    { scaleX: scale },
+                    { scaleY: scale }
+                ]
+            } : {}
+            ]}>
             {backgroundImage && backgroundImage.length > 0 && <Image source={{ uri: backgroundImage }} style={{ position: "absolute", width: "100%", height: "100%" }} />}
             {faceText && faceText.text && faceText.text.length > 0 && <Text style={[styles.textFace, {
                 color: faceText.color,
@@ -397,12 +399,10 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
             },
             ]}>{faceText.text}</Text>}
 
-            {audioUri && <Pressable style={[styles.playButton]}
-                onPress={() => onAudioPress ? onAudioPress() : {}}
-            >
-                <IconMCI name="play-outline" size={35} style={{ transform: [{ translateX: 3 }] }} />
-            </Pressable>}
-        </View>
+            {audioUri && <View style={[styles.playButton]}>
+                <IconMCI name="music-note" size={25} />
+            </View>}
+        </Pressable>
     </View >
 }
 
@@ -507,11 +507,11 @@ const styles = StyleSheet.create({
     },
     playButton: {
         position: "absolute",
-        right: 0,
-        top: 0,
+        right: -9,
+        top: -9,
         margin: 10,
-        width: 45,
-        height: 45,
+        width: 25,
+        height: 25,
         borderRadius: 22.5,
         backgroundColor: "lightgray",
         justifyContent: "center",

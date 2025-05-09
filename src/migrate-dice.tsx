@@ -52,6 +52,7 @@ export function MigrateDice({ migrateDice, setMigrateDice, winWidth }:
             }, 1000);
         } else if (currMigratedIndex >= migrateDice.length) {
             // done migrating - set a setting to avoid it again
+            console.log("Set migrated")
             Settings.set({"MigrateV1": false});
             setMigrateDice([])
             setCurrMigrateIndex(-1)

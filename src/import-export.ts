@@ -42,7 +42,7 @@ export async function exportDice(name: string): Promise<string> {
     files.push(ensureAndroidCompatible(metaDataFile));
     await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
 
-    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
+    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".dice"));
     // delete if exists before
     await RNFS.unlink(targetFile).catch(doNothing);
 
@@ -70,7 +70,7 @@ export async function exportProfile(name: string, alreadyIncludedCubes: string[]
     }
     await writeFile(metaDataFile, JSON.stringify(metaData, undefined, " "));
 
-    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".zip"));
+    const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".dice"));
     // delete if exists before
     await RNFS.unlink(targetFile).catch(doNothing);
 
@@ -87,7 +87,7 @@ export async function exportProfile(name: string, alreadyIncludedCubes: string[]
     }
 
     if (returnInOne) {
-        const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".zip"));
+        const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".dice"));
 
         return zip([profileZip, ...diceZips], targetFile).then(path => {
             return ensureAndroidCompatible(path);
@@ -121,8 +121,8 @@ export async function exportAll(): Promise<string> {
 
     const date = new Date()
     let fn = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + ('0' + date.getDate()).slice(-2) + ' ' + ('0' + date.getHours()).slice(-2) + '-' + ('0' + date.getMinutes()).slice(-2) + '-' + ('0' + date.getSeconds()).slice(-2);
-    console.log("about to zip", files)
-    const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieDice Backup-" + fn + ".zip"));
+    console.log("about to zip a dice file", files)
+    const targetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "IssieDice Backup-" + fn + ".dice"));
     await RNFS.unlink(targetPath).catch(doNothing);
 
     return zip(files, targetPath).then(path => {

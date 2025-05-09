@@ -173,8 +173,12 @@ export const EditFace: React.FC<EditFaceProps> = ({
                         } as FaceInfo
                         onDone(faceInfo);
 
-                    }} backgroundColor={colors.titleButtonsBG} />
-                    <IconButton text={translate("Cancel")} onPress={onClose} backgroundColor={colors.titleButtonsBG} />
+                    }} backgroundColor={colors.titleButtonsBG} 
+                    icon="check"
+                    />
+                    <IconButton text={translate("Cancel")} onPress={onClose} backgroundColor={colors.titleButtonsBG} 
+                    icon="close"
+                    />
                 </View>
             </View>
 
@@ -329,7 +333,7 @@ function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpen
         }} />
 
         <LabeledIconButton icon="circle" type="MCI" label={translate("FaceBackgroundColor")}
-            color={backgroundColor}
+            color={backgroundColor && backgroundColor != "" ? backgroundColor : DefaultFaceBackgroundColor}
             onPress={() => onOpenColorPicker({
                 color: backgroundColor && backgroundColor != "" ? backgroundColor : DefaultFaceBackgroundColor,
                 onSelect: c => {
@@ -393,20 +397,22 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
         />
         <View style={{ flexDirection: "column", width: 500 }}>
             {/* Font Selection */}
-            <Section title={translate("FontName") + ":"} component={
-                <Pressable style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}
+            <Section title={translate("FontName") + ":"}
+                marginHorizontal={0}
+                component={
+                    <Pressable style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}
 
-                    onPress={() => setOpenFontPicker({
-                        fontName, onSelect: (fontName) => setFontName(fontName)
-                    })}>
-                    <Text allowFontScaling={false}
-                        style={{ fontFamily: fontName, fontSize: 22, marginInlineStart: 15, width: 250 }}
-                    >{fontName ? FONTS.find(f => f.value === fontName)?.label :
-                        translate("NoFont")}
-                    </Text>
-                    <IconIonic name="list" size={30} />
+                        onPress={() => setOpenFontPicker({
+                            fontName, onSelect: (fontName) => setFontName(fontName)
+                        })}                    >
+                        <Text allowFontScaling={false}
+                            style={{ fontFamily: fontName, fontSize: 22, marginInlineStart: 15, width: 250 }}
+                        >{fontName ? FONTS.find(f => f.value === fontName)?.label :
+                            translate("NoFont")}
+                        </Text>
+                        <IconIonic name="list" size={30} />
 
-                </Pressable>}
+                    </Pressable>}
             />
 
             <View style={{ flexDirection: "row", height: 150, justifyContent: "space-around", marginTop: 15 }}>

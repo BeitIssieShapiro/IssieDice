@@ -47,8 +47,8 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
 
     const winDimChange = Dimensions.addEventListener("change", (e) => setWindowSize({ width: e.window.width, height: e.window.height }))
 
-    migrateV1().then(migrateDice => {
-      setMigrateDice(migrateDice)
+    migrateV1().then(md => {
+      setMigrateDice(md)
     })
 
     return () => {
@@ -90,8 +90,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
     getCurrentProfile().then(p => {
       setProfile(p);
       setTimeout(() => sceneRef.current?.update(p), 100);
-
-    })
+    }).catch(e=>console.log("error loading profile", e))
   }, [revision]);
 
   const sceneRef = useRef<DiceSceneMethods>(undefined);
