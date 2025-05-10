@@ -188,17 +188,25 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
         };
     }, [])
 
-    const worldDiceRef = useRef<{ body: CANNON.Body }[]>([]);
+    const worldDiceRef = useRef<({ body: CANNON.Body } | null)[]>([]);
     const floorAndWallsRef = useRef<CANNON.Body[]>([]);
 
-    const diceCount = useSharedValue(0);
-    const backgroundColorRef = useSharedValue<Float4>([0, 1, 0, 1]);
+    const diceActive = [
+        useSharedValue<boolean>(profile.dice[0].active),
+        useSharedValue<boolean>(profile.dice[1].active),
+        useSharedValue<boolean>(profile.dice[2].active),
+        useSharedValue<boolean>(profile.dice[3].active)
+    ];
+
     const freezeAfterRenderTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     useImperativeHandle(ref, (): DiceSceneMethods => ({
         rollDice: () => {
             const scale = getDiceScale();
+            let count = 0;
             worldDiceRef.current?.forEach((die, i) => {
+                if (!die) return;
+                count++
                 // Reset any existing velocities
                 die.body.velocity.setZero();
                 die.body.angularVelocity.setZero();
@@ -218,8 +226,8 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
                 freezeAfterRenderTimerRef.current = undefined;
             }
 
-            setSceneActive(worldDiceRef.current.length);
-            sceneActiveRef.current = worldDiceRef.current.length;
+            setSceneActive(count);
+            sceneActiveRef.current = count;
 
             setFaceUp(FaceUpInit);
         },
@@ -228,7 +236,9 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
             const info = profile.dice
             setDiceInfo(info)
             diceInfoRef.current = info;
-            backgroundColorRef.value = hexToSrgb(safeColor(profile.tableColor));
+            for (let i = 0; i < 4; i++) {
+                diceActive[i].value = profile.dice[i].active;
+            }
             setRevision(prev => prev + 1);
         },
         updateWindowSize: (winSize: WinSize) => {
@@ -236,10 +246,7 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
             setCurrWindowSize(winSize);
         },
         updateCamera: (tilt) => {
-            // if (tilt >= 0 && tilt < cameraPos.length) {
-            //     console.log("update camera tilt", tilt)
-            //     setCameraTilt(tilt);
-            // }
+
         }
     }));
 
@@ -279,20 +286,22 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
     function createDice() {
         if (!worldRef.current) return;
 
-        worldDiceRef.current.forEach(die => worldRef.current!.removeBody(die.body));
+        worldDiceRef.current.forEach(die => die ? worldRef.current!.removeBody(die.body) : undefined);
 
         const scale = getDiceScale()
+        let count = 0;
 
         worldDiceRef.current = diceInfoRef.current
-            .filter(die => die.active)
-            .map((die, i) => {
+            .map((die, i, activeDice) => {
+                if (!die.active) return null;
+                count++;
                 const body = createDieShape();
 
                 // Initial position above ground.
                 body.position.set(
-                    getDieX(i % 2, Math.min(2, diceCount.value), scale / 2) -scale/4 , // X
-                    scale/2, // Z
-                    diceCount.value < 3 ? 0 : (i < 2 ? -scale/2 : scale/2)  //Y
+                    getDieX(i % 2, Math.min(2, activeDice.length), scale / 2) - scale / 4, // X
+                    scale / 2, // Z
+                    activeDice.length < 3 ? 0 : (i < 2 ? -scale / 2 : scale / 2)  //Y
                 );
                 body.sleepSpeedLimit = 0.1;
                 body.sleepTimeLimit = 1;
@@ -362,15 +371,16 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
                     body
                 };
             });
-        diceCount.value = worldDiceRef.current.length;
         // render all dice at rest
-        setSceneActive(worldDiceRef.current.length);
+        setSceneActive(count);
 
         freezeAfterRenderTimerRef.current = setTimeout(() => {
             freezeAfterRenderTimerRef.current = undefined;
             setSceneActive(0)
         }, 200)
     }
+
+
 
     const dicePosition = [
         useSharedValue<Float3>([0, 0, 0]),
@@ -385,12 +395,9 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
         useSharedValue<DieRotation>(DefaultRotation)
     ];
 
-    const activeDice = diceInfo.filter(die => die.active);
     const texture = [0, 1, 2, 3]
-        //.filter(die => die.active)
         .map((i) => {
-            //if (die.template == Templates.Dots) return undefined;
-            let template = i < activeDice.length ? activeDice[i].template : Templates.Dots;
+            let template = diceInfoRef.current[i].template;
             let textureSource
             switch (template) {
                 case Templates.Numbers:
@@ -425,7 +432,9 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
             const dtClamped = Math.min(dt, 1 / 30);
             worldRef.current?.step(1 / 60, dtClamped, 3);
 
-            worldDiceRef.current?.map((die, i) => {
+            worldDiceRef.current?.forEach((die, i) => {
+                if (!die) return;
+
                 const { x, y, z } = die.body.position;
                 const { angle, axis } = quaternionToAngleAxis(die.body.quaternion);
 
@@ -449,7 +458,7 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
     const renderCallback: RenderCallback = useCallback(() => {
         "worklet"
         const scale = getDiceScale();
-        //console.log("render callback", scale, diceSize, currWindowSize)
+        console.log("render callback", diceSize, diceActive[0].value, diceActive[1].value, diceActive[2].value, diceActive[3].value)
         const hideTransform = transformManager.createIdentityMatrix().translate([-1000, 0, 0]);
         for (let i = 0; i < 4; i++) {
             const entity = generalEntity[i];
@@ -461,7 +470,7 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
                 const axis = [diceRotation[i].value.axis[0], diceRotation[i].value.axis[1], diceRotation[i].value.axis[2]] as Float3;
 
 
-                if (i < diceCount.value) {
+                if (diceActive[i].value) {
                     let transform = transformManager.createIdentityMatrix();
                     transform = transform.rotate(angle, axis);
                     transform = transform.translate(pos);
@@ -471,10 +480,9 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
                     transformManager.setTransform(entity, hideTransform);
                 }
 
-            }
+            } else console.log("entity null", i)
         }
-
-    }, [dicePosition, diceRotation, generalEntity, transformManager, diceCount, diceSize])
+    }, [dicePosition, diceRotation, generalEntity, transformManager, diceSize])
 
     const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
@@ -542,18 +550,15 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
 
 
 
-                {activeDice
-                    .filter(die => die.active)
-                    .map((dieInfo, i) => (worldDiceRef.current &&
-                        <ModelRenderer key={i}
-                            model={generalDiceModel[i]}
-                            castShadow={true} receiveShadow={true}
-                        //onPress={() => handleDiceClicked(dieInfo, i)}
-                        >
-                            {texture[i] && <EntitySelector byName="Cube"
-                                textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
-                        </ModelRenderer>
-                    ))}
+                {diceInfo.map((dieInfo, i) => (worldDiceRef.current && dieInfo.active &&
+                    <ModelRenderer key={i}
+                        model={generalDiceModel[i]}
+                        castShadow={true} receiveShadow={true}
+                    >
+                        {texture[i] && <EntitySelector byName="Cube"
+                            textureMap={{ materialName: "Material", textureSource: texture[i] }} />}
+                    </ModelRenderer>
+                ))}
                 {/* <Model source={FloorModel} receiveShadow={true}>
                   
                 </Model> */}
