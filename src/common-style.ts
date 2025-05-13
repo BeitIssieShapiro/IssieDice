@@ -146,7 +146,9 @@ export const gStyles = StyleSheet.create({
     },
     labeledIconText: {
         color: "black", 
-        fontSize: 18
+        fontSize: 18,
+        minWidth:100,
+        textAlign:"center"
     },
     pickerView: {
         flexDirection: 'column',

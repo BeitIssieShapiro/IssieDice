@@ -66,6 +66,7 @@ export interface DiceSceneMethods {
     update: (profile: Profile) => void;
     updateWindowSize: (winSize: WinSize) => void;
     updateCamera: (tilt: number) => void;
+    resetRecovery: () => void;
 }
 
 interface DieRotation {
@@ -246,7 +247,13 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
             setCurrWindowSize(winSize);
         },
         updateCamera: (tilt) => {
-
+        },
+        resetRecovery: () => {
+            setInRecovery(false);
+            if (inRecoveryRef.current != undefined) {
+                clearTimeout(inRecoveryRef.current);
+                inRecoveryRef.current = undefined;
+            }
         }
     }));
 
@@ -504,11 +511,7 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
 
         if (profile && profile.recoveryTime > 0) {
             inRecoveryRef.current = setTimeout(() => {
-                if (inRecoveryRef.current != undefined) {
-                    clearTimeout(inRecoveryRef.current);
-                    inRecoveryRef.current = undefined;
-                    setInRecovery(false);
-                }
+                ref.current?.resetRecovery();
             }, profile?.recoveryTime! * 1000);
             setInRecovery(true);
         }

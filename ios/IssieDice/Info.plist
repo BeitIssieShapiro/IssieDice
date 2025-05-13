@@ -2,126 +2,110 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
-  <key>UTExportedTypeDeclarations</key>
-  <array>
-    <dict>
-      <!-- 1) The unique identifier for your file type -->
-      <key>UTTypeIdentifier</key>
-      <string>com.issieshapiro.issiedice.dice</string>
-
-      <!-- 2) A human-readable description -->
-      <key>UTTypeDescription</key>
-      <string>IssieDice Package</string>
-
-      <!-- 3) Declare that it “is a” ZIP so the system can unpack it -->
-      <key>UTTypeConformsTo</key>
-      <array>
-        <string>public.zip-archive</string>
-      </array>
-
-      <!-- 4) What extension & MIME to tag it with -->
-      <key>UTTypeTagSpecification</key>
-      <dict>
-        <key>public.filename-extension</key>
-        <string>dice</string>
-        <key>public.mime-type</key>
-        <string>application/zip</string>
-      </dict>
-    </dict>
-  </array>
-  
-  <key>CFBundleDocumentTypes</key>
-  <array>
-    <dict>
-      <key>CFBundleTypeName</key>
-      <string>IssieDice Package</string>
-
-      <!-- Point to your UTI -->
-      <key>LSItemContentTypes</key>
-      <array>
-        <string>com.issieshapiro.issiedice.dice</string>
-      </array>
-
-      <!-- YOU MUST include this -->
-      <key>CFBundleTypeRole</key>
-      <string>Viewer</string>
-
-      <!-- Optional: makes you the “Owner” rank so you show up first -->
-      <key>LSHandlerRank</key>
-      <string>Owner</string>
-    </dict>
-  </array>
-  
-  <key>LSSupportsOpeningDocumentsInPlace</key>
-  <true/>
-  <key>CFBundleDevelopmentRegion</key>
-  <string>en</string>
-  <key>CFBundleDisplayName</key>
-  <string>IssieDice</string>
-  <key>CFBundleExecutable</key>
-  <string>$(EXECUTABLE_NAME)</string>
-  <key>CFBundleIdentifier</key>
-  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-  <key>CFBundleInfoDictionaryVersion</key>
-  <string>6.0</string>
-  <key>CFBundleName</key>
-  <string>$(PRODUCT_NAME)</string>
-  <key>CFBundlePackageType</key>
-  <string>APPL</string>
-  <key>CFBundleShortVersionString</key>
-  <string>$(MARKETING_VERSION)</string>
-  <key>CFBundleSignature</key>
-  <string>????</string>
-  <key>CFBundleVersion</key>
-  <string>$(CURRENT_PROJECT_VERSION)</string>
-  <key>ITSAppUsesNonExemptEncryption</key>
-  <false/>
-  <key>LSRequiresIPhoneOS</key>
-  <true/>
-  <key>NSAppTransportSecurity</key>
-  <dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <false/>
-    <key>NSAllowsLocalNetworking</key>
-    <true/>
-  </dict>
-  <key>NSPhotoLibraryUsageDescription</key>
-  <string>Uses photos as dice faces</string>
-  <key>NSAppleMusicUsageDescription</key>
-  <string>Use music to attach to a face of a dice</string>
-  <key>NSMicrophoneUsageDescription</key>
-  <string>Uses microphone to recod short voice message to attach to dice faces</string>
-  <key>NSCameraUsageDescription</key>
-  <string>Takes pictures for dice faces</string>
-  <key>UIAppFonts</key>
-  <array>
-    <string>AntDesign.ttf</string>
-    <string>FontAwesome.ttf</string>
-    <string>Ionicons.ttf</string>
-    <string>MaterialIcons.ttf</string>
-    <string>MaterialCommunityIcons.ttf</string>
-    <string>Gveret Levin AlefAlefAlef-Regular.ttf</string>
-    <string>DanaYadAlefAlefAlef-Normal.otf</string>
-    <string>Alef-regular.ttf</string>
-    <string>DavidLibre-Regular.ttf</string>
-  </array>
-  <key>UILaunchStoryboardName</key>
-  <string>LaunchScreen</string>
-  <key>UIRequiredDeviceCapabilities</key>
-  <array>
-    <string>arm64</string>
-  </array>
-  <key>UISupportedInterfaceOrientations</key>
-  <array>
-    <string>UIInterfaceOrientationLandscapeLeft</string>
-    <string>UIInterfaceOrientationLandscapeRight</string>
-    <string>UIInterfaceOrientationPortrait</string>
-    <string>UIInterfaceOrientationPortraitUpsideDown</string>
-  </array>
-  <key>UIViewControllerBasedStatusBarAppearance</key>
-  <false/>
-  <key>LSApplicationCategoryType</key>
-  <string/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>IssieDice</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>IssieDice Package</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.issieshapiro.issiedice.dice</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Use music to attach to a face of a dice</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Takes pictures for dice faces</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Uses microphone to recod short voice message to attach to dice faces</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Uses photos as dice faces</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>AntDesign.ttf</string>
+		<string>FontAwesome.ttf</string>
+		<string>Ionicons.ttf</string>
+		<string>MaterialIcons.ttf</string>
+		<string>MaterialCommunityIcons.ttf</string>
+		<string>Gveret Levin AlefAlefAlef-Regular.ttf</string>
+		<string>DanaYadAlefAlefAlef-Normal.otf</string>
+		<string>Alef-regular.ttf</string>
+		<string>DavidLibre-Regular.ttf</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen2.storyboard</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.zip-archive</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>IssieDice Package</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.issieshapiro.issiedice.dice</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<string>dice</string>
+				<key>public.mime-type</key>
+				<string>application/zip</string>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>

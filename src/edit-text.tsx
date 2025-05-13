@@ -182,13 +182,6 @@ const styles = StyleSheet.create({
         width: 150,
         alignItems: "center",
     },
-    colorCircle: {
-        width: 40, height: 40,
-        borderRadius: 20,
-        marginEnd: 20,
-        borderColor: "gray",
-        borderWidth: 1
-    },
     fontSelector: {
         flexDirection: "row-reverse",
         alignItems: "center",

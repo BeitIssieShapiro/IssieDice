@@ -265,7 +265,9 @@ export const EditFace: React.FC<EditFaceProps> = ({
                                         color={color} setColor={setColor} setOpenColorPicker={setOpenColorPicker}
                                         setOpenFontPicker={(props: FontPickerProps) => setShowFonts(props)} />;
                                 case 'audio':
-                                    return <FaceAudio setAudioUri={setAudioUri} />;
+                                    return <FaceAudio setAudioUri={setAudioUri} audioUri={audioUri} />;
+                                default:
+                                    return <View />;
                             }
                         }}
                         onIndexChange={setTabIndex}
@@ -442,10 +444,11 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
 }
 
 
-function FaceAudio({ setAudioUri }: {
+function FaceAudio({ setAudioUri, audioUri }: {
+    audioUri: string | undefined;
     setAudioUri: (uri: string | undefined) => void;
 }) {
-    return <View style={[styles.faceEditSection, { flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "center" }]}>
+    return <View style={[styles.faceEditSection, { flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "space-around" }]}>
         <View style={{ width: 100, alignItems: "center" }}>
             <View style={styles.roundButton}>
                 <RecordButton
@@ -461,7 +464,13 @@ function FaceAudio({ setAudioUri }: {
             </View>
             <Text allowFontScaling={false} style={{ fontSize: 18 }}>{translate("RecordAudio")}</Text>
         </View>
-        <LabeledIconButton icon="close-outline" type="Ionicon" label={translate("NoBackground")}
+        {audioUri && <LabeledIconButton icon="play-outline" type="Ionicon" label={translate("PlayAudio")}
+            color={colors.sectionIconColor}
+            onPress={() => playAudio(audioUri)}
+            size={65}
+        />}
+       
+        <LabeledIconButton icon="close-outline" type="Ionicon" label={translate("NoAudio")}
             color="red"
             onPress={() => setAudioUri(undefined)}
             size={65}

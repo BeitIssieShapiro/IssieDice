@@ -12,7 +12,7 @@ import { WinSize } from "./utils";
 import { FilamentScene } from "react-native-filament";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MigrateDice } from "./migrate-dice";
-import { CountdownEditButton } from "./settings-btn";
+import { CountdownButton, CountdownEditButton } from "./settings-btn";
 import { EmptyProfile, Profile } from "./models";
 import { importPackage } from "./import-export";
 
@@ -90,7 +90,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
     getCurrentProfile().then(p => {
       setProfile(p);
       setTimeout(() => sceneRef.current?.update(p), 100);
-    }).catch(e=>console.log("error loading profile", e))
+    }).catch(e => console.log("error loading profile", e))
   }, [revision]);
 
   const sceneRef = useRef<DiceSceneMethods>(undefined);
@@ -105,18 +105,32 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
     }}>
 
       {/** indicator to a lock */}
-      {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), left: 5 + insets.left, zIndex: 1000 }]} />}
+      {/* {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), left: 5 + insets.left, zIndex: 1000 }]} />} */}
+      {inRecovery && <CountdownButton iconSize={40} onComplete={() => sceneRef.current?.resetRecovery()}
+        style={{
+          top: Math.max(25, 15 + insets.top),
+          left: Math.max(15, 5 + insets.left)
+        }}
+        icon="lock"
+        textKey="UnlockIn"
+        textLocation="right"
+        delayInSeconds={2}
+      />}
 
-
-      <CountdownEditButton iconSize={35} onComplete={() => setOpenSettings(revision)} style={{
+      <CountdownButton iconSize={35} onComplete={() => setOpenSettings(revision)} style={{
         top: Math.max(20, 15 + insets.top),
         right: Math.max(15, 5 + insets.right)
-      }} />
+      }}
+        icon="setting"
+        textKey="OpenIn"
+        textLocation="left"
+
+      />
 
       {migrateDice.length > 0 && <MigrateDice migrateDice={migrateDice} setMigrateDice={setMigrateDice}
         winWidth={windowSize.width} />}
 
-      {openSettings>0 && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => {
+      {openSettings > 0 && <SettingsUI windowSize={windowSize} onChange={() => setRevision(prev => prev + 1)} onClose={() => {
         if (revision != openSettings) {
           console.log("settings changed", revision, openSettings)
           setRevision(prev => prev + 1);

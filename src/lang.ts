@@ -112,6 +112,9 @@ const strings = {
         "SrcFromSearch": "Search",
         "SrcFromCamera": "Camera",
         "NoBackground": "Remove",
+        "NoAudio": "Remove",
+        "PlayAudio": "Play",
+
         "RecordAudio": "Record",
         "MigrateOldDice": "Loading dice from previous version",
         "DoneBtn": "OK",
@@ -125,6 +128,7 @@ const strings = {
         "Rotate": "Rotate",
         "CancelBtn": "Cancel",
         "OpenIn": "Open in {1} seconds",
+        "UnlockIn": "Unlock in {1} seconds",
         "NoFont": "Default",
         "FaceBackgroundTab": "Background",
         "FaceTextTab": "Text",
@@ -225,7 +229,9 @@ const strings = {
         "SrcFromSearch": "חיפוש",
         "SrcFromCamera": "מצלמה",
         "RecordAudio": "הקלטה",
-        "NoBackground": "הסר רקע",
+        "NoBackground": "הסר",
+        "NoAudio": "הסר",
+        "PlayAudio": "השמע",
 
         "MigrateOldDice": "טוען קוביות מגרסא קודמת",
         "DoneBtn": "אישור",
@@ -239,7 +245,7 @@ const strings = {
         "Rotate": "סובב",
         "CancelBtn": "ביטול",
         "OpenIn": "פתיחה בעוד {1} שניות",
-
+        "UnlockIn": "שחרור בעוד {1} שניות",
         "NoFont": "מערכת",
         "FaceBackgroundTab": "רקע",
         "FaceTextTab": "טקסט",

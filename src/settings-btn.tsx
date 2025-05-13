@@ -3,15 +3,21 @@ import { Pressable, View, Text, StyleSheet, ViewStyle } from 'react-native';
 import IconAntDesign from 'react-native-vector-icons/AntDesign';
 import { fTranslate } from './lang';
 
-interface CountdownEditButtonProps {
+interface CountdownButtonProps {
     onComplete: () => void;
     iconSize?: number;
-    style:ViewStyle
+    style: ViewStyle;
+    icon: string;
+    textLocation: "left" | "right";
+    textKey: string;
+    delayInSeconds?:number;
 }
 
-export const CountdownEditButton: React.FC<CountdownEditButtonProps> = ({
+export const CountdownButton: React.FC<CountdownButtonProps> = ({
     onComplete,
     style,
+    icon, textLocation, textKey,
+    delayInSeconds = 3,
     iconSize = 30,
 }) => {
     // countdown: null means no countdown active.
@@ -20,7 +26,7 @@ export const CountdownEditButton: React.FC<CountdownEditButtonProps> = ({
 
     // When press starts, begin a countdown from 3.
     const handlePressIn = () => {
-        setCountdown(__DEV__ ? 0 : 3);
+        setCountdown(__DEV__ ? 0 : delayInSeconds);
     };
 
     // When press is released, cancel the countdown.
@@ -54,11 +60,11 @@ export const CountdownEditButton: React.FC<CountdownEditButtonProps> = ({
         <Pressable
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
-            style={[styles.button, style]}
+            style={[styles.button, style, { flexDirection: textLocation == "left" ? "row-reverse" : "row" }]}
         >
-            <IconAntDesign name="setting" size={iconSize} color={"white"} />
+            <IconAntDesign name={icon} size={iconSize} color={"white"} />
             {countdown !== null && (
-                <Text allowFontScaling={false} style={styles.countdownText}>{fTranslate("OpenIn", countdown)}</Text>
+                <Text allowFontScaling={false} style={styles.countdownText}>{fTranslate(textKey, countdown)}</Text>
             )}
         </Pressable>
     );
@@ -67,8 +73,7 @@ export const CountdownEditButton: React.FC<CountdownEditButtonProps> = ({
 const styles = StyleSheet.create({
     button: {
         position: "absolute",
-        right: 15, zIndex: 600,
-        flexDirection: "row-reverse",
+        zIndex: 600,
         alignItems: "center",
         justifyContent: "flex-start"
     },
@@ -77,11 +82,11 @@ const styles = StyleSheet.create({
         paddingRight: 10,
         paddingLeft: 10,
         fontSize: 20,
-        borderRadius:12,
+        borderRadius: 12,
         //width: 250,
-        marginRight:20,
+        marginRight: 20,
         textAlign: "right",
         color: "black",
-        backgroundColor:"white"
+        backgroundColor: "white"
     },
 });

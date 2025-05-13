@@ -14,6 +14,7 @@
 		6A798ECE2DB4221100F6545E /* IssieDice.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 6A798ECC2DB4221100F6545E /* IssieDice.xcdatamodeld */; };
 		6A798ED12DB4227800F6545E /* TemplateMigrator.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A798ED02DB4227800F6545E /* TemplateMigrator.m */; };
 		6A798ED22DB4227800F6545E /* TemplateMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A798ECF2DB4227800F6545E /* TemplateMigrator.swift */; };
+		6AD7DF432DD22EC400783579 /* LaunchScreen2.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6AD7DF422DD22EC400783579 /* LaunchScreen2.storyboard */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8572BACA5F2E475B9DB399D2 /* Alef-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FA234884889045EBBC1D5FA4 /* Alef-regular.ttf */; };
@@ -34,6 +35,7 @@
 		6A798ECF2DB4227800F6545E /* TemplateMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateMigrator.swift; sourceTree = "<group>"; };
 		6A798ED02DB4227800F6545E /* TemplateMigrator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TemplateMigrator.m; sourceTree = "<group>"; };
 		6A798ED32DB4227B00F6545E /* IssieDice-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IssieDice-Bridging-Header.h"; sourceTree = "<group>"; };
+		6AD7DF422DD22EC400783579 /* LaunchScreen2.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen2.storyboard; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = IssieDice/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = IssieDice/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A224F8C7F19B4B9B9DE5FA3F /* DavidLibre-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DavidLibre-Regular.ttf"; path = "../assets/fonts/DavidLibre-Regular.ttf"; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 				6A798ED02DB4227800F6545E /* TemplateMigrator.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
+				6AD7DF422DD22EC400783579 /* LaunchScreen2.storyboard */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
@@ -193,6 +196,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				A8F849A1C6F7DBA8BB5496AA /* PrivacyInfo.xcprivacy in Resources */,
 				C7BF44EB6F2646C1AE71FC6D /* DanaYadAlefAlefAlef-Normal.otf in Resources */,
+				6AD7DF432DD22EC400783579 /* LaunchScreen2.storyboard in Resources */,
 				8572BACA5F2E475B9DB399D2 /* Alef-regular.ttf in Resources */,
 				4CABC0D1506E4FBEA2D1D242 /* DavidLibre-Regular.ttf in Resources */,
 				3547298851334AAF9FB4D62B /* Gveret Levin AlefAlefAlef-Regular.ttf in Resources */,
@@ -305,7 +309,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 33;
+				CURRENT_PROJECT_VERSION = 34;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
@@ -452,7 +456,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 33;
+				CURRENT_PROJECT_VERSION = 34;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
