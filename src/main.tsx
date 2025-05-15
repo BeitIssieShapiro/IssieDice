@@ -12,7 +12,7 @@ import { WinSize } from "./utils";
 import { FilamentScene } from "react-native-filament";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MigrateDice } from "./migrate-dice";
-import { CountdownButton, CountdownEditButton } from "./settings-btn";
+import { CountdownButton } from "./settings-btn";
 import { EmptyProfile, Profile } from "./models";
 import { importPackage } from "./import-export";
 
@@ -97,7 +97,6 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
 
   const insets = useSafeAreaInsets();
 
-  console.log("current profile", profile)
   return (
     <SafeAreaView style={styles.container} onLayout={(e) => {
       let wz = e.nativeEvent.layout;

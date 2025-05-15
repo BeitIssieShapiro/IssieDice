@@ -1,12 +1,12 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { fTranslate, isRTL, translate } from "./lang";
+import { DefaultProfileName, fTranslate, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
 
-import { IconButton, NumberSelector, ScreenTitle, Section, Spacer } from "./components";
+import { IconButton, NumberSelector, ScreenSubTitle, ScreenTitle, Section, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
+import {  deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { DiePicker, ProfilePicker } from "./profile-picker";
@@ -24,7 +24,7 @@ import { SettingsKeys } from "./settings-storage";
 import { exportAll, exportDice, exportProfile } from "./import-export";
 import { colors, gStyles } from "./common-style";
 import { Switch } from "@rneui/themed";
-const disabledColor = "gray";
+import { About } from "./about";
 
 
 interface SettingsProp {
@@ -35,6 +35,7 @@ interface SettingsProp {
 
 export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [revision, setRevision] = useState<number>(0);
+    const [showAbout, setShowAbout] = useState<boolean>(false)
     const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
     const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
     const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined);
@@ -53,7 +54,12 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     useEffect(() => {
         getCurrentProfile().then(p => {
             setProfile(p);
-            setProfileName(Settings.getString(SettingsKeys.CurrentProfileName, ""));
+            const profileName = Settings.getString(SettingsKeys.CurrentProfileName, "");
+            if (profileName == DefaultProfileName) {
+                setProfileName(translate(profileName));
+            } else {
+                setProfileName(profileName)
+            }
             console.log("reload settings", p.dice.map(b => b.template))
             if (revision > 0) {
                 onChange()
@@ -145,7 +151,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         }
 
         if (isCurrent) {
-            await LoadProfileFileIntoSettings("");
+            await LoadProfileFileIntoSettings(DefaultProfileName);
             setTimeout(() => setRevision(prev => prev + 1), 100);
         }
         await deleteProfileFile(name);
@@ -155,7 +161,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     const handleProfileEditName = (newName: string, prevName: string, afterSave?: () => void) => {
         const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
-        const isCurrent = currName == newName;
+        const isCurrent = currName == prevName;
         const isRename = prevName.length > 0;
 
         console.log("save pressed", newName)
@@ -198,23 +204,13 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         }
     }
 
-    const closeProfile = async () => {
-        const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
-        if (currName.length > 0) {
-            await LoadProfileFileIntoSettings("");
-            setTimeout(() => setRevision(prev => prev + 1), 100);
-        }
-    }
-
-
-
     const isScreenNarrow = windowSize.width < 500;
     const isMobile = isScreenNarrow || windowSize.height < 500;
     let diceInRow = windowSize.width > windowSize.height ? 4 : 2;
     const marginHorizontal = isScreenNarrow ? 5 : 40;
     const cubeSettingSize = Math.max((windowSize.width - insets.left - insets.right - 2 * marginHorizontal) / diceInRow - 10, 150)
     const onAbout = () => {
-        // todo
+        setShowAbout(true)
     }
 
     async function handleExportDice(name: string) {
@@ -308,6 +304,10 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     }
 
+    if (showAbout) {
+        return <About onClose={() => setShowAbout(false)}/>
+    }
+
     return <View style={[gStyles.screenContainer, { top: insets.top, left: insets.left }]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
@@ -329,6 +329,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             }}
             editButton={{ name: translate("Rename") }}
+            onCreate={() => {
+                setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
+                setOpenLoadProfile(false);
+            }}
+            
             onEdit={(name, afterSave) => setShowEditProfileName({
                 name,
                 afterSave
@@ -378,7 +383,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
         {showEditProfileName != undefined && <EditText
             label={showEditProfileName.name.length > 0 ? translate("RenameProfile") : translate("SetProfileName")}
-            initialText={""}
+            initialText={showEditProfileName.name}
             textOnly={true}
             onClose={() => setShowEditProfileName(undefined)}
             onDone={(newName) => {
@@ -421,7 +426,16 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} iconName="check" />
 
         {/* Profile Name */}
-        <View style={[gStyles.screenSubTitle, {
+        <ScreenSubTitle
+            titleIcon={{ name: "person-circle-outline", size: 45, color: colors.titleBlue, type: "Ionicons" }}
+            elementTitle={translate("ProfileName")} elementName={profileName}
+            actionName={translate("ListProfiles")}
+            actionIcon={{ name: "list", type: "Ionicons", color: colors.titleBlue, size: 25 }}
+            onAction={() => setOpenLoadProfile(true)}
+        />
+
+
+        {/* <View style={[gStyles.screenSubTitle, {
             flexDirection: isScreenNarrow ? "column" : "row",
             direction: isRTL() ? "rtl" : "ltr",
 
@@ -448,7 +462,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 <IconButton text={translate("List")} onPress={() => setOpenLoadProfile(true)} />
 
             </View>
-        </View>
+        </View> */}
 
         {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>}
         <ScrollView style={styles.settingHost}>

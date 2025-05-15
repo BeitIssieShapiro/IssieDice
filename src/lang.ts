@@ -6,22 +6,25 @@ const deviceLanguageRaw = bestLanguage;
 const supportedLanguages = ['he', 'en', 'ar'];
 
 // Extract the first two characters of the language code (e.g., 'en', 'he')
-const deviceLanguage = //"he"
+const deviceLanguage = "he"
     deviceLanguageRaw.split(/[-_]/)[0];
 
 // Check if the detected language is supported, otherwise default to 'en'
-export const gCurrentLang: string = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
+export const gCurrentLang: "he" | "en" | "ar" = (supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en') as "he" | "en" | "ar";
 
 console.log("Detected Language", deviceLanguageRaw, "Using Language", gCurrentLang);
 export const isRight2Left = gCurrentLang.startsWith("he") || gCurrentLang.startsWith("ar");
 
+export const DefaultProfileName = "DefaultProfile";
 
-const strings = {
+
+const strings: { [key: string]: { [key: string]: string } } = {
     "en": {
         "ButtonTitle": "Button {1}",
         "Settings": "Settings",
         "About": "About",
-        "DiceName": "Dice Name",
+        "DiceName": "Die Name",
+        "EditDieName": "Edit Name",
         "FacePreview": "Face Preview",
         "DiceSectionTitle": "Dice",
         "GeneralSectionTitle": "General",
@@ -34,6 +37,8 @@ const strings = {
         "Export": "Export",
         "Rename": "Rename",
         "ProfileName": "Profile Name",
+        [DefaultProfileName]: "Default Profile",
+        "ListProfiles":"List",
         "ProfileNoName": "Unnamed Profile",
         "DeleteProfileWarnning": "Are you sure you want to delete the profile {1}?",
         "DeleteCurrentProfileWarnning": "This is the active profile. Deleting it will reset the app. Continue?",
@@ -85,7 +90,7 @@ const strings = {
 
         "SelectDiceTitle": "Select Dice",
         "NoItemsFound": "No Items Found",
-        "EditDice": "Edit Dice",
+        "EditDice": "Edit Die",
         "CreateDice": "Create Dice",
         "EditNameTitle": "Edit Name",
         "FaceTextLabel": "Enter Text for Dice Face",
@@ -143,6 +148,7 @@ const strings = {
         "DiceSectionTitle": "קוביות",
         "GeneralSectionTitle": "כללי",
         "DiceName": "שם קובייה",
+        "EditDieName": "עריכת שם",
         "FacePreview": "תצוגת פאה",
         "ActiveDice": "קובייה פעילה",
         "EnableSound": "צליל קוביות",
@@ -152,6 +158,8 @@ const strings = {
         "Export": "ייצוא",
         "Rename": "שינוי שם",
         "ProfileName": "שם פרופיל",
+        [DefaultProfileName]: "פרופיל בית",
+        "ListProfiles":"רשימה",
         "ProfileNoName": "פרופיל ללא שם",
         "DeleteProfileWarnning": "האם למחוק את הפרופיל {1}?",
         "DeleteCurrentProfileWarnning": "זהו הפרופיל הנוכחי. מחיקתו תאפס את האפליקציה. להמשיך?",

@@ -2,9 +2,16 @@ import { StyleSheet } from "react-native";
 
 export const colors = {
     titleBlue: "#193C73",
-    sectionIconColor:"#4FA1D1",
+    sectionIconColor: "#4FA1D1",
     switchColor: "#193C73",
-    titleButtonsBG:  "#F5F5F5",
+    titleButtonsBG: "#F5F5F5",
+    disabled: "gray",
+    defaultIconColor: "#6E6E6E",
+}
+
+export const menuActionIcon = {
+    color:colors.titleBlue,
+    size:22
 }
 
 export const gStyles = StyleSheet.create({
@@ -41,8 +48,8 @@ export const gStyles = StyleSheet.create({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        height: 70,
+        justifyContent: "center",
+        height: 110,
         fontSize: 20,
         padding: 15,
     },
@@ -53,11 +60,18 @@ export const gStyles = StyleSheet.create({
         marginLeft: 10,
         marginRight: 10
     },
-    screenSubTitleText: {
+    screenSubTitleElementTitle: {
         marginEnd: 10,
         marginStart: 10,
-        fontSize: 20,
-        color: "black"
+        fontSize: 23,
+        color: colors.titleBlue,
+        fontWeight: "bold"
+    },
+    screenSubTitleElementName: {
+        marginEnd: 10,
+        marginStart: 10,
+        fontSize: 23,
+        color: colors.titleBlue,
     },
     card: {
         borderWidth: 2,
@@ -91,7 +105,7 @@ export const gStyles = StyleSheet.create({
     },
     cardFooter: {
         position: "absolute",
-        flexDirection:"row",
+        flexDirection: "row",
         alignItems: "center",
         width: "100%",
         bottom: 0,
@@ -103,7 +117,7 @@ export const gStyles = StyleSheet.create({
         fontWeight: "bold",
         marginBottom: 5,
         paddingHorizontal: 40,
-        paddingTop:10,
+        paddingTop: 10,
     },
     sectionHost: {
         flexDirection: "row",
@@ -118,18 +132,18 @@ export const gStyles = StyleSheet.create({
         marginHorizontal: 40
     },
     vchip: {
-        height:70,
-        width:120,
+        height: 70,
+        width: 120,
         padding: 10,
         flexDirection: "column",
         justifyContent: "flex-start",
         alignItems: "center",
     },
-    vchipText:{
-        position:"absolute",
-        bottom:0,
-        width:"100%",
-        textAlign:"center",
+    vchipText: {
+        position: "absolute",
+        bottom: 0,
+        width: "100%",
+        textAlign: "center",
     },
     iconBtnColor: {
         color: "#6E6E6E",
@@ -145,10 +159,10 @@ export const gStyles = StyleSheet.create({
         backgroundColor: "lightgray",
     },
     labeledIconText: {
-        color: "black", 
+        color: "black",
         fontSize: 18,
-        minWidth:100,
-        textAlign:"center"
+        minWidth: 100,
+        textAlign: "center"
     },
     pickerView: {
         flexDirection: 'column',
@@ -185,6 +199,6 @@ export const gStyles = StyleSheet.create({
         margin: 25,
         fontWeight: "bold",
         color: colors.titleBlue,
-        
+
     }
 });

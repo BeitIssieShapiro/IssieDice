@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'
 import { ensureAndroidCompatible } from './utils';
-import { fTranslate } from './lang';
+import { DefaultProfileName, fTranslate, translate } from './lang';
 import { NativeModules } from 'react-native';
 import { Dice, EmptyDice, EmptyProfile, FaceInfo, List, Profile, Templates, templatesList } from './models';
 import { AlreadyExists, Folders, getCacheBusterSuffix, InvalidFileName, loadFile, loadJSON, saveJSON, writeFileWithCacheBuster } from './disk';
@@ -40,7 +40,7 @@ export async function migrateV1(): Promise<string[]> {
             }
             console.log("Done migrating old dice templates", customDice.length);
             if (customDice.length == 0) {
-                RNSettings.set({"MigrateV1": false});
+                RNSettings.set({ "MigrateV1": false });
             }
         }
     }
@@ -108,7 +108,9 @@ export async function LoadProfileFileIntoSettings(name: string | NoName) {
 
     if (name == "") {
         // create new profile
-        await clearProfileInSettings()
+        await clearProfileInSettings();
+        // this happens Once in the lifetime of app:
+        Settings.set(SettingsKeys.CurrentProfileName, translate("DefaultProfileName"));
         return;
     }
 
@@ -148,6 +150,16 @@ async function loadProfileIntoSettings(p: Profile, name: string) {
 }
 
 export async function getCurrentProfile(): Promise<Profile> {
+    const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
+
+    if (currName == "") {
+        // initialization of DefaultProfile
+        await clearProfileInSettings();
+        Settings.set(SettingsKeys.CurrentProfileName, DefaultProfileName);
+        await saveProfileFile(DefaultProfileName, EmptyProfile, true)
+        await loadProfileIntoSettings(EmptyProfile, DefaultProfileName);
+    }
+
     const numOfDice = 4 // Settings.getNumber(SettingsKeys.DiceCount, 1);
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
     const diceActive = Settings.getArray<boolean>(SettingsKeys.DiceActive, "boolean", [true, true, true, true]);
@@ -205,11 +217,11 @@ export async function listProfiles(): Promise<List[]> {
                 const name = file.name.substring(0, file.name.length - 5);
                 list.push({
                     key: name,
-                    name
+                    name: name == DefaultProfileName ? translate(DefaultProfileName) : name,
                 })
             }
         }
-        list.sort((a, b) => a.name.localeCompare(b.name));
+        list.sort((a, b) => a.key == DefaultProfileName ? -1 : b.key == DefaultProfileName ? 1 : a.name.localeCompare(b.name));
         return list;
     }).catch((e) => {
         console.log("Fail browsing profiles", e);
@@ -293,6 +305,9 @@ export function isValidFilename(filename: string): boolean {
     if (invalidCharsRegex.test(filename)) {
         return false;
     }
+    if (filename == DefaultProfileName) {
+        return false;
+    }
     return true;
 }
 
@@ -357,7 +372,7 @@ export async function deleteDice(name: string) {
     // check current profile:
     const diceTemplateType = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
     let modified = false;
-    for (let i=0;i<  diceTemplateType.length;i++) {
+    for (let i = 0; i < diceTemplateType.length; i++) {
         if (diceTemplateType[i] == name) {
             diceTemplateType[i] = EmptyDice.template;
             modified = true;

@@ -1,26 +1,16 @@
 import { Fragment, useEffect, useState } from "react";
-import { ListElements } from "./profile";
+import {  ListElements } from "./profile";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
-import { isRTL, translate } from "./lang";
+import { DefaultProfileName, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
 import { FadeInView, IconButton } from "./components";
 import { DicePreview } from "./edit-dice";
 import { RadioButton } from "./radio-button";
 import { List, Templates } from "./models";
 import { Folders } from "./disk";
-import { colors, gStyles } from "./common-style";
+import { colors, gStyles, menuActionIcon } from "./common-style";
 
 
-function Seperator({ width }: { width: string }) {
-    return <View
-        style={{
-            width,
-            marginTop: 4,
-            borderBottomColor: 'gray',
-            borderBottomWidth: 1,
-        }}
-    />
-}
 
 interface ButtonInfo {
     name?: string;
@@ -60,12 +50,16 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
         }
     }, [open, exclude, revision]);
 
+    console.log("profiles", list)
     return <FadeInView height={open ? height : 0} style={[gStyles.pickerView]} onClose={onClose}>
         <View style={[gStyles.pickerTitleHost, { direction: isRTL() ? "rtl" : "ltr" }]}>
             <Text allowFontScaling={false} style={gStyles.pickerTitleText} >{
                 translate("SelectProfileTitle")
             }</Text>
-            <Icon name="close" size={45} onPress={onClose} />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />}
+                <Icon name="close" size={45} onPress={onClose} />
+            </View>
         </View>
 
         <View style={gStyles.horizontalSeperator} />
@@ -90,13 +84,12 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                         }}>{item.name}</Text>
                                 </View>
                             </Pressable>
-                            <View style={{ flexDirection: "row-reverse", width: "40%" }}>
-                                {onDelete && !item.readOnly && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onEdit && !item.readOnly && <IconButton icon="edit" onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onExport && !item.readOnly && <IconButton icon="share-social-outline"
-                                    type="Ionicon" onPress={() => onExport(item.key)} />}
-
-                            </View>
+                            {item.key !== DefaultProfileName &&
+                                <View style={{ flexDirection: "row-reverse", width: "40%" }}>
+                                {onDelete && !item.readOnly && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onEdit && !item.readOnly && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                {onExport && !item.readOnly && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}
+                            </View>}
                         </View>
                         <View style={gStyles.horizontalSeperator} />
                     </View>
@@ -140,7 +133,7 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
                 translate("SelectDiceTitle")
             }</Text>
             <View style={[{ flexDirection: "row", alignItems: "center" }, dir]}>
-                {onCreate && <IconButton icon="plus" onPress={() => onCreate()} text={translate("Create")} />}
+                {onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />}
                 <Icon name="close" size={45} onPress={onClose} />
             </View>
             {
@@ -188,10 +181,9 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
                                     </View>
                                 </Pressable>
                                 <View style={{ flexDirection: "row-reverse", width: "40%" }}>
-                                    {onDelete && !item.readOnly && <IconButton icon="delete" onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
-                                    {onEdit && !item.readOnly && <IconButton icon="edit" onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                    {onExport && !item.readOnly && <IconButton icon="share-social-outline"
-                                        type="Ionicon" onPress={() => onExport(item.key)} />}
+                                    {onDelete && !item.readOnly && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onEdit && !item.readOnly && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onExport && !item.readOnly && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}
 
                                 </View>
                             </View>

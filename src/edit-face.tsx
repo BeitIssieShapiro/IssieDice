@@ -173,11 +173,11 @@ export const EditFace: React.FC<EditFaceProps> = ({
                         } as FaceInfo
                         onDone(faceInfo);
 
-                    }} backgroundColor={colors.titleButtonsBG} 
-                    icon="check"
+                    }} backgroundColor={colors.titleButtonsBG}
+                        icon={{ name: "check" }}
                     />
-                    <IconButton text={translate("Cancel")} onPress={onClose} backgroundColor={colors.titleButtonsBG} 
-                    icon="close"
+                    <IconButton text={translate("Cancel")} onPress={onClose} backgroundColor={colors.titleButtonsBG}
+                        icon={{ name: "close" }}
                     />
                 </View>
             </View>
@@ -258,12 +258,23 @@ export const EditFace: React.FC<EditFaceProps> = ({
                                         setBusy={setBusy}
                                         onOpenSearch={() => setOpenSearch(true)}
                                         onOpenCamera={() => setOpenCamera(true)}
-                                        onOpenColorPicker={(props: ColorPickerProps) => setOpenColorPicker(props)} />;
+                                        onOpenColorPicker={(props: ColorPickerProps) => {
+                                            setOpenColorPicker(props)
+                                        }} />;
                                 case 'text':
                                     return <FaceText size={size} text={text} setText={setText} fontName={fontName} setFontName={setFontName}
                                         isBold={isBold} setIsBold={setIsBold} fontSize={fontSize} setFoneSize={setFoneSize}
-                                        color={color} setColor={setColor} setOpenColorPicker={setOpenColorPicker}
-                                        setOpenFontPicker={(props: FontPickerProps) => setShowFonts(props)} />;
+                                        color={color} setColor={setColor}
+                                        setOpenColorPicker={(props: ColorPickerProps) => {
+                                            setOpenColorPicker(props);
+                                            setShowFonts(undefined)
+                                            Keyboard.dismiss();
+                                        }}
+                                        setOpenFontPicker={(props: FontPickerProps) => {
+                                            setShowFonts(props)
+                                            setOpenColorPicker(undefined);
+                                            Keyboard.dismiss();
+                                        }} />;
                                 case 'audio':
                                     return <FaceAudio setAudioUri={setAudioUri} audioUri={audioUri} />;
                                 default:
@@ -469,7 +480,7 @@ function FaceAudio({ setAudioUri, audioUri }: {
             onPress={() => playAudio(audioUri)}
             size={65}
         />}
-       
+
         <LabeledIconButton icon="close-outline" type="Ionicon" label={translate("NoAudio")}
             color="red"
             onPress={() => setAudioUri(undefined)}

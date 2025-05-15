@@ -163,6 +163,7 @@ export async function importPackage(packagePath: string, overwrite = false, subF
                 size: md.size,
                 recoveryTime: md.recoveryTime,
                 tableColor: md.tableColor,
+                soundEnabled: md.soundEnabled
             }
 
             await saveProfileFile(md.name, p, true);

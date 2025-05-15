@@ -1,7 +1,6 @@
 import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleSheet, Text, View } from "react-native"
 import { fTranslate, isRTL, translate } from "./lang";
-import { ScreenTitle, Spacer } from "./components";
-import Icon from 'react-native-vector-icons/AntDesign';
+import { MyIcon, ScreenSubTitle, ScreenTitle, Spacer } from "./components";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { existsFolder, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder } from "./profile";
 import { captureRef } from "react-native-view-shot";
@@ -10,12 +9,11 @@ import { unlink } from "react-native-fs";
 import { EditText } from "./edit-text";
 import { EditFace, FaceText } from "./edit-face";
 import * as RNFS from 'react-native-fs';
-import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import { WinSize } from "./utils";
 import { playAudio } from "./audio";
 import { emptyFaceInfo, FaceInfo } from "./models";
 import { copyFileToFolder, getCacheBusterSuffix, InvalidCharachters, writeFileWithCacheBuster } from "./disk";
-import { gStyles } from "./common-style";
+import { colors, gStyles } from "./common-style";
 
 
 interface EditDiceProps {
@@ -199,25 +197,18 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         />
 
         <View style={styles.faceButtons}>
-            <Icon name="edit" size={30} onPress={(() => setEditFace(index))} />
-            {/*todo add listen to audio*/}
+            <MyIcon info={{name:"edit", size:33}} onPress={() => setEditFace(index)} />
         </View>
     </View>)
 
     return <View style={gStyles.screenContainer}>
         <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} iconName="check" />
-        <View style={[gStyles.screenSubTitle, { flexDirection: (isRTL() ? "row-reverse" : "row") }]} >
-            <View style={{ flexDirection: "row", alignItems: "center", direction: isRTL() ? "rtl" : "ltr" }}>
-                <Text allowFontScaling={false} style={gStyles.screenSubTitleCaption}>{translate("DiceName")}:</Text>
-                <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" }]}>{editedName}</Text>
-            </View>
-            <Icon name="edit" size={35} onPress={() => setOpenNameEditor(true)} />
-        </View>
-        {busy && <ActivityIndicator />}
-        {/* {isLandscape && <DicePreview facesInfo={facesInfo} size={150} />} */}
-        <View style={{ flexDirection: "row", width: "100%", justifyContent: "center", margin: 10 }}>
-            <DicePreview facesInfo={facesInfo} size={150} />
-        </View>
+        <ScreenSubTitle
+            elementTitle={translate("DiceName")} elementName={editedName}
+            actionName={translate("EditDieName")}
+            actionIcon={{ name: "edit", type: "AntDesign", color: colors.titleBlue, size: 30 }}
+            onAction={() => setOpenNameEditor(true)}
+        />
 
 
         {editFace >= 0 && <EditFace
@@ -228,7 +219,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
             intialAudioUri={facesInfo[editFace]?.audioUri}
             onClose={() => setEditFace(-1)}
             onDone={(faceInfo) => {
-                console.log("onDone",editFace, faceInfo, facesInfo)
+                console.log("onDone", editFace, faceInfo, facesInfo)
                 handleFaceInfoChange(editFace, faceInfo, facesInfo);
                 setEditFace(-1);
             }}
@@ -400,7 +391,8 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
             ]}>{faceText.text}</Text>}
 
             {audioUri && <View style={[styles.playButton]}>
-                <IconMCI name="music-note" size={25} />
+
+                <MyIcon info={{name:"sound", size:25, type:"MCI"}} />
             </View>}
         </Pressable>
     </View >

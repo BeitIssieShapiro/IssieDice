@@ -73,7 +73,7 @@
 		<string>DavidLibre-Regular.ttf</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen2.storyboard</string>
+	<string>LaunchScreen2</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>

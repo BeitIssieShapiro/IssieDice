@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Dice, templatesList } from "./models";
 import { isRTL, translate } from "./lang";
-import { IconButton, Spacer } from "./components";
+import { IconButton, MyIcon, Spacer } from "./components";
 import { DicePreview } from "./edit-dice";
 import { colors, gStyles } from "./common-style";
 import { Switch } from "@rneui/themed";
@@ -47,7 +47,7 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
                 <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("ActiveDice")}</Text>
             </TouchableOpacity> */}
 
-            <Spacer h={isMobile?5:20} />
+            <Spacer h={isMobile ? 5 : 20} />
 
             {dice.faces && dice.faces.length > 0 ?
                 <DicePreview facesInfo={dice.faces} size={width / 3} /> :
@@ -55,8 +55,8 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
             }
         </View>
         <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>
-            <IconButton icon="list" text={isMobile ? "" : translate("List")} onPress={() => onOpenLoadDice()} type="Ionicon" />
-            {onEditDice && <IconAnt name="edit" size={35} onPress={onEditDice} />}
+            <IconButton icon={{ name: "list", type: "Ionicons", size: 30, color: colors.titleBlue }} text={isMobile ? "" : translate("List")} onPress={() => onOpenLoadDice()} />
+            {onEditDice && <MyIcon info={{ name: "edit", type: "AntDesign", size: 30, color: colors.titleBlue }} onPress={onEditDice} />}
         </View>
     </View>
 

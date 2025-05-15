@@ -12,6 +12,13 @@ import { colors, gStyles } from "./common-style";
 import { BlurView } from "@react-native-community/blur";
 
 
+export interface IconProps {
+    name: string;
+    type?: "MCI" | "Ionicons" | "AntDesign";
+    color?: string;
+    size?: number;
+}
+
 export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black" }:
     {
         type?: undefined | "Ionicon" | "MCI",
@@ -30,21 +37,26 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
     </Pressable>
 }
 
-export function IconButton({ icon, onPress, text, type, backgroundColor }:
-    { icon?: string, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
-    const IconElem = type == "Ionicon" ? IconIonicons :
-        (type == "MCI" ? MCIIcon : IconAnt);
-
-    return <TouchableOpacity style={[styles.iconButton, { flexDirection: "row", direction: isRTL() ? "rtl" : "ltr" },
-    backgroundColor && { backgroundColor },
-    !text && { borderWidth: 0 }]} onPress={onPress} >
-
-        {icon && <IconElem name={icon} style={styles.icon} />}
-        {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign: icon ? "left" : "center" }}>{text}</Text>}
-    </TouchableOpacity>
+export function MyIcon({ info, onPress }: { info: IconProps, onPress?: () => void }) {
+    const IconElem = info.type == "Ionicons" ? IconIonicons :
+        (info.type == "MCI" ? MCIIcon : IconAnt);
+    return <IconElem name={info.name} size={info.size || 22} color={info.color || colors.defaultIconColor} onPress={onPress} />
 }
 
-export function Spacer({ h, w, bc }: { h?: Number, w?: Number, bc?: string }) {
+export function IconButton({ icon, onPress, text, backgroundColor }:
+    { icon?: IconProps, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
+
+    return <TouchableOpacity style={
+        [styles.iconButton, { flexDirection: "row", direction: isRTL() ? "rtl" : "ltr" },
+        backgroundColor && { backgroundColor },
+        !text && { borderWidth: 0, padding: 0, maxWidth: styles.iconButton.maxHeight }]} onPress={onPress} >
+
+        {icon && <MyIcon info={icon} />}
+        {!!text && <Text allowFontScaling={false} style={{ fontSize: 22, marginInlineStart: 5, marginInlineEnd: 5, textAlign: icon ? "left" : "center" }}>{text}</Text>}
+    </TouchableOpacity >
+}
+
+export function Spacer({ h, w, bc }: { h?: number, w?: number, bc?: string }) {
     return <View style={{ height: h, width: w, backgroundColor: bc }} />
 }
 
@@ -158,8 +170,46 @@ export function ScreenTitle({ title, onClose, onAbout, iconName = "close" }: { t
             <IconAnt name={"infocirlceo"} color={gStyles.screenTitleText.color} size={35} onPress={onAbout} /> :
             <Spacer h={10} />}
         <Text allowFontScaling={false} style={gStyles.screenTitleText}>{title}</Text>
-        <IconAnt name={iconName} color={gStyles.screenTitleText.color} size={35} onPress={onClose} />
+        <IconButton
+            icon={{ name: iconName, type: "AntDesign" }}
+            onPress={onClose}
+            backgroundColor="white"
+        />
+        {/* <IconAnt name={iconName} color={gStyles.screenTitleText.color} size={35} onPress={onClose} /> */}
     </View>
+}
+
+export function ScreenSubTitle({ titleIcon, elementTitle, elementName, actionName, actionIcon, onAction }:
+    { titleIcon?: IconProps, elementTitle: string, elementName: string, actionName: string, actionIcon: IconProps, onAction: () => void }) {
+
+    return (
+        <View style={[gStyles.screenSubTitle, {
+            flexDirection: "column",
+            direction: isRTL() ? "rtl" : "ltr",
+
+        }]} >
+
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {titleIcon && <MyIcon info={titleIcon} />}
+                <Text allowFontScaling={false} style={gStyles.screenSubTitleElementTitle}>{elementTitle}:</Text>
+                <Text allowFontScaling={false} style={[gStyles.screenSubTitleElementName, { textAlign: isRTL() ? "right" : "left" },
+                elementName.length == 0 && { color: colors.disabled }]}>
+                    {elementName.length > 0 ? elementName : translate("ProfileNoName")}
+                </Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {/* {profileBusy && <ActivityIndicator color="#0000ff" size="large" />} */}
+                {/* {profileName.length > 0 ?
+                    <IconButton text={translate("Close")} onPress={closeProfile} /> :
+                    <IconButton text={translate("Create")} onPress={() =>
+                        setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
+                    } />
+                } */}
+                <IconButton text={actionName} onPress={() => onAction()} icon={actionIcon} />
+
+            </View>
+        </View>
+    )
 }
 
 export function Section({ title, component, iconName, marginHorizontal }: { title: string, component: any, iconName?: string, marginHorizontal: number }) {
@@ -181,19 +231,14 @@ export function ColumnChip({ title, component }: { title: string, component: any
 
 const styles = StyleSheet.create({
 
-    icon: {
-        color: "#6E6E6E",
-        fontSize: 28
-    },
-
     iconButton: {
 
         margin: 10,
         paddingLeft: 10,
         paddingRight: 10,
 
-        maxHeight: 39,
-        minHeight: 39,
+        maxHeight: 40,
+        minHeight: 40,
         minWidth: 39,
         alignItems: "center",
         borderColor: "gray",

@@ -16,7 +16,6 @@
 		6A798ED22DB4227800F6545E /* TemplateMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A798ECF2DB4227800F6545E /* TemplateMigrator.swift */; };
 		6AD7DF432DD22EC400783579 /* LaunchScreen2.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6AD7DF422DD22EC400783579 /* LaunchScreen2.storyboard */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8572BACA5F2E475B9DB399D2 /* Alef-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FA234884889045EBBC1D5FA4 /* Alef-regular.ttf */; };
 		A8F849A1C6F7DBA8BB5496AA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		C7BF44EB6F2646C1AE71FC6D /* DanaYadAlefAlefAlef-Normal.otf in Resources */ = {isa = PBXBuildFile; fileRef = EDC7E11F06AD4700B2BA16F2 /* DanaYadAlefAlefAlef-Normal.otf */; };
@@ -37,7 +36,6 @@
 		6A798ED32DB4227B00F6545E /* IssieDice-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IssieDice-Bridging-Header.h"; sourceTree = "<group>"; };
 		6AD7DF422DD22EC400783579 /* LaunchScreen2.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen2.storyboard; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = IssieDice/AppDelegate.swift; sourceTree = "<group>"; };
-		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = IssieDice/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A224F8C7F19B4B9B9DE5FA3F /* DavidLibre-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DavidLibre-Regular.ttf"; path = "../assets/fonts/DavidLibre-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		EDC7E11F06AD4700B2BA16F2 /* DanaYadAlefAlefAlef-Normal.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DanaYadAlefAlefAlef-Normal.otf"; path = "../assets/fonts/DanaYadAlefAlefAlef-Normal.otf"; sourceTree = "<group>"; };
@@ -66,7 +64,6 @@
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				6AD7DF422DD22EC400783579 /* LaunchScreen2.storyboard */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
-				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 				6A798ED32DB4227B00F6545E /* IssieDice-Bridging-Header.h */,
 			);
@@ -192,7 +189,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				A8F849A1C6F7DBA8BB5496AA /* PrivacyInfo.xcprivacy in Resources */,
 				C7BF44EB6F2646C1AE71FC6D /* DanaYadAlefAlefAlef-Normal.otf in Resources */,
@@ -309,7 +305,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
@@ -456,7 +452,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = SKNJT9TD9G;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

@@ -96,7 +96,7 @@ export const EditText: React.FC<EditTextProps> = ({
 
 
                 <View style={styles.buttonRow}>
-                    <IconButton width={80} text={translate("OK")} onPress={() => {
+                    <IconButton text={translate("OK")} onPress={() => {
                         onDone({
                             text,
                             backgroundColor,
@@ -106,7 +106,7 @@ export const EditText: React.FC<EditTextProps> = ({
                             fontSize,
                         })
                     }} />
-                    <IconButton width={80} text={translate("Cancel")} onPress={onClose} />
+                    <IconButton text={translate("Cancel")} onPress={onClose} />
                 </View>
             </View>
         </View>
