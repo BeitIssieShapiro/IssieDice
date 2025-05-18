@@ -5,7 +5,6 @@ import { IconButton, MyIcon, Spacer } from "./components";
 import { DicePreview } from "./edit-dice";
 import { colors, gStyles } from "./common-style";
 import { Switch } from "@rneui/themed";
-import IconAnt from 'react-native-vector-icons/AntDesign';
 
 interface DiceSettingsProps {
     width: number,
@@ -14,6 +13,7 @@ interface DiceSettingsProps {
     onOpenLoadDice: () => void;
     onSetActive: (active: boolean) => void;
     onEditDice?: () => void;
+
 }
 
 export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onOpenLoadDice }: DiceSettingsProps) {
@@ -21,6 +21,7 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
     let templ = templatesList.find(t => t.key == dice.template)!;
 
     const isMobile = width < 300 || height < 300;
+    const isNarrow = width < 300;
 
     const dirStyle: any = { flexDirection: (isRTL() ? "row-reverse" : "row") }
 
@@ -36,17 +37,6 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
             />
         </View>
         <View style={gStyles.cardBody}>
-
-            {/* <IconButton icon="cube-outline" text={translate("List")} onPress={() => onOpenLoadDice()} type="Ionicon" /> */}
-            {/* <TouchableOpacity style={[{ alignItems: "center", marginEnd: 15, width: "33%" }, dirStyle]}
-                onPress={() => onSetActive(!dice.active)}>
-                {dice.active ?
-                    <IconMCI name="checkbox-outline" style={{ fontSize: 30, color: gStyles.iconBtnColor.color }} /> :
-                    <IconMCI name="checkbox-blank-outline" style={{ fontSize: 30, color: gStyles.iconBtnColor.color }} />
-                }
-                <Text allowFontScaling={false} style={{ fontSize: 20 }} >{translate("ActiveDice")}</Text>
-            </TouchableOpacity> */}
-
             <Spacer h={isMobile ? 5 : 20} />
 
             {dice.faces && dice.faces.length > 0 ?
@@ -54,7 +44,7 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
                 <DicePreview facesInfo={templ?.image} size={width / 3} />
             }
         </View>
-        <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>
+        <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: isNarrow ? "space-between" : "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>
             <IconButton icon={{ name: "list", type: "Ionicons", size: 30, color: colors.titleBlue }} text={isMobile ? "" : translate("List")} onPress={() => onOpenLoadDice()} />
             {onEditDice && <MyIcon info={{ name: "edit", type: "AntDesign", size: 30, color: colors.titleBlue }} onPress={onEditDice} />}
         </View>

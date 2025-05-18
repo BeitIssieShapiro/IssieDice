@@ -1,6 +1,6 @@
-import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleSheet, Text, View } from "react-native"
+import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleSheet, Text, TextInput, View } from "react-native"
 import { fTranslate, isRTL, translate } from "./lang";
-import { MyIcon, ScreenSubTitle, ScreenTitle, Spacer } from "./components";
+import { getInsetsLimit, MyIcon, ScreenSubTitle, ScreenTitle, Spacer } from "./components";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { existsFolder, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder } from "./profile";
 import { captureRef } from "react-native-view-shot";
@@ -14,6 +14,8 @@ import { playAudio } from "./audio";
 import { emptyFaceInfo, FaceInfo } from "./models";
 import { copyFileToFolder, getCacheBusterSuffix, InvalidCharachters, writeFileWithCacheBuster } from "./disk";
 import { colors, gStyles } from "./common-style";
+import { text } from "stream/consumers";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 interface EditDiceProps {
@@ -38,6 +40,8 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
     const [facesInfo, setFacesInfo] = useState<FaceInfo[]>([...emptyFacesInfoArray]);
     const diceLayoutRef = useRef<any>(null);
     const [busy, setBusy] = useState<boolean>(false);
+
+    const shouldcondense = windowSize.width < FacePreviewSize * 6 + styles.faceView.margin * 6 + 5;
 
     useEffect(() => {
         if (name.length > 0) {
@@ -141,12 +145,12 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
                 diceLayoutRef.current?.toImage().catch((e: any) => console.log("fail capture", e))
                     .then((filePath: string) => {
                         copyFileToFolder(filePath, textureFilePath, true)
-                        console.log("saved the texture")
+                        console.log("saved the texture");
+                        onAfterSave(editedName);
                     })
                     .finally(() => setBusy(false))
             }, 1000);
             console.log("FacesInfo updated", facesInfo);
-            onAfterSave(editedName);
         } else {
             setBusy(false);
         }
@@ -187,7 +191,9 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         Math.min(windowSize.width / 4, FacePreviewSize, 0.15 * windowSize.height) :
         windowSize.width / 8;
 
-    const renderFaceRow = (index: number) => (<View key={index} style={[styles.faceView, { width: faceSize, height: faceSize }]}>
+    const renderFaceRow = (index: number) => (<View key={index} style={[styles.faceView, { width: faceSize, height: faceSize },
+        shouldcondense && { margin: 3 }
+    ]}>
         <FacePreview size={faceSize}
             backgroundColor={facesInfo[index].backgroundColor}
             faceText={facesInfo[index].text}
@@ -197,12 +203,12 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         />
 
         <View style={styles.faceButtons}>
-            <MyIcon info={{name:"edit", size:33}} onPress={() => setEditFace(index)} />
+            <MyIcon info={{ name: "edit", size: 33 }} onPress={() => setEditFace(index)} />
         </View>
     </View>)
 
-    return <View style={gStyles.screenContainer}>
-        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} iconName="check" />
+    return <View style={[gStyles.screenContainer]}>
+        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} icon={{ name: "check-bold", type: "MCI", size: 30, color: colors.titleBlue }} />
         <ScreenSubTitle
             elementTitle={translate("DiceName")} elementName={editedName}
             actionName={translate("EditDieName")}
@@ -230,6 +236,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         {openNameEditor && <EditText label={translate("EditNameTitle")}
             initialText={editedName}
             textOnly={true}
+            windowSize={windowSize}
             width={400}
             onClose={() => setOpenNameEditor(false)}
             onDone={(newName) => {
@@ -241,7 +248,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         />}
         <DiceLayout facesInfo={facesInfo} size={FacePreviewSize * 4} ref={diceLayoutRef} />
 
-        <View style={styles.addFacesHost}>
+        <View style={[styles.addFacesHost]}>
             <View style={{ flexDirection: "column", width: "100%" }}>
                 {isLandscape ?
                     <View style={styles.faceRow}>
@@ -356,9 +363,11 @@ function DiceLayoutImpl({ facesInfo, size }: DiceLayoutProps, ref: any) {
     );
 }
 
-export function FacePreview({ faceText, backgroundColor, size, backgroundImage, audioUri, style, onAudioPress }: {
+export function FacePreview({ faceText, backgroundColor, size, backgroundImage, audioUri, style, onAudioPress, onTextEdit }: {
     faceText?: FaceText,
-    backgroundColor?: string, backgroundImage?: string, size: number, style?: any, audioUri?: string, onAudioPress?: () => void
+    backgroundColor?: string, backgroundImage?: string, size: number, style?: any, audioUri?: string,
+    onAudioPress?: () => void,
+    onTextEdit?: (newText: string) => void
 }) {
     const scale = size / FacePreviewSize;
 
@@ -382,17 +391,36 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
             } : {}
             ]}>
             {backgroundImage && backgroundImage.length > 0 && <Image source={{ uri: backgroundImage }} style={{ position: "absolute", width: "100%", height: "100%" }} />}
-            {faceText && faceText.text && faceText.text.length > 0 && <Text style={[styles.textFace, {
-                color: faceText.color,
-                fontWeight: faceText.fontBold ? "bold" : undefined,
-                fontSize: faceText.fontSize * FontFactor,
-                fontFamily: faceText.fontName ?? undefined
-            },
-            ]}>{faceText.text}</Text>}
+            {faceText && (faceText.text && faceText.text.length > 0 || onTextEdit) &&
+                onTextEdit ?
+                <TextInput style={[styles.textFace, {
+                    color: faceText.color,
+                    fontWeight: faceText.fontBold ? "bold" : undefined,
+                    fontSize: faceText.fontSize * FontFactor,
+                    fontFamily: faceText.fontName ?? undefined
+                }]}
+                    autoFocus
+                    multiline={true}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={faceText.text}
+                    allowFontScaling={false}
+                    onChangeText={(text => onTextEdit(text))}
+                /> :
+
+                faceText && <Text style={[styles.textFace, {
+                    color: faceText.color,
+                    fontWeight: faceText.fontBold ? "bold" : undefined,
+                    fontSize: faceText.fontSize * FontFactor,
+                    fontFamily: faceText.fontName ?? undefined
+                },
+                ]}>{faceText.text}
+                </Text>
+            }
 
             {audioUri && <View style={[styles.playButton]}>
 
-                <MyIcon info={{name:"sound", size:25, type:"MCI"}} />
+                <MyIcon info={{ name: "sound", size: 25, type: "MCI" }} />
             </View>}
         </Pressable>
     </View >
@@ -401,14 +429,6 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
 export const DiceLayout = forwardRef(DiceLayoutImpl);
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        position: "absolute",
-        top: 0, left: 0,
-        width: "100%", height: "100%",
-        backgroundColor: "lightgray",
-        zIndex: 1100
-    },
     addFacesHost: {
         flexDirection: "row",
         flexWrap: "wrap",

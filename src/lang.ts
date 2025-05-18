@@ -6,7 +6,7 @@ const deviceLanguageRaw = bestLanguage;
 const supportedLanguages = ['he', 'en', 'ar'];
 
 // Extract the first two characters of the language code (e.g., 'en', 'he')
-const deviceLanguage = "he"
+const deviceLanguage = //"he"
     deviceLanguageRaw.split(/[-_]/)[0];
 
 // Check if the detected language is supported, otherwise default to 'en'
@@ -20,6 +20,13 @@ export const DefaultProfileName = "DefaultProfile";
 
 const strings: { [key: string]: { [key: string]: string } } = {
     "en": {
+        //fonts:
+        "AlefFont": "Alef",
+        "GveretLevinFont": "Ms. Levin",
+        "DabaYadFont": "Dana-Yad",
+        "DavidLibreFont": "David Libre",
+        "ArialFont": "Arial",
+
         "ButtonTitle": "Button {1}",
         "Settings": "Settings",
         "About": "About",
@@ -38,7 +45,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "Rename": "Rename",
         "ProfileName": "Profile Name",
         [DefaultProfileName]: "Default Profile",
-        "ListProfiles":"List",
+        "ListProfiles": "List",
         "ProfileNoName": "Unnamed Profile",
         "DeleteProfileWarnning": "Are you sure you want to delete the profile {1}?",
         "DeleteCurrentProfileWarnning": "This is the active profile. Deleting it will reset the app. Continue?",
@@ -141,6 +148,13 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "SelectFont": "Select Font",
     },
     "he": {
+        //fonts:
+        "AlefFont": "אלף",
+        "GveretLevinFont": "גברת ליון",
+        "DabaYadFont": "דנה יד",
+        "DavidLibreFont": "דויד",
+        "ArialFont": "אריאל",
+
         "ImportError": "תקלה ביבוא",
         "ButtonTitle": "כפתור {1}",
         "Settings": "הגדרות",
@@ -159,7 +173,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "Rename": "שינוי שם",
         "ProfileName": "שם פרופיל",
         [DefaultProfileName]: "פרופיל בית",
-        "ListProfiles":"רשימה",
+        "ListProfiles": "רשימה",
         "ProfileNoName": "פרופיל ללא שם",
         "DeleteProfileWarnning": "האם למחוק את הפרופיל {1}?",
         "DeleteCurrentProfileWarnning": "זהו הפרופיל הנוכחי. מחיקתו תאפס את האפליקציה. להמשיך?",
@@ -365,7 +379,6 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "GveretLevinFont": "Ms. Levin",
         "DabaYadFont": "Dana-Yad",
         "DavidLibreFont": "David Libre",
-        "ArielHebrewFont": "Ariel - Hebrew",
         "ArialFont": "Arial",
 
         "DeleteProfileAlert": "هل تريد حذف الملف الشخصي {1}؟",
@@ -379,7 +392,13 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "FacePreview": "معاينة الوجه",
         "EnableSound": "تمكين صوت النرد",
         "Save": "حفظ",
-        "SelectFont": "اختيار الخط"
+        "SelectFont": "اختيار الخط",
+        "EditDieName": "تعديل الاسم",
+        "DefaultProfile": "الملف الرئيسي",
+        "ListProfiles": "القائمة",
+        "NoAudio": "إزالة",
+        "PlayAudio": "تشغيل",
+        "UnlockIn": "فتح بعد {1} ثانية"
     }
 };
 
@@ -414,7 +433,7 @@ function findMissing() {
     console.log(missing);
 
 }
-//findMissing();
+findMissing();
 
 
 const currStrings = strings[deviceLanguage];

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import {  ListElements } from "./profile";
+import { ListElements } from "./profile";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { DefaultProfileName, isRTL, translate } from "./lang";
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -37,6 +37,7 @@ interface ProfilePickerProps {
 }
 
 export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder, onDelete, onEdit, onCreate,
+    isNarrow,
     currentProfile,
     onExport }: ProfilePickerProps) {
     const [list, setList] = useState<List[]>([]);
@@ -51,16 +52,18 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
     }, [open, exclude, revision]);
 
     console.log("profiles", list)
+    const create = onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />
     return <FadeInView height={open ? height : 0} style={[gStyles.pickerView]} onClose={onClose}>
         <View style={[gStyles.pickerTitleHost, { direction: isRTL() ? "rtl" : "ltr" }]}>
             <Text allowFontScaling={false} style={gStyles.pickerTitleText} >{
                 translate("SelectProfileTitle")
             }</Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-                {onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />}
+                {!isNarrow && create}
                 <Icon name="close" size={45} onPress={onClose} />
             </View>
         </View>
+        {isNarrow && <View style={{}} >{create}</View>}
 
         <View style={gStyles.horizontalSeperator} />
 
@@ -86,10 +89,10 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                             </Pressable>
                             {item.key !== DefaultProfileName &&
                                 <View style={{ flexDirection: "row-reverse", width: "40%" }}>
-                                {onDelete && !item.readOnly && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onEdit && !item.readOnly && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
-                                {onExport && !item.readOnly && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}
-                            </View>}
+                                    {onDelete && !item.readOnly && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onEdit && !item.readOnly && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
+                                    {onExport && !item.readOnly && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}
+                                </View>}
                         </View>
                         <View style={gStyles.horizontalSeperator} />
                     </View>
@@ -110,9 +113,10 @@ interface DiePickerProps {
     onEdit?: (name: string, afterSave: () => void) => void;
     onCreate?: () => void;
     onExport?: (name: string) => void;
-    currentDie: string
+    currentDie: string;
+    isNarrow: boolean;
 }
-export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelete, onEdit, onCreate, onExport }: DiePickerProps) {
+export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelete, onEdit, onCreate, onExport, isNarrow }: DiePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
@@ -125,7 +129,7 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
     }, [open, revision]);
 
     const dir: ViewStyle = { direction: isRTL() ? "rtl" : "ltr" };
-
+    const create = onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />
     return <FadeInView height={open ? height : 0} onClose={onClose}
         style={[gStyles.pickerView]}>
         <View style={[gStyles.pickerTitleHost, dir]}>
@@ -133,28 +137,14 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
                 translate("SelectDiceTitle")
             }</Text>
             <View style={[{ flexDirection: "row", alignItems: "center" }, dir]}>
-                {onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />}
+                {!isNarrow && create}
                 <Icon name="close" size={45} onPress={onClose} />
             </View>
-            {
-                // <Pressable style={{position:"absolute", left:"20%"}} onPress={() => onCreate()}>
-                //     <DicePreview facesInfo={[
-                //         {backgroundColor:"white"},
-                //         {backgroundColor:"white"},
-                //         {backgroundColor:"white"},
-                //         ]} size={35}/>
-                //     <Icon name="plus" size={25}  style={{
-                //         position:"absolute",
-                //         left:-6,
-                //         top:40,
-                //         width: 27, height: 27,
-                //         backgroundColor:"white",
 
-                //     }}/>
-                // </Pressable>}
-            }
 
         </View>
+        {isNarrow && <View style={{}} >{create}</View>}
+
         <View style={[gStyles.horizontalSeperator, { marginBottom: 10 }]} />
 
         {

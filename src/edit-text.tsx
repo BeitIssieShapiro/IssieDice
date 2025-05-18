@@ -7,11 +7,13 @@ import {
     TouchableOpacity,
     StyleSheet,
     FlatList,
+    useWindowDimensions,
 } from "react-native";
 import { translate } from "./lang";
 import { IconButton } from "./components";
 import { MyColorPicker } from "./color-picker";
 import { FaceText } from "./edit-face";
+import { WinSize } from "./utils";
 
 
 interface EditTextProps {
@@ -28,14 +30,10 @@ interface EditTextProps {
     width: number;
     textWidth: number;
     textHeight: number;
+    windowSize: WinSize;
 
 }
 
-const FONT_SIZES = [12, 14, 16, 18, 20, 24, 30, 36, 42];
-const FONTS = [
-    { label: "default", value: undefined },
-    { label: "גברת לוין", value: "Gveret Levin AlefAlefAlef" }
-];
 
 interface ColorPickerProps {
     color: string;
@@ -44,7 +42,7 @@ interface ColorPickerProps {
 
 export const EditText: React.FC<EditTextProps> = ({
     label, initialText, textOnly, initialFontSize, initialFontBold, initialColor, initialBGColor, initialFontName,
-    onDone, onClose, width, textWidth, textHeight,
+    onDone, onClose, width, textWidth, textHeight, windowSize
 }) => {
     const [text, setText] = useState(initialText);
     const [fontSize, setFoneSize] = useState(initialFontSize || 30);
@@ -54,9 +52,12 @@ export const EditText: React.FC<EditTextProps> = ({
     const [openColorPicker, setOpenColorPicker] = useState<ColorPickerProps | undefined>();
     const [fontName, setFontName] = useState<string | undefined>(initialFontName || undefined);
 
-    console.log("Render edit-text", text, fontName)
+
+    console.log("Render edit-text", text, fontName, windowSize)
+    const top = windowSize.height < 400 ? 0 : "12%";
+
     return (
-        <View style={[StyleSheet.absoluteFill, styles.overlay, {zIndex:999999}]}>
+        <View style={[StyleSheet.absoluteFill, styles.overlay, { zIndex: 999999 }, { top }]}>
             <View style={[styles.container, { width: width || "90%" }]}>
 
                 <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={openColorPicker ? openColorPicker.color : "white"}
@@ -96,7 +97,7 @@ export const EditText: React.FC<EditTextProps> = ({
 
 
                 <View style={styles.buttonRow}>
-                    <IconButton text={translate("OK")} onPress={() => {
+                    <IconButton text={translate("OK")} icon={{ name: "check" }} onPress={() => {
                         onDone({
                             text,
                             backgroundColor,
@@ -106,7 +107,7 @@ export const EditText: React.FC<EditTextProps> = ({
                             fontSize,
                         })
                     }} />
-                    <IconButton text={translate("Cancel")} onPress={onClose} />
+                    <IconButton text={translate("Cancel")} icon={{ name: "close" }} onPress={onClose} />
                 </View>
             </View>
         </View>
@@ -116,7 +117,6 @@ export const EditText: React.FC<EditTextProps> = ({
 // Styles
 const styles = StyleSheet.create({
     overlay: {
-        justifyContent: "center",
         alignItems: "center",
         zIndex: 1200,
         shadowColor: '#171717',

@@ -7,11 +7,11 @@ import IconIonic from 'react-native-vector-icons/Ionicons';
 import { gStyles } from './common-style';
 export const FONTS = [
     { label: "NoFont", value: undefined },
-    { label: "Alef - אלף", value: "Alef-regular" },
-    { label: "Gveret Levin - גברת לוין", value: "Gveret Levin AlefAlefAlef" },
-    { label: "Daba Yad - דנה יד", value: "DanaYadAlefAlefAlef-Normal" },
-    { label: "David Libre - דויד ליבר", value: "DavidLibre-Regular" },
-    { label: "Arial - אריאל", value: "Ariel Regular" },
+    { label: "AlefFont", value: "Alef-regular" },
+    { label: "GveretLevinFont", value: "Gveret Levin AlefAlefAlef" },
+    { label: "DabaYadFont", value: "DanaYadAlefAlefAlef-Normal" },
+    { label: "DavidLibreFont", value: "DavidLibre-Regular" },
+    { label: "ArialFont", value: "Ariel Regular" },
 ];
 
 export interface FontPickerProps {

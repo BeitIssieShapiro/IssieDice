@@ -125,6 +125,8 @@ export async function clearProfileInSettings() {
 
 
 async function loadProfileIntoSettings(p: Profile, name: string) {
+    console.log("xxx", name);
+
     const diceTemplateType = [];
     const diceActive = [];
 
@@ -305,9 +307,7 @@ export function isValidFilename(filename: string): boolean {
     if (invalidCharsRegex.test(filename)) {
         return false;
     }
-    if (filename == DefaultProfileName) {
-        return false;
-    }
+   
     return true;
 }
 

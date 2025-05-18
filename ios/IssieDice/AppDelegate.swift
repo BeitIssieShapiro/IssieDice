@@ -25,9 +25,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     reactNativeFactory = factory
     
     window = UIWindow(frame: UIScreen.main.bounds)
+    // Capture native start time in ms
+    let launchTime = Date().timeIntervalSince1970 * 1000 // milliseconds
+
     var initialProps = [:] as [AnyHashable : Any]
     if let url = launchOptions?[.url] as? URL {
-      initialProps = ["url": url.absoluteString]
+      initialProps = ["url": url.absoluteString,"nativeStartTime": launchTime]
+    } else {
+      initialProps = ["nativeStartTime": launchTime]
     }
     
     factory.startReactNative(
@@ -36,6 +41,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       initialProperties: initialProps,
       launchOptions: launchOptions
     )
+    RNSplashScreen.show()
+
     
     return true
   }

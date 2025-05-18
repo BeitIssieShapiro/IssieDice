@@ -1,4 +1,4 @@
-import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from "react-native";
 import { isRTL, translate } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
@@ -40,7 +40,7 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
 export function MyIcon({ info, onPress }: { info: IconProps, onPress?: () => void }) {
     const IconElem = info.type == "Ionicons" ? IconIonicons :
         (info.type == "MCI" ? MCIIcon : IconAnt);
-    return <IconElem name={info.name} size={info.size || 22} color={info.color || colors.defaultIconColor} onPress={onPress} />
+    return <IconElem name={info.name} size={info.size || 22} color={info.color || colors.defaultIconColor} style={{ width: info.size, height: info.size, margin: 0, padding: 0 }} onPress={onPress} />
 }
 
 export function IconButton({ icon, onPress, text, backgroundColor }:
@@ -164,14 +164,14 @@ export const FadeInView = (props: any) => {
     );
 }
 
-export function ScreenTitle({ title, onClose, onAbout, iconName = "close" }: { title: string, onClose: () => void, onAbout?: () => void, iconName?: string }) {
+export function ScreenTitle({ title, onClose, onAbout, icon }: { title: string, onClose: () => void, onAbout?: () => void, icon?: IconProps }) {
     return <View style={gStyles.screenTitle}>
         {onAbout ?
             <IconAnt name={"infocirlceo"} color={gStyles.screenTitleText.color} size={35} onPress={onAbout} /> :
             <Spacer h={10} />}
         <Text allowFontScaling={false} style={gStyles.screenTitleText}>{title}</Text>
         <IconButton
-            icon={{ name: iconName, type: "AntDesign" }}
+            icon={icon}
             onPress={onClose}
             backgroundColor="white"
         />
@@ -229,10 +229,15 @@ export function ColumnChip({ title, component }: { title: string, component: any
     </View>
 }
 
+export function getInsetsLimit(insets: any): ViewStyle {
+    return { top: insets.top, left: insets.left, right: insets.right, bottom: insets.bottom };
+}
+
 const styles = StyleSheet.create({
 
     iconButton: {
-
+        alignItems: "center",
+        justifyContent: "center",
         margin: 10,
         paddingLeft: 10,
         paddingRight: 10,
@@ -240,7 +245,6 @@ const styles = StyleSheet.create({
         maxHeight: 40,
         minHeight: 40,
         minWidth: 39,
-        alignItems: "center",
         borderColor: "gray",
         borderStyle: "solid",
         borderWidth: 1,

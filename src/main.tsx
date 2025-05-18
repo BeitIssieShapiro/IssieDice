@@ -35,8 +35,6 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
 
   const context = useContext(GlobalContext);
 
-
-
   useEffect(() => {
 
     Linking.addEventListener("url", handleImport);
@@ -113,7 +111,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
         icon="lock"
         textKey="UnlockIn"
         textLocation="right"
-        delayInSeconds={2}
+        delayInSeconds={1}
       />}
 
       <CountdownButton iconSize={35} onComplete={() => setOpenSettings(revision)} style={{

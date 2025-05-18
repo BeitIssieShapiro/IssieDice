@@ -11,11 +11,9 @@ import {
 
 } from "react-native";
 import { isRTL, translate } from "./lang";
-import { ColumnChip, IconButton, LabeledIconButton, NumberSelector, ScreenTitle, Section, Spacer } from "./components";
+import { ColumnChip, getInsetsLimit, IconButton, LabeledIconButton, MyIcon, NumberSelector, ScreenTitle, Section, Spacer } from "./components";
 import { MyColorPicker } from "./color-picker";
-import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconIonic from 'react-native-vector-icons/Ionicons';
-import Icon from 'react-native-vector-icons/AntDesign';
 import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize } from "./edit-dice";
 import { SelectFromGallery } from "./image-select";
 import { CameraOverlay } from "./CameraOverlay";
@@ -60,6 +58,7 @@ import { getTempFileName } from "./disk";
 import { colors, gStyles } from "./common-style";
 import { WinSize } from "./utils";
 import { Switch } from "@rneui/themed";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const routes = [
     { key: 'bg', title: translate('FaceBackgroundTab') },
@@ -96,8 +95,9 @@ export const EditFace: React.FC<EditFaceProps> = ({
     const [editImage, setEditImage] = useState<boolean>(false);
     const [KBHeight, setKBHeight] = useState<number>(0);
     const [showFonts, setShowFonts] = useState<FontPickerProps | undefined>();
+    const [textMode, setTextMode] = useState<boolean>(false);
 
-
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e: { endCoordinates: { height: number } }) => {
@@ -150,14 +150,23 @@ export const EditFace: React.FC<EditFaceProps> = ({
             setEditImage(false);
         }} />
     }
+    const markEditMode = (tMode: boolean) => {
+        console.log("mark edit mode", tMode)
+        setTimeout(() => setTextMode(tMode))
+    }
+
     const isLandscape = windowSize.height < windowSize.width;
-    console.log("edit face", isLandscape)
+    const editingWidth = (isLandscape ? windowSize.height : windowSize.width)
+    const isMobileLandscape = windowSize.height < 500;
+    const editingHeight = isMobileLandscape ? 180 : 250;
+    const isNarrow = editingWidth < 450;
+    console.log("edit face", isLandscape, windowSize)
 
     return (
         <View style={[gStyles.screenContainer]}>
-            <View style={[gStyles.screenTitle, { justifyContent: "center" }]}>
+            <View style={[gStyles.screenTitle, { justifyContent: "center" }, isNarrow && { height: 140 }]}>
                 <Text allowFontScaling={false} style={gStyles.screenTitleText}>{translate("EditFace")}</Text>
-                <View style={styles.buttons}>
+                <View style={[styles.buttons, isNarrow && { bottom: -5, left: 10, alignItems: "center" }]}>
                     <IconButton text={translate("Save")} onPress={() => {
                         const faceInfo = {
                             text: text.length > 0 ? {
@@ -182,12 +191,15 @@ export const EditFace: React.FC<EditFaceProps> = ({
                 </View>
             </View>
 
-            <View style={[isLandscape ? { flexDirection: "row", justifyContent: "space-between" } : { flexDirection: "column", justifyContent: "center" }, { alignItems: "center" }]}>
+            <View style={[isLandscape ?
+                { flexDirection: "row", justifyContent: "space-between", } :
+                { flexDirection: "column", justifyContent: "center" },
+            { alignItems: isMobileLandscape ? "flex-start" : "center" }]}>
                 {/* Preview  */}
                 <View style={{
                     flexDirection: "column",
                     padding: 10,
-                    width: (isLandscape ? windowSize.width - windowSize.height : "100%"),
+                    width: (isLandscape ? windowSize.width - editingWidth - insets.left - insets.right : "100%"),
                     alignItems: "center",
                 }}>
                     {busy && <View style={styles.busy}>
@@ -197,10 +209,14 @@ export const EditFace: React.FC<EditFaceProps> = ({
                         {backgroundImage && <View style={styles.cropButton}>
                             <IconIonic size={35} name="crop" onPress={() => {
                                 setEditImage(true);
-                            }} /></View>}
+                            }} />
+                        </View>}
                         <FacePreview size={size}
                             backgroundColor={backgroundColor}
                             backgroundImage={backgroundImage}
+                            onTextEdit={textMode ? (text) => {
+                                setText(text);
+                            } : undefined}
                             faceText={{
                                 fontName: fontName,
                                 fontBold: isBold,
@@ -213,9 +229,6 @@ export const EditFace: React.FC<EditFaceProps> = ({
                         />
                     </View>
                     <Text allowFontScaling={false} style={styles.label}>{translate("FacePreview")}</Text>
-
-
-
                 </View>
 
                 {isLandscape ?
@@ -245,6 +258,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                                     text: { labelStyle: styles.tabLabel },
                                     audio: { labelStyle: styles.tabLabel },
                                 }}
+                                onTabPress={(scene => scene.route.key == 'text' ? setTextMode(true) : setTextMode(false))}
                             />)}
 
                         navigationState={{ index: tabIndex, routes: isRTL() ? routesRtl : routes }}
@@ -260,7 +274,9 @@ export const EditFace: React.FC<EditFaceProps> = ({
                                         onOpenCamera={() => setOpenCamera(true)}
                                         onOpenColorPicker={(props: ColorPickerProps) => {
                                             setOpenColorPicker(props)
-                                        }} />;
+                                        }}
+                                        height={editingHeight}
+                                    />;
                                 case 'text':
                                     return <FaceText size={size} text={text} setText={setText} fontName={fontName} setFontName={setFontName}
                                         isBold={isBold} setIsBold={setIsBold} fontSize={fontSize} setFoneSize={setFoneSize}
@@ -274,9 +290,12 @@ export const EditFace: React.FC<EditFaceProps> = ({
                                             setShowFonts(props)
                                             setOpenColorPicker(undefined);
                                             Keyboard.dismiss();
-                                        }} />;
+                                        }}
+                                        isNarrow={isNarrow}
+                                        height={editingHeight}
+                                    />;
                                 case 'audio':
-                                    return <FaceAudio setAudioUri={setAudioUri} audioUri={audioUri} />;
+                                    return <FaceAudio setAudioUri={setAudioUri} audioUri={audioUri} height={editingHeight} />;
                                 default:
                                     return <View />;
                             }
@@ -310,7 +329,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
 
 
 
-function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpenSearch, onOpenCamera, onOpenColorPicker, backgroundColor }:
+function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpenSearch, onOpenCamera, onOpenColorPicker, backgroundColor, height }:
     {
         onOpenSearch: () => void;
         setBackgroundColor: (color: string | undefined) => void;
@@ -319,9 +338,10 @@ function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpen
         onOpenCamera: () => void;
         onOpenColorPicker: (props: ColorPickerProps) => void;
         backgroundColor: string | undefined;
+        height: number;
     }) {
 
-    return <View style={[styles.faceEditSection, { flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "space-around" }]}>
+    return <View style={[styles.faceEditSection, { height, flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "space-around" }]}>
 
         <LabeledIconButton icon="view-gallery-outline" type="MCI" label={translate("SrcFromGallery")} onPress={() => {
             const filePath = getTempFileName("jpg")
@@ -371,7 +391,8 @@ function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpen
 
 
 
-function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, setFoneSize, setFontName, setOpenFontPicker, setIsBold, setOpenColorPicker }:
+function FaceText({ fontSize, fontName, isBold, color, text,
+    setText, setColor, setFoneSize, setFontName, setOpenFontPicker, setIsBold, setOpenColorPicker, isNarrow, height }:
     {
         fontSize: number;
         size: number;
@@ -386,80 +407,82 @@ function FaceText({ fontSize, fontName, isBold, color, text, setText, setColor, 
         setFoneSize: (fontSize: number) => void;
         setOpenColorPicker: (props: ColorPickerProps) => void;
         setOpenFontPicker: (props: FontPickerProps) => void;
+        isNarrow: boolean;
+        height: number;
     }
 ) {
+
+
+    const editFontName = <ColumnChip title={translate("FontName")} component={
+        <Pressable style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", borderWidth: 1, borderRadius: 5 }}
+            onPress={() => setOpenFontPicker({
+                fontName, onSelect: (fontName) => setFontName(fontName)
+            })}>
+            <MyIcon info={{ name: "down", type: "AntDesign", size: 25 }} />
+
+            <Text allowFontScaling={false}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={{ fontFamily: fontName, fontSize: 22, marginInlineStart: 5, textAlign: "left", width: 160, }}
+
+            >{fontName ? translate(FONTS.find(f => f.value === fontName)?.label || "") :
+                translate("NoFont")}
+            </Text>
+
+        </Pressable>}
+    />
+
+    const editFontSize = <ColumnChip title={translate("FontSize")} component={
+        <NumberSelector min={10} max={60} value={fontSize}
+            onDown={() => setFoneSize(fontSize - 2)}
+            onUp={() => setFoneSize(fontSize + 2)}
+        />}
+    />
+
+    const editColor = <ColumnChip title={translate("Color")} component={
+        <Pressable style={[styles.colorCircle, { backgroundColor: color, margin: 0, marginEnd: 0 }]}
+            onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} />}
+    />
+
+    const editBold = <ColumnChip title={translate("Bold")} component={
+        <Switch value={isBold} onValueChange={(isBold) => setIsBold(isBold)} />}
+    />
+
     return <View style={[styles.faceEditSection, { direction: isRTL() ? "rtl" : "ltr" }]} >
 
-        <TextInput
-            style={[
-                styles.input,
-                { width: "30%", marginTop: 10 },
-
-            ]}
-            placeholderTextColor="gray"
-            multiline={true}
-            defaultValue={text}
-            autoCapitalize="none"
-            autoCorrect={false}
-
-            onChangeText={(newText) => {
-                setText(newText);
-            }}
-            autoFocus
-            allowFontScaling={false}
-        />
-        <View style={{ flexDirection: "column", width: 500 }}>
-            {/* Font Selection */}
-            <Section title={translate("FontName") + ":"}
-                marginHorizontal={0}
-                component={
-                    <Pressable style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}
-
-                        onPress={() => setOpenFontPicker({
-                            fontName, onSelect: (fontName) => setFontName(fontName)
-                        })}                    >
-                        <Text allowFontScaling={false}
-                            style={{ fontFamily: fontName, fontSize: 22, marginInlineStart: 15, width: 250 }}
-                        >{fontName ? FONTS.find(f => f.value === fontName)?.label :
-                            translate("NoFont")}
-                        </Text>
-                        <IconIonic name="list" size={30} />
-
-                    </Pressable>}
-            />
-
-            <View style={{ flexDirection: "row", height: 150, justifyContent: "space-around", marginTop: 15 }}>
-                {/* Font Size */}
-                <ColumnChip title={translate("FontSize")} component={
-                    <NumberSelector min={10} max={60} value={fontSize}
-                        onDown={() => setFoneSize(fontSize - 2)}
-                        onUp={() => setFoneSize(fontSize + 2)}
-                    />}
-                />
-
-                {/** Color */}
-                <ColumnChip title={translate("Color")} component={
-                    <Pressable style={[styles.colorCircle, { backgroundColor: color, margin: 0, marginEnd: 0 }]}
-                        onPress={() => setOpenColorPicker(({ color, onSelect: c => setColor(c) }))} />}
-                />
-
-                {/** Bold */}
-                <ColumnChip title={translate("Bold")} component={
-                    <Switch value={isBold} onValueChange={(isBold) => setIsBold(isBold)} />}
-                />
-
+        <View style={[styles.faceEditSection, { height, flexDirection: isNarrow ? "column" : "row", justifyContent: "space-around"}, { paddingLeft:30,paddingRight:30 }]}>
+            {isNarrow && <View style={styles.faceEditSectionRow}>
+                {editFontName}
+                {editFontSize}
             </View>
+            }
+
+
+            {isNarrow && <View style={styles.faceEditSectionRow}>
+                {editColor}
+                {editBold}
+            </View>
+            }
+
+            {!isNarrow && editFontName}
+            {!isNarrow && editFontSize}
+            {!isNarrow && editColor}
+            {!isNarrow && editBold}
+
+
         </View>
-    </View>
+        {/* </View> */}
+    </View >
 
 }
 
 
-function FaceAudio({ setAudioUri, audioUri }: {
+function FaceAudio({ setAudioUri, audioUri, height }: {
     audioUri: string | undefined;
     setAudioUri: (uri: string | undefined) => void;
+    height: number;
 }) {
-    return <View style={[styles.faceEditSection, { flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "space-around" }]}>
+    return <View style={[styles.faceEditSection, { height, flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "space-around" }]}>
         <View style={{ width: 100, alignItems: "center" }}>
             <View style={styles.roundButton}>
                 <RecordButton
@@ -542,6 +565,14 @@ const styles = StyleSheet.create({
         borderColor: "lightgray",
         margin: 3,
         alignItems: "center"
+    },
+    faceEditSectionRow: {
+        flexDirection: "row",
+        width: "100%",
+        borderColor: "lightgray",
+        margin: 3,
+        alignItems: "center",
+        justifyContent: "space-around"
     },
     label: {
         fontSize: 26,

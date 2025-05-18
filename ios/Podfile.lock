@@ -1806,6 +1806,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-splash-screen (3.3.0):
+    - React-Core
   - react-native-view-shot (4.0.3):
     - DoubleConversion
     - glog
@@ -2515,6 +2517,7 @@ DEPENDENCIES:
   - react-native-mmkv (from `../node_modules/react-native-mmkv`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-view-shot (from `../node_modules/react-native-view-shot`)
   - react-native-worklets-core (from `../node_modules/react-native-worklets-core`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2660,6 +2663,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-pager-view"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-splash-screen:
+    :path: "../node_modules/react-native-splash-screen"
   react-native-view-shot:
     :path: "../node_modules/react-native-view-shot"
   react-native-worklets-core:
@@ -2799,6 +2804,7 @@ SPEC CHECKSUMS:
   react-native-mmkv: 2421db62a08da22d1b97ea4d55adfee9ea0f88a1
   react-native-pager-view: b7f8cf921e19063a3528ee2aeae945bb42104dbd
   react-native-safe-area-context: 00d03dc688ba86664be66f9e3f203fc7d747d899
+  react-native-splash-screen: 4312f786b13a81b5169ef346d76d33bc0c6dc457
   react-native-view-shot: 41c5c50c809f1fd61f91c99400b2222c9b80d13f
   react-native-worklets-core: 82bdc2566cf000702e6eefb24e8ef7bf21d67bd1
   React-NativeModulesApple: 6d750bb9829fdf0f02c56e9a68cbb390e1f5de25

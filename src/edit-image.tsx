@@ -32,7 +32,7 @@ export const EditImage: React.FC<EditImageProps> = ({ uri, onClose, onDone }) =>
     return (
         <View style={styles.container}>
             <CropView
-                sourceUrl={"file://"+uri}
+                sourceUrl={"file://" + uri}
                 style={styles.cropView}
                 ref={cropViewRef}
                 keepAspectRatio
@@ -43,9 +43,9 @@ export const EditImage: React.FC<EditImageProps> = ({ uri, onClose, onDone }) =>
                 }}
             />
             <View style={styles.buttonContainer}>
-                <IconButton icon="check" text={translate("DoneBtn")} onPress={handleDone}/>
-                <IconButton icon="reload1" text={translate("Rotate")} onPress={handleRotate}/>
-                <IconButton icon="close" text={translate("CancelBtn")} onPress={onClose}/>
+                <IconButton icon={{ name: "check" }} text={translate("DoneBtn")} onPress={handleDone} />
+                <IconButton icon={{ name: "close" }} text={translate("CancelBtn")} onPress={onClose} />
+                <IconButton icon={{ name: "reload1" }} text={translate("Rotate")} onPress={handleRotate} />
             </View>
         </View>
     );

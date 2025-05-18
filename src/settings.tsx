@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
 
-import { IconButton, NumberSelector, ScreenSubTitle, ScreenTitle, Section, Spacer } from "./components";
+import { getInsetsLimit, IconButton, NumberSelector, ScreenSubTitle, ScreenTitle, Section, Spacer } from "./components";
 import { useEffect, useState } from "react";
 import {  deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
@@ -53,6 +53,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
     useEffect(() => {
         getCurrentProfile().then(p => {
+
             setProfile(p);
             const profileName = Settings.getString(SettingsKeys.CurrentProfileName, "");
             if (profileName == DefaultProfileName) {
@@ -308,7 +309,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         return <About onClose={() => setShowAbout(false)}/>
     }
 
-    return <View style={[gStyles.screenContainer, { top: insets.top, left: insets.left }]}>
+    return <View style={[gStyles.screenContainer, getInsetsLimit(insets)]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
@@ -349,6 +350,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         <DiePicker
             open={openSelectTemplate > -1}
             height={windowSize.height * .8}
+            isNarrow={isScreenNarrow}
             onSelect={async (template) => {
                 setDiceTemplate(openSelectTemplate, template as Templates);
                 setOpenSelectTemplate(-1);
@@ -387,6 +389,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             textOnly={true}
             onClose={() => setShowEditProfileName(undefined)}
             onDone={(newName) => {
+                if (newName.text.trim() == DefaultProfileName) {
+                    Alert.alert("Reserved name");
+                    return;
+                }
+
                 const newNamedTrimmed = newName.text.trim()
                 if (newNamedTrimmed == "") {
                     Alert.alert(translate("ProfileMissingName"), "", [{ text: translate("OK") }]);
@@ -401,6 +408,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 handleProfileEditName(newNamedTrimmed, showEditProfileName.name, showEditProfileName.afterSave);
                 setShowEditProfileName(undefined);
             }}
+            windowSize={windowSize}
             width={400}
             textWidth={300}
             textHeight={80}
@@ -423,7 +431,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
         />}
 
-        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} iconName="check" />
+        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} icon={{name:"check-bold", type:"MCI", size:30, color: colors.titleBlue}} />
 
         {/* Profile Name */}
         <ScreenSubTitle
@@ -434,35 +442,6 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             onAction={() => setOpenLoadProfile(true)}
         />
 
-
-        {/* <View style={[gStyles.screenSubTitle, {
-            flexDirection: isScreenNarrow ? "column" : "row",
-            direction: isRTL() ? "rtl" : "ltr",
-
-        },
-        isScreenNarrow && { height: 120 }
-        ]} >
-
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <IconIonicons name="person-circle-outline" size={45} color={colors.titleBlue} />
-                <Text allowFontScaling={false} style={gStyles.screenSubTitleText}>{translate("ProfileName")}:</Text>
-                <Text allowFontScaling={false} style={[gStyles.screenSubTitleText, { textAlign: isRTL() ? "right" : "left" },
-                profileName.length == 0 && { color: disabledColor }]}>
-                    {profileName.length > 0 ? profileName : translate("ProfileNoName")}
-                </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-                {profileBusy && <ActivityIndicator color="#0000ff" size="large" />}
-                {profileName.length > 0 ?
-                    <IconButton text={translate("Close")} onPress={closeProfile} /> :
-                    <IconButton text={translate("Create")} onPress={() =>
-                        setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
-                    } />
-                }
-                <IconButton text={translate("List")} onPress={() => setOpenLoadProfile(true)} />
-
-            </View>
-        </View> */}
 
         {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>}
         <ScrollView style={styles.settingHost}>
