@@ -44,3 +44,8 @@ https://xd.adobe.com/view/2787b739-50b8-4610-b19a-fcadc5c5f1ff-72d4/
 - export to gLTF 2.0
   - properties: 
     - Data->Mesh->[Apply Modifiers, UVs, Normals]
+
+## preparing a video to appstore
+`ffmpeg -i input.mp4 -vf "scale=1200:1600,setdar=1200/1600" output.mp4`
+
+
