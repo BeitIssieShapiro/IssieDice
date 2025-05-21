@@ -420,7 +420,7 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
 
             {audioUri && <View style={[styles.playButton]}>
 
-                <MyIcon info={{ name: "sound", size: 25, type: "MCI" }} />
+                <MyIcon info={{ name: "sound", size: 25, type: "AntDesign", color:"black" }} />
             </View>}
         </Pressable>
     </View >
@@ -519,12 +519,12 @@ const styles = StyleSheet.create({
     },
     playButton: {
         position: "absolute",
-        right: -9,
-        top: -9,
+        right: -3,
+        top: -3,
         margin: 10,
-        width: 25,
-        height: 25,
-        borderRadius: 22.5,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         backgroundColor: "lightgray",
         justifyContent: "center",
         alignItems: "center"

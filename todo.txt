@@ -7,7 +7,13 @@ V- on reload, it does not show the selected dice (bug)
 V- font/color is under keyboard
 V- back button as Icon button without text
 V- profile refactoring
-- implement About
+V- implement About
+V- sound icon pos
+V- delete a profile should go bck to default
+- dice created in iPad with text, the text size is different on iPhone (larger, then wrapped)
+V- import profile with die with conflicting name, skip the die and creates a mixed profile...
+
+
 
 - zoom in camera?
 

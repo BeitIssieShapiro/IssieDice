@@ -88,7 +88,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
                                 </View>
                             </Pressable>
                             {item.key !== DefaultProfileName &&
-                                <View style={{ flexDirection: "row-reverse", width: "40%" }}>
+                                <View style={{ flexDirection: "row-reverse", width: isNarrow ? "25%" : "40%" }}>
                                     {onDelete && !item.readOnly && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
                                     {onEdit && !item.readOnly && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
                                     {onExport && !item.readOnly && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}
@@ -170,7 +170,7 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
                                             }}>{item.name}</Text>
                                     </View>
                                 </Pressable>
-                                <View style={{ flexDirection: "row-reverse", width: "40%" }}>
+                                <View style={{ flexDirection: "row-reverse", width: isNarrow ? "25%" : "40%" }}>
                                     {onDelete && !item.readOnly && <IconButton icon={{ name: "delete", ...menuActionIcon }} onPress={() => onDelete(item.key, () => setRevision(prev => prev + 1))} />}
                                     {onEdit && !item.readOnly && <IconButton icon={{ name: "edit", ...menuActionIcon }} onPress={() => onEdit(item.key, () => setRevision(prev => prev + 1))} />}
                                     {onExport && !item.readOnly && <IconButton icon={{ name: "share-social-outline", type: "Ionicons", ...menuActionIcon }} onPress={() => onExport(item.key)} />}

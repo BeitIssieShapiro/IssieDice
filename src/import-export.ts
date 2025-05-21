@@ -2,7 +2,7 @@ import * as RNFS from "react-native-fs";
 
 import { fTranslate } from "./lang";
 import { Profile, Templates } from "./models";
-import { existsFolder, getCustomTypePath, getProfilePath, listCustomDice, listProfiles, loadFaceImages, loadProfileFile, readTexture, saveProfileFile } from "./profile";
+import { existsFolder, getCustomTypePath, getProfilePath, listCustomDice, listProfiles, loadFaceImages, loadProfileFile, profileFilePath, readTexture, saveProfileFile } from "./profile";
 import { doNothing, getTempFileName, loadFile, writeFile } from "./disk";
 import { ensureAndroidCompatible, joinPaths } from "./utils";
 import { unzip, zip } from "react-native-zip-archive";
@@ -130,7 +130,14 @@ export async function exportAll(): Promise<string> {
     });
 }
 
-export async function importPackage(packagePath: string, overwrite = false, subFolder = "", failSilent = false) {
+export interface ImportInfo {
+    importedDice: string[];
+    importedProfiles: string[];
+    skippedExistingDice: string[];
+    skippedExistingProfiles: string[];
+}
+
+export async function importPackage(packagePath: string, importInfo: ImportInfo, subFolder = "") {
     const unzipTargetPath = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "imported", subFolder));
     await RNFS.unlink(unzipTargetPath).catch(doNothing);
     const unzipFolderPath = await unzip(packagePath, unzipTargetPath);
@@ -143,19 +150,21 @@ export async function importPackage(packagePath: string, overwrite = false, subF
         if (md.type == "dice") {
             const targetPath = getCustomTypePath(md.name)
 
-            if (!overwrite && await RNFS.exists(targetPath)) {
-                if (failSilent) return;
-                throw fTranslate("ImportDiceExist", md.name);
+            if (await RNFS.exists(targetPath)) {
+                importInfo.skippedExistingDice.push(md.name);
+                return;
             }
 
             await RNFS.mkdir(targetPath);
             for (const file of items.filter(item => item.name != metaDataItem.name)) {
                 await RNFS.moveFile(file.path, targetPath + "/" + file.name).catch(e => console.log("copy file on import failed", e));
             }
+            importInfo.importedDice.push(md.name);
         } else if (md.type == "profile") {
-            const targetPath = getProfilePath(md.name);
-            if (!overwrite && await existsFolder(targetPath)) {
-                throw fTranslate("ImportProfileExist", md.name);
+            const targetPath = profileFilePath(md.name);
+            if (await RNFS.exists(targetPath)) {
+                importInfo.skippedExistingProfiles.push(md.name);
+                return;
             }
 
             const p: Profile = {
@@ -167,6 +176,7 @@ export async function importPackage(packagePath: string, overwrite = false, subF
             }
 
             await saveProfileFile(md.name, p, true);
+            importInfo.importedProfiles.push(md.name);
         } else {
             throw "Unknown package type";
         }
@@ -174,7 +184,7 @@ export async function importPackage(packagePath: string, overwrite = false, subF
         // list of zips
         let i = 0;
         for (const item of items) {
-            await importPackage(item.path, false, i++ + "", true);
+            await importPackage(item.path, importInfo, i++ + "");
         }
     }
 }

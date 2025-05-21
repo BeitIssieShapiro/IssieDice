@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MigrateDice } from "./migrate-dice";
 import { CountdownButton } from "./settings-btn";
 import { EmptyProfile, Profile } from "./models";
-import { importPackage } from "./import-export";
+import { EmptyImportInfo, ImportInfo, importPackage } from "./import-export";
+import { ImportInfoDialog } from "./import-info-dialog";
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
@@ -27,7 +28,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
   const [cameraTilt, setCameraTilt] = useState<number>(0);
   const [migrateDice, setMigrateDice] = useState<string[]>([]);
   const [inRecovery, setInRecovery] = useState<boolean>(false);
-
+  const [importInfo, setImportInfo] = useState<ImportInfo | undefined>(undefined);
   const [importInProgress, setImportInProgress] = useState<{
     message: string;
     precent: number;
@@ -38,7 +39,6 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
   useEffect(() => {
 
     Linking.addEventListener("url", handleImport);
-
     if (context && context.url) {
       setTimeout(() => handleImport({ url: context.url }));
     }
@@ -64,10 +64,13 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
   }, [cameraTilt]);
 
   async function handleImport(event: any) {
-    console.log("handleImport event:", JSON.stringify(event));
     let url = event.url
     url = decodeURI(url);
+    // if (url.startsWith("file://")) {
+    //   url = url.substring(7)
+    // }
     //url = await FileSystem.contentUriToFilePath(url);
+    console.log("handleImport event:", url, JSON.stringify(event));
 
     //Alert.alert("Import: " + url);
     setImportInProgress({
@@ -75,9 +78,16 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
       precent: 0,
     })
 
-    importPackage(url)
-      .then(() => Alert.alert("SuccessfulImport"))
-      .catch(err => Alert.alert(translate("ImportError"), err))
+    let result: ImportInfo = {
+      importedDice: [],
+      importedProfiles: [],
+      skippedExistingDice: [],
+      skippedExistingProfiles: []
+    };
+    
+    importPackage(url, result)
+      .then(() => setImportInfo(result))
+      .catch(err => Alert.alert(translate("ImportError"), err?.message || err))
       .finally(() => setImportInProgress(undefined))
 
   }
@@ -142,10 +152,10 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
           <Progress.Bar width={windowSize.width * .6} progress={importInProgress.percent / 100} style={[isRTL() && { transform: [{ scaleX: -1 }] }]} />
         </View>}
 
-        {/* {!openSettings && !inRecovery && <TouchableOpacity style={styles.overlay}
-          onPress={handleThrowDice}
-          activeOpacity={1}
-        />} */}
+        {
+          // Import info
+          importInfo && <ImportInfoDialog importInfo={importInfo} onClose={() => setImportInfo(undefined)} />
+        }
 
         {profile && <FilamentScene>
           <DiceScene

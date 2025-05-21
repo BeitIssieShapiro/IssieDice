@@ -125,8 +125,6 @@ export async function clearProfileInSettings() {
 
 
 async function loadProfileIntoSettings(p: Profile, name: string) {
-    console.log("xxx", name);
-
     const diceTemplateType = [];
     const diceActive = [];
 

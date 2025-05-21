@@ -144,3 +144,4 @@ export async function getRandomFile(filePath: string, ext: string): Promise<stri
 export function getCacheBusterSuffix(): string {
     return "$$" + Math.floor(Math.random() * 1000000);
 }
+

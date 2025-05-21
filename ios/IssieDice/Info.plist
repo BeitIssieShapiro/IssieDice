@@ -87,25 +87,25 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>UTExportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.zip-archive</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>IssieDice Package</string>
-			<key>UTTypeIdentifier</key>
-			<string>com.issieshapiro.issiedice.dice</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<string>dice</string>
-				<key>public.mime-type</key>
-				<string>application/zip</string>
-			</dict>
-		</dict>
-	</array>
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>com.issieshapiro.issiedice.dice</string>
+      <key>UTTypeDescription</key>
+      <string>IssieDice Package</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.data</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <string>dice</string>
+        <key>public.mime-type</key>
+        <string>application/x-issiedice</string>
+      </dict>
+    </dict>
+  </array>
 </dict>
 </plist>

@@ -56,6 +56,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
             setProfile(p);
             const profileName = Settings.getString(SettingsKeys.CurrentProfileName, "");
+            console.log("loading default settings 3", profileName)
             if (profileName == DefaultProfileName) {
                 setProfileName(translate(profileName));
             } else {
@@ -138,6 +139,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const handleProfileDelete = async (name: string, afterDelete: () => void, force = false) => {
         const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
         const isCurrent = name == currName;
+        console.log("xx", name, currName, isCurrent)
 
         if (!force) {
             const msg = isCurrent ?
@@ -152,8 +154,9 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         }
 
         if (isCurrent) {
+            console.log("loading default settings 1")
             await LoadProfileFileIntoSettings(DefaultProfileName);
-            setTimeout(() => setRevision(prev => prev + 1), 100);
+            setRevision(prev => prev + 1);
         }
         await deleteProfileFile(name);
         afterDelete();
@@ -277,19 +280,19 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
 
 
-    function handleDeleteProfile(name: string, afterDelete: () => void): void {
-        Alert.alert(translate("DeleteProfileTitle"), fTranslate("DeleteProfileAlert", name), [
-            {
-                text: translate("Delete"), onPress: () => {
-                    deleteProfileFile(name);
-                    setRevision(prev => prev + 1);
-                    afterDelete()
-                }
-            },
-            { text: translate("Cancel"), onPress: () => { } }
-        ])
+    // function handleDeleteProfile(name: string, afterDelete: () => void): void {
+    //     Alert.alert(translate("DeleteProfileTitle"), fTranslate("DeleteProfileAlert", name), [
+    //         {
+    //             text: translate("Delete"), onPress: () => {
+    //                 deleteProfileFile(name);
+    //                 setRevision(prev => prev + 1);
+    //                 afterDelete()
+    //             }
+    //         },
+    //         { text: translate("Cancel"), onPress: () => { } }
+    //     ])
 
-    }
+    // }
 
     function handleDeleteDie(name: string, afterDelete: () => void): void {
         Alert.alert(translate("DeleteDieTitle"), fTranslate("DeleteDieAlert", name), [
@@ -339,7 +342,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 name,
                 afterSave
             })}
-            onDelete={(name, afterDelete) => handleDeleteProfile(name, afterDelete)}
+            onDelete={(name, afterDelete) => handleProfileDelete(name, afterDelete)}
             onClose={() => setOpenLoadProfile(false)}
             onExport={handleExportProfile}
             isNarrow={isScreenNarrow}
