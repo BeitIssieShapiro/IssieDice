@@ -44,7 +44,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "ImportedProfiles": "Imported Profiles",
         "SkippedDice": "Skipped Dice (Already Exist)",
         "SkippedProfiles": "Skipped Profiles (Already Exist)",
-
+        "NoteSkippedItems": "Note: If you want the imported dice and profiles to replace your existing ones, please delete the local versions with the same name before importing.",
         "Load": "Load",
         "Export": "Export",
         "Rename": "Rename",
@@ -177,6 +177,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "ImportedProfiles": "פרופילים חדשים",
         "SkippedDice": "קוביות שלא נשמרו (קיימות כבר)",
         "SkippedProfiles": "פרופילים שלא נשמרו (קיימים כבר)",
+        "NoteSkippedItems": "הערה: אם ברצונך שהקוביות והפרופילים המיובאים יחליפו את הקיימים, מחק את הגרסאות המקומיות עם אותו שם לפני הייבוא.",
 
         "Load": "טעינה",
         "Export": "ייצוא",
@@ -296,6 +297,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "ImportedProfiles": "ملفات تعريف جديدة",
         "SkippedDice": "النرد التي لم تُحفَظ (موجودة بالفعل)",
         "SkippedProfiles": "ملفات التعريف التي لم تُحفَظ (موجودة بالفعل)",
+        "NoteSkippedItems": "ملاحظة: إذا كنت ترغب في استبدال النردات والملفات الشخصية المستوردة بتلك الموجودة لديك، يرجى حذف النسخ المحلية التي تحمل نفس الاسم قبل الاستيراد.",
         "Load": "تحميل",
         "Export": "تصدير",
         "Rename": "إعادة تسمية",

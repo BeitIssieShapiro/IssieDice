@@ -37,6 +37,9 @@ export const ImportInfoDialog: React.FC<Props> = ({ importInfo, onClose }) => {
                         {renderSection(translate('ImportedDice'), importInfo.importedDice)}
                         {importInfo.skippedExistingDice.length > 0 && renderSection(translate('SkippedDice'), importInfo.skippedExistingDice)}
                     </ScrollView>
+                    {(importInfo.skippedExistingProfiles.length > 0 || importInfo.skippedExistingDice.length > 0) && <Text
+                        style={styles.note}
+                    >{translate("NoteSkippedItems")}</Text>}
 
                     {/* <Button title={translate("OK")} onPress={onClose} /> */}
                     <View style={{ width: "100%", alignItems: "center" }}>
@@ -80,6 +83,11 @@ const styles = StyleSheet.create({
     },
     item: {
         fontSize: 16,
+        marginLeft: 8,
+        marginRight: 8,
+    },
+    note: {
+        fontSize: 17,
         marginLeft: 8,
         marginRight: 8,
     },
