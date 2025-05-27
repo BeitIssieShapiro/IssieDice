@@ -7,20 +7,15 @@ import Animated, {
     useAnimatedReaction,
 } from 'react-native-reanimated';
 import { audioRecorderPlayer } from '../index.js';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
-import { RecordBackType } from 'react-native-audio-recorder-player';
+import { Alert, Image, PermissionsAndroid, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { AudioEncoderAndroidType, OutputFormatAndroidType, RecordBackType } from 'react-native-audio-recorder-player';
 import Sound from 'react-native-sound';
 Sound.setCategory('Playback');
 import * as RNFS from 'react-native-fs';
 import path from 'path';
 
-interface AudioAsset { name: string, asset: any, sound?: Sound }
-export const Sounds: { [key: string]: AudioAsset } = {
-    collision: {
-        name: "collision",
-        asset: require("../assets/dice-sound.mp3")
-    }
-}
+export interface AudioAsset { name: string, asset: any, sound?: Sound }
+
 
 interface RecordButtonProps {
     size: number,
@@ -30,11 +25,17 @@ interface RecordButtonProps {
     onStopRecord: () => void,
 }
 
-export async function playAudio(uri: string) {
+export async function playAudio(uri: string, volume?: number) {
     try {
         // Start player and handle potential errors
         await audioRecorderPlayer.stopPlayer();
-        await audioRecorderPlayer.startPlayer("file://" + uri);
+        // uri = "content://com.issiedice.provider/custom-dice/android 1/face_4$$12682.mp4"
+        // await audioRecorderPlayer.startPlayer( uri);
+        if (!uri.startsWith("file://")) {
+            uri = "file://" + uri;
+        }
+        await audioRecorderPlayer.startPlayer(uri);
+
         console.log('Player started', uri);
 
         return true;
@@ -48,25 +49,25 @@ export async function playBundledAudio(asset: AudioAsset, volume: number = 1.0) 
     try {
         // Stop any previous playback
         await audioRecorderPlayer.stopPlayer();
-        if (!asset.sound) {
-            const fileName = path.join(RNFS.TemporaryDirectoryPath, asset.name + ".mp3");
-            const src = Image.resolveAssetSource(asset.asset);
-            let downloadInfo = await RNFS.downloadFile({
-                fromUrl: src.uri,
-                toFile: fileName
-            });
-            await downloadInfo.promise;
-            const soundLoads = new Promise<void>((resolve, reject) => {
-                asset.sound = new Sound(fileName, undefined, (error) => {
-                    if (error) {
-                        console.log("Error loading sound", error);
-                    }
-                    resolve();
-                })
-            })
+        // if (!asset.sound) {
+        //     const fileName = "file://" + path.join(RNFS.TemporaryDirectoryPath, asset.name + ".mp3");
+        //     const src = Image.resolveAssetSource(asset.asset);
+        //     let downloadInfo = await RNFS.downloadFile({
+        //         fromUrl: src.uri,
+        //         toFile: fileName
+        //     });
+        //     await downloadInfo.promise;
+        //     const soundLoads = new Promise<void>((resolve, reject) => {
+        //         asset.sound = new Sound(fileName, undefined, (error) => {
+        //             if (error) {
+        //                 console.log("Error loading sound", error);
+        //             }
+        //             resolve();
+        //         })
+        //     })
 
-            await soundLoads;
-        }
+        //     await soundLoads;
+        // }
         if (asset.sound) {
             // Set the playback volume (0.0 to 1.0).
             asset.sound.setVolume(volume);
@@ -99,8 +100,26 @@ export const RecordButton = ({
 
     // Function to start recording
     const _startRecording = async () => {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.requestMultiple([
+                PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            ]);
+
+            if (!granted) {
+                Alert.alert("Permissions not granted")
+                return;
+            }
+        }
         try {
-            await audioRecorderPlayer.startRecorder();
+            await audioRecorderPlayer.startRecorder(undefined, {
+                AudioEncoderAndroid: AudioEncoderAndroidType.AAC, // or AMR_WB
+                OutputFormatAndroid: OutputFormatAndroidType.MPEG_4, // or THREE_GPP
+                AudioSourceAndroid: 1, // MIC
+                AudioSamplingRateAndroid: 44100,     // 🔼 bump to 44.1kHz
+                AudioChannelsAndroid: 1,
+                AudioEncodingBitRateAndroid: 96000, // or 128000
+            });
             console.log("Recording started...");
             audioRecorderPlayer.addRecordBackListener(recordingProgressCallback);
         } catch (err) {

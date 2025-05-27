@@ -1,6 +1,7 @@
 import { ImageSourcePropType } from "react-native";
 import { translate } from "./lang";
 import { defaultFloorColor } from "./color-picker";
+import { getAssetLocalPath } from "./assets";
 
 // models.ts
 export enum Templates {
@@ -114,19 +115,22 @@ export const templatesList = [
     {
         key: Templates.Numbers,
         name: translate("Numbers"),
-        image: require("../assets/numbers.png"),
+        //image: require("../assets/numbers.png"),
+        image: {uri: getAssetLocalPath("numbers.png", true)},
         readOnly: true,
     },
     {
         key: Templates.Colors,
         name: translate("Colors"),
-        image: require("../assets/colors.png"),
+        //image: require("../assets/colors.png"),
+        image: {uri: getAssetLocalPath("colors.png", true)},
         readOnly: true,
     },
     {
         key: Templates.Dots,
         name: translate("Dots"),
-        image: require("../assets/dots.png"),
+        //image: require("../assets/dots.png"),
+        image: {uri: getAssetLocalPath("dots.png", true)},
         readOnly: true,
     }
 ]

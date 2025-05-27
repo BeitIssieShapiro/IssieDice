@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert, Text, Dimensions } from "react-native";
+import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert, Text, Dimensions, Platform, AppState } from "react-native";
 
 import { DiceScene, DiceSceneMethods } from "./diceScene";
 import { SettingsUI } from "./settings";
@@ -14,8 +14,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MigrateDice } from "./migrate-dice";
 import { CountdownButton } from "./settings-btn";
 import { EmptyProfile, Profile } from "./models";
-import { EmptyImportInfo, ImportInfo, importPackage } from "./import-export";
+import { ImportInfo, importPackage } from "./import-export";
 import { ImportInfoDialog } from "./import-info-dialog";
+
+import { NativeModules } from 'react-native';
+import { useIncomingURL } from "./linking-hook";
+
+const { FileCopyModule } = NativeModules;
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
@@ -34,14 +39,37 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
     precent: number;
   } | undefined>();
 
-  const context = useContext(GlobalContext);
+  // const context = useContext(GlobalContext);
+  // const appState = useRef<string>(AppState.currentState);
+  useIncomingURL((url)=>handleImport({url}));
+
 
   useEffect(() => {
 
-    Linking.addEventListener("url", handleImport);
-    if (context && context.url) {
-      setTimeout(() => handleImport({ url: context.url }));
-    }
+    // Linking.addEventListener("url", handleImport);
+    // if (context && context.url) {
+    //   setTimeout(() => handleImport({ url: context.url }));
+    // } else {
+    //   Linking.getInitialURL().then(url => {
+    //     if (url) {
+    //       handleImport({ url });
+    //     }
+    //   })
+    // }
+
+    // const handleAppStateChange = async (nextState: string) => {
+    //   if (appState.current.match(/inactive|background/) && nextState === 'active') {
+    //     const url = await Linking.getInitialURL();
+    //     console.log("app state changed to active", url)
+    //     if (url) {
+    //       handleImport({ url });
+    //     }
+    //   }
+    //   appState.current = nextState;
+    // };
+
+
+    // const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
     const winDimChange = Dimensions.addEventListener("change", (e) => setWindowSize({ width: e.window.width, height: e.window.height }))
 
@@ -51,6 +79,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
 
     return () => {
       winDimChange.remove();
+      //appStateSubscription.remove();
       console.log("about to unmount")
     }
   }, [])
@@ -66,13 +95,14 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
   async function handleImport(event: any) {
     let url = event.url
     url = decodeURI(url);
-    // if (url.startsWith("file://")) {
-    //   url = url.substring(7)
-    // }
-    //url = await FileSystem.contentUriToFilePath(url);
+
+    if (Platform.OS === "android" && url.startsWith("content://")) {
+      console.log("translate content://", url);
+      url = await FileCopyModule.copyContentUriToTemp(url);
+    }
+      
     console.log("handleImport event:", url, JSON.stringify(event));
 
-    //Alert.alert("Import: " + url);
     setImportInProgress({
       message: translate("ImportInProgress"),
       precent: 0,
@@ -84,12 +114,11 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
       skippedExistingDice: [],
       skippedExistingProfiles: []
     };
-    
+
     importPackage(url, result)
       .then(() => setImportInfo(result))
       .catch(err => Alert.alert(translate("ImportError"), err?.message || err))
       .finally(() => setImportInProgress(undefined))
-
   }
 
 

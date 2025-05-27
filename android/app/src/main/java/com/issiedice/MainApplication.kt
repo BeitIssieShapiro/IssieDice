@@ -1,5 +1,6 @@
 package com.issiedice
 
+import MyCustomPackage
 import android.app.Application
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -11,6 +12,7 @@ import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
+import com.th3rdwave.safeareacontext.getReactContext
 
 class MainApplication : Application(), ReactApplication {
 
@@ -18,8 +20,7 @@ class MainApplication : Application(), ReactApplication {
       object : DefaultReactNativeHost(this) {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
-              // Packages that cannot be autolinked yet can be added manually here, for example:
-              // add(MyReactNativePackage())
+              add(MyCustomPackage())
             }
 
         override fun getJSMainModuleName(): String = "index"

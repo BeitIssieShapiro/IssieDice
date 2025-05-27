@@ -1,12 +1,9 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { DefaultProfileName, fTranslate, isRTL, translate } from "./lang";
-import Icon from 'react-native-vector-icons/AntDesign';
-import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
-import IconIonicons from 'react-native-vector-icons/Ionicons';
 
 import { getInsetsLimit, IconButton, NumberSelector, ScreenSubTitle, ScreenTitle, Section, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import {  deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
+import { deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { DiePicker, ProfilePicker } from "./profile-picker";
@@ -309,10 +306,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     }
 
     if (showAbout) {
-        return <About onClose={() => setShowAbout(false)}/>
+        return <About onClose={() => setShowAbout(false)} />
     }
 
-    return <View style={[gStyles.screenContainer, getInsetsLimit(insets)]}>
+    console.log("insets", getInsetsLimit(insets))
+    return <View style={[gStyles.screenContainer, getInsetsLimit(insets), { height: windowSize.height - insets.top - insets.bottom }]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
@@ -337,7 +335,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 setShowEditProfileName({ name: "", afterSave: () => setRevision(prev => prev + 1) })
                 setOpenLoadProfile(false);
             }}
-            
+
             onEdit={(name, afterSave) => setShowEditProfileName({
                 name,
                 afterSave
@@ -434,7 +432,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
         />}
 
-        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} icon={{name:"check-bold", type:"MCI", size:30, color: colors.titleBlue}} />
+        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} icon={{ name: "check-bold", type: "MCI", size: 30, color: colors.titleBlue }} />
 
         {/* Profile Name */}
         <ScreenSubTitle
@@ -447,7 +445,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
 
         {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>}
-        <ScrollView style={styles.settingHost}>
+        <ScrollView style={styles.settingHost} >
             <View style={[styles.cubes, { marginHorizontal }]}>
                 {
                     [0, 1, 2, 3].map((i: any) => (
@@ -535,7 +533,7 @@ const styles = StyleSheet.create({
         width: "100%",
         flex: 1,
         backgroundColor: "#F5F5F5",
-        position: "relative"
+        position: "relative",
     },
     colorCircle: {
         width: 40, height: 40,

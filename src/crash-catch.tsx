@@ -16,6 +16,6 @@ const nativeErrorHandler = (exceptionMsg: string): void => {
 }
 
 export function InitCrashCatch() {
-    setJSExceptionHandler(errorHandler, false);
+    setJSExceptionHandler(errorHandler, true);
     setNativeExceptionHandler(nativeErrorHandler, false, false);
 }

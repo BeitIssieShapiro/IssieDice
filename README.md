@@ -19,12 +19,21 @@
 - Copy AppIcon
 - Copy IssieDice model (copy the file and add it to proj)
 
-# Adding fonts:
+# Adding fonts/icons:
 - add font file to assets/fonts
 - run `npx react-native-asset`
 
+- for android, for react-native-vector-icons:
+  - add to app/build.gradle
+```
+  project.ext.vectoricons = [
+    iconFontNames: [ 'Ionicons.ttf', 'AntDesign.ttf', 'MaterialCommunityIcons.ttf'] // Specify font files
+  ]
 
-Mockups:
+  apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
+```
+
+## Mockups:
 
 https://xd.adobe.com/view/43e02c8a-ebee-4495-aff9-042b85e213b6-16b3
 https://xd.adobe.com/view/2787b739-50b8-4610-b19a-fcadc5c5f1ff-72d4/

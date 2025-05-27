@@ -5,18 +5,42 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { existsFolder, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
-import { unlink } from "react-native-fs";
 import { EditText } from "./edit-text";
 import { EditFace, FaceText } from "./edit-face";
 import * as RNFS from 'react-native-fs';
-import { WinSize } from "./utils";
+import { buildFullMatrix, normalizeImgSrc4Android, WinSize } from "./utils";
 import { playAudio } from "./audio";
 import { emptyFaceInfo, FaceInfo } from "./models";
-import { copyFileToFolder, getCacheBusterSuffix, InvalidCharachters, writeFileWithCacheBuster } from "./disk";
+import { copyFileToFolder, getCacheBusterSuffix, InvalidCharachters, unlinkFile, writeFileWithCacheBuster } from "./disk";
 import { colors, gStyles } from "./common-style";
-import { text } from "stream/consumers";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+const faces = {
+    top: {a:250,s:-30, sc: 0.864},
+    left: {a:95,s:30, sc: 1.05},
+    right: {a:10,s:-30, sc:0.864}
+};
+
+const faceTransform = (angle: any) => ({
+    transform: [
+        {
+            matrix: buildFullMatrix(
+                angle.a,
+                angle.s,
+                angle.sc,
+            ),
+        },
+    ],
+});
+
+const faceTransTop = faceTransform(faces.top)
+const faceTransLeft = faceTransform(faces.left)
+const faceTransRight = faceTransform(faces.right)
+
+// const skewXminus30 =  { matrix: makeSkewX3DMatrix(-30) };
+
+// const uppFace = { transform: [{ rotate: "210deg" }, skewXminus30, { scaleY: 0.864 }] }
+// const leftFace = { transform: [{ rotate: "90deg" }, skewXminus30, { scaleY: 0.864 }] }
+// const rightFace = { transform: [{ rotate: "-30deg" }, skewXminus30, { scaleY: 0.864 }] }
 
 interface EditDiceProps {
     name: string;
@@ -85,7 +109,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
             changed = true;
             // text or background change
             if (infoUri) {
-                await unlink(infoUri);
+                await unlinkFile(infoUri);
                 infoUri = undefined;
             }
 
@@ -106,7 +130,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         if (backgroundUri != faceInfo.backgroundUri) {
             changed = true;
             if (backgroundUri) {
-                await unlink(backgroundUri);
+                await unlinkFile(backgroundUri);
                 backgroundUri = undefined;
             }
             if (faceInfo.backgroundUri) {
@@ -121,7 +145,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         if (audioUri != faceInfo.audioUri) {
             changed = true;
             if (audioUri) {
-                await unlink(audioUri);
+                await unlinkFile(audioUri);
                 audioUri = undefined;
             }
             if (faceInfo.audioUri) {
@@ -192,7 +216,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
         windowSize.width / 8;
 
     const renderFaceRow = (index: number) => (<View key={index} style={[styles.faceView, { width: faceSize, height: faceSize },
-        shouldcondense && { margin: 3 }
+    shouldcondense && { margin: 3 }
     ]}>
         <FacePreview size={faceSize}
             backgroundColor={facesInfo[index].backgroundColor}
@@ -390,7 +414,7 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
                 ]
             } : {}
             ]}>
-            {backgroundImage && backgroundImage.length > 0 && <Image source={{ uri: backgroundImage }} style={{ position: "absolute", width: "100%", height: "100%" }} />}
+            {backgroundImage && backgroundImage.length > 0 && <Image source={normalizeImgSrc4Android({ uri: backgroundImage })} style={{ position: "absolute", width: "100%", height: "100%" }} />}
             {faceText && (faceText.text && faceText.text.length > 0 || onTextEdit) &&
                 onTextEdit ?
                 <TextInput style={[styles.textFace, {
@@ -420,7 +444,7 @@ export function FacePreview({ faceText, backgroundColor, size, backgroundImage, 
 
             {audioUri && <View style={[styles.playButton]}>
 
-                <MyIcon info={{ name: "sound", size: 25, type: "AntDesign", color:"black" }} />
+                <MyIcon info={{ name: "sound", size: 25, type: "AntDesign", color: "black" }} />
             </View>}
         </Pressable>
     </View >

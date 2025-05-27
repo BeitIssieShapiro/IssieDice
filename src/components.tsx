@@ -3,8 +3,7 @@ import { isRTL, translate } from "./lang";
 import IconAnt from 'react-native-vector-icons/AntDesign';
 import IconIonicons from 'react-native-vector-icons/Ionicons';
 import MCIIcon from "react-native-vector-icons/MaterialCommunityIcons";
-
-import Icon from 'react-native-vector-icons/FontAwesome';
+import FWIcon from "react-native-vector-icons/FontAwesome";
 
 
 import { useEffect, useRef, useState } from "react";
@@ -14,7 +13,7 @@ import { BlurView } from "@react-native-community/blur";
 
 export interface IconProps {
     name: string;
-    type?: "MCI" | "Ionicons" | "AntDesign";
+    type?: "MCI" | "Ionicons" | "AntDesign" | "FontAwesome";
     color?: string;
     size?: number;
 }
@@ -39,7 +38,8 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
 
 export function MyIcon({ info, onPress }: { info: IconProps, onPress?: () => void }) {
     const IconElem = info.type == "Ionicons" ? IconIonicons :
-        (info.type == "MCI" ? MCIIcon : IconAnt);
+        (info.type == "MCI" ? MCIIcon :
+            (info.type == "FontAwesome" ? FWIcon : IconAnt));
     return <IconElem name={info.name} size={info.size || 22} color={info.color || colors.defaultIconColor} style={{ width: info.size, height: info.size, margin: 0, padding: 0 }} onPress={onPress} />
 }
 
@@ -74,7 +74,7 @@ export function isTooWhite(color: string) {
     return false;
 }
 
-export function ColorButton({ callback, color, size, icon, index, iconColor }: any) {
+export function ColorButton({ callback, color, size, icon, index, iconColor, type }: any) {
     let borderStyle = {}
     if (isTooWhite(color)) {
         borderStyle = { borderWidth: 1, borderColor: "gray" }
@@ -96,7 +96,7 @@ export function ColorButton({ callback, color, size, icon, index, iconColor }: a
         }, borderStyle]}
         >
 
-            {icon && <Icon color={iconColor || "white"} size={size / 2} name={icon}></Icon>}
+            {icon && <MyIcon info={{ color: iconColor || "white", size: size / 2, name: icon, type }} />}
         </View>
     </TouchableOpacity>
 }

@@ -3,7 +3,6 @@ import { ensureAndroidCompatible, joinPaths } from "./utils";
 import path from "path";
 import * as RNFS from "react-native-fs";
 import { Folders } from "./disk";
-import Sound from "react-native-sound";
 
 
 export const SettingsKeys = {
@@ -37,13 +36,13 @@ export async function Init() {
 
     const profilesPath = ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Profiles));
     const buttonsPath = ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Dice));
-    let exists = await RNFS.exists(profilesPath);
+    let exists = await RNFS.exists(ensureAndroidCompatible(profilesPath));
     if (!exists) {
-        await RNFS.mkdir(profilesPath);
+        await RNFS.mkdir(ensureAndroidCompatible(profilesPath));
     }
-    exists = await RNFS.exists(buttonsPath);
+    exists = await RNFS.exists(ensureAndroidCompatible(buttonsPath));
     if (!exists) {
-        await RNFS.mkdir(buttonsPath);
+        await RNFS.mkdir(ensureAndroidCompatible(buttonsPath));
     }
 }
 

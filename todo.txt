@@ -1,3 +1,13 @@
+android:
+V- face with image is not saved
+- skew not working
+V- scroll settings to see backup not working
+V- dice sound not working
+- splash screen
+- app icon missing
+
+
+
 todo:
 V- click on dice do not roll it, but play audio if exists
 V- background accuracy - even instead of a wheel

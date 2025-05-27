@@ -16,7 +16,7 @@ export async function exportDice(name: string): Promise<string> {
     }
 
     const files = [];
-    const exists = await RNFS.exists(getCustomTypePath(name));
+    const exists = await RNFS.exists(ensureAndroidCompatible(getCustomTypePath(name)));
     if (!exists) {
         return "";
     }
@@ -44,7 +44,7 @@ export async function exportDice(name: string): Promise<string> {
 
     const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, name + ".dice"));
     // delete if exists before
-    await RNFS.unlink(targetFile).catch(doNothing);
+    await RNFS.unlink(ensureAndroidCompatible(targetFile)).catch(doNothing);
 
     return zip(files, targetFile).then(path => {
         return ensureAndroidCompatible(path);
@@ -72,7 +72,7 @@ export async function exportProfile(name: string, alreadyIncludedCubes: string[]
 
     const targetFile = ensureAndroidCompatible(joinPaths(RNFS.TemporaryDirectoryPath, "profile__" + name + ".dice"));
     // delete if exists before
-    await RNFS.unlink(targetFile).catch(doNothing);
+    await RNFS.unlink(ensureAndroidCompatible(targetFile)).catch(doNothing);
 
     const profileZip = await zip([ensureAndroidCompatible(metaDataFile)], targetFile);
     const diceZips = [];
@@ -150,19 +150,19 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
         if (md.type == "dice") {
             const targetPath = getCustomTypePath(md.name)
 
-            if (await RNFS.exists(targetPath)) {
+            if (await RNFS.exists(ensureAndroidCompatible(targetPath))) {
                 importInfo.skippedExistingDice.push(md.name);
                 return;
             }
 
-            await RNFS.mkdir(targetPath);
+            await RNFS.mkdir(ensureAndroidCompatible(targetPath));
             for (const file of items.filter(item => item.name != metaDataItem.name)) {
-                await RNFS.moveFile(file.path, targetPath + "/" + file.name).catch(e => console.log("copy file on import failed", e));
+                await RNFS.moveFile(ensureAndroidCompatible(file.path), ensureAndroidCompatible(targetPath + "/" + file.name)).catch(e => console.log("copy file on import failed", e));
             }
             importInfo.importedDice.push(md.name);
         } else if (md.type == "profile") {
             const targetPath = profileFilePath(md.name);
-            if (await RNFS.exists(targetPath)) {
+            if (await RNFS.exists(ensureAndroidCompatible(targetPath))) {
                 importInfo.skippedExistingProfiles.push(md.name);
                 return;
             }

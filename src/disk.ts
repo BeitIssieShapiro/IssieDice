@@ -33,6 +33,11 @@ export async function loadJSON<T>(path: string, defaults: T): Promise<T> {
   }
 }
 
+export function unlinkFile(path: string) {
+    return RNFS.unlink(ensureAndroidCompatible(path));
+}
+
+
 export function loadFile(path: string) {
     return RNFS.readFile(ensureAndroidCompatible(path), 'utf8');
 }
@@ -41,18 +46,18 @@ export async function writeFileWithCacheBuster(targetPath: string, content: stri
     const { folder, fileName, extension } = splitFilePath(targetPath);
     const cacheBusterPrefixPos = fileName.indexOf("$$");
 
-    if (!await RNFS.exists(folder)) {
-        await RNFS.mkdir(folder);
+    if (!await RNFS.exists(ensureAndroidCompatible(folder))) {
+        await RNFS.mkdir(ensureAndroidCompatible(folder));
     }
     if (cacheBusterPrefixPos < 0) {
-        await RNFS.unlink(targetPath).catch(doNothing);
+        await RNFS.unlink(ensureAndroidCompatible(targetPath)).catch(doNothing);
     } else {
         const baseFileName = fileName.substring(0, cacheBusterPrefixPos);
-        const files = await RNFS.readDir(folder);
+        const files = await RNFS.readDir(ensureAndroidCompatible(folder));
         for (const file of files) {
             // delete any file with same base path
             if (file.name.startsWith(baseFileName) && file.name.endsWith(extension)) {
-                await RNFS.unlink(file.path);
+                await RNFS.unlink(ensureAndroidCompatible(file.path));
             }
         }
     }
@@ -61,8 +66,8 @@ export async function writeFileWithCacheBuster(targetPath: string, content: stri
 
 export async function writeFile(path: string, content: string, verifyFolderExists?: string, encoding?: string) {
     if (verifyFolderExists) {
-        if (!await RNFS.exists(verifyFolderExists)) {
-            await RNFS.mkdir(verifyFolderExists);
+        if (!await RNFS.exists(ensureAndroidCompatible(verifyFolderExists))) {
+            await RNFS.mkdir(ensureAndroidCompatible(verifyFolderExists));
         }
     }
     return RNFS.writeFile(ensureAndroidCompatible(path), content, encoding)
@@ -90,34 +95,34 @@ function splitFilePath(targetPath: string): { folder: string; fileName: string; 
 export const copyFileToFolder = async (sourcePath: string, targetPath: string, overwrite = true) => {
 
     const { folder, fileName, extension } = splitFilePath(targetPath);
-    await RNFS.mkdir(folder);
+    await RNFS.mkdir(ensureAndroidCompatible(folder));
     if (overwrite) {
         const cacheBusterPrefixPos = fileName.indexOf("$$");
 
         if (cacheBusterPrefixPos < 0) {
-            await RNFS.unlink(targetPath).catch(doNothing);
+            await RNFS.unlink(ensureAndroidCompatible(targetPath)).catch(doNothing);
         } else {
             const baseFileName = fileName.substring(0, cacheBusterPrefixPos);
-            const files = await RNFS.readDir(folder);
+            const files = await RNFS.readDir(ensureAndroidCompatible(folder));
             for (const file of files) {
                 // delete any file with same base path
                 if (file.name.startsWith(baseFileName) && file.name.endsWith(extension)) {
-                    await RNFS.unlink(file.path);
+                    await RNFS.unlink(ensureAndroidCompatible(file.path));
                 }
             }
         }
     }
-    await RNFS.copyFile(sourcePath, targetPath);
+    await RNFS.copyFile(ensureAndroidCompatible(sourcePath), ensureAndroidCompatible(targetPath));
 };
 
 export const deleteFile = async (filePath: string) => {
     if (filePath.length == 0 || filePath.startsWith("http")) return;
     try {
         // Check if the file exists before attempting to delete it
-        const fileExists = await RNFS.exists(filePath);
+        const fileExists = await RNFS.exists(ensureAndroidCompatible(filePath));
 
         if (fileExists) {
-            await RNFS.unlink(filePath); // Delete the file
+            await RNFS.unlink(ensureAndroidCompatible(filePath)); // Delete the file
             console.log(`File deleted: ${filePath}`);
         } else {
             console.log('File does not exist');

@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
       android:name=".MainApplication"
@@ -9,6 +15,7 @@
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme"
+      android:requestLegacyExternalStorage="true"
       android:supportsRtl="true">
       <activity
         android:name=".MainActivity"
@@ -21,6 +28,58 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+
+        <!-- Open .dice files via file manager or Downloads app -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <data android:scheme="content" />
+            <data android:scheme="file" />
+
+            <data android:mimeType="*/*" />
+            <data android:pathPattern=".*\\.dice" />
+        </intent-filter>
+
+        <!-- Be available as target for Share > .dice files -->
+        <intent-filter>
+            <action android:name="android.intent.action.SEND" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:mimeType="application/octet-stream" />
+            <data android:pathPattern=".*\\.dice" />
+        </intent-filter>
+
       </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+      <provider
+          android:name="com.imagepicker.ImagePickerProvider"
+          android:authorities="com.issiedice.imagepickerprovider"
+          android:exported="false"
+          android:grantUriPermissions="true" >
+          <meta-data
+              android:name="android.support.FILE_PROVIDER_PATHS"
+              android:resource="@xml/imagepicker_provider_paths" />
+      </provider>
+      <provider
+          android:name="cl.json.RNShareFileProvider"
+          android:authorities="com.issiedice.rnshare.fileprovider"
+          android:exported="false"
+          android:grantUriPermissions="true" >
+          <meta-data
+              android:name="android.support.FILE_PROVIDER_PATHS"
+              android:resource="@xml/share_download_paths" />
+      </provider>
+
     </application>
 </manifest>

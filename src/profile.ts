@@ -25,7 +25,7 @@ export async function migrateV1(): Promise<string[]> {
             for (const customDie of customDice) {
                 const migratedDieName = await getNextDieName("MigratedDieName");
                 const diePath = getCustomTypePath(migratedDieName);
-                await RNFS.mkdir(diePath);
+                await RNFS.mkdir(ensureAndroidCompatible(diePath));
                 migratedDice.push(migratedDieName);
 
                 for (let i = 1; i <= 6; ++i) {
@@ -48,14 +48,14 @@ export async function migrateV1(): Promise<string[]> {
 }
 
 export function profileFilePath(name: string) {
-    return ensureAndroidCompatible(path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`));
+    return path.join(RNFS.DocumentDirectoryPath, Folders.Profiles, `${name}.json`);
 }
 
 export async function saveProfileFile(name: string, profile: Profile, overwrite = false) {
     if (!isValidFilename(name)) throw new InvalidFileName(name);
     const profilePath = profileFilePath(name);
     if (!overwrite) {
-        if (await RNFS.exists(profilePath)) {
+        if (await RNFS.exists(ensureAndroidCompatible(profilePath))) {
             throw new AlreadyExists(name);
         }
     }
@@ -73,25 +73,25 @@ export async function loadProfileFile(name: string): Promise<Profile> {
 export async function renameProfileFile(previousName: string, newName: string, overwrite = false) {
     const prevPath = profileFilePath(previousName);
     const newPath = profileFilePath(newName)
-    if (!overwrite && await RNFS.exists(newPath)) {
+    if (!overwrite && await RNFS.exists(ensureAndroidCompatible(newPath))) {
         throw new AlreadyExists(newName);
     }
 
     // only rename if file existed
-    if (await RNFS.exists(prevPath)) {
-        await RNFS.moveFile(prevPath, newPath);
+    if (await RNFS.exists(ensureAndroidCompatible(prevPath))) {
+        await RNFS.moveFile(ensureAndroidCompatible(prevPath), ensureAndroidCompatible(newPath));
     }
 }
 
 export async function deleteProfileFile(name: string) {
     const profilePath = profileFilePath(name);
-    return RNFS.unlink(profilePath);
+    return RNFS.unlink(ensureAndroidCompatible(profilePath));
 }
 
 export async function verifyProfileNameFree(name: string) {
     const profilePath = profileFilePath(name);
     console.log("verifyProfileNameFree", name)
-    if (await RNFS.exists(profilePath)) {
+    if (await RNFS.exists(ensureAndroidCompatible(profilePath))) {
         throw new AlreadyExists(name);
     }
     console.log("verifyProfileNameFree OK")
@@ -210,7 +210,7 @@ export function getProfilePath(name: string): string {
 }
 
 export async function listProfiles(): Promise<List[]> {
-    return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.Profiles}`).then(async (files) => {
+    return RNFS.readDir(ensureAndroidCompatible(`${RNFS.DocumentDirectoryPath}/${Folders.Profiles}`)).then(async (files) => {
         const list: List[] = [];
         for (const file of files) {
             if (file.name.endsWith(".json")) {
@@ -230,7 +230,7 @@ export async function listProfiles(): Promise<List[]> {
 }
 
 export async function listCustomDice(ommitFaces = false): Promise<List[]> {
-    return RNFS.readDir(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`).then(async (folders) => {
+    return RNFS.readDir(ensureAndroidCompatible(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`)).then(async (folders) => {
         const list: List[] = [];
         for (const folder of folders) {
             list.push({
@@ -249,7 +249,7 @@ export async function listCustomDice(ommitFaces = false): Promise<List[]> {
 export async function loadFaceImages(name: string): Promise<FaceInfo[]> {
     const customDicePath = getCustomTypePath(name);
 
-    const files = await RNFS.readDir(customDicePath);
+    const files = await RNFS.readDir(ensureAndroidCompatible(customDicePath));
     const list: FaceInfo[] = [{}, {}, {}, {}, {}, {}];
     for (const elem of files) {
         if (elem.name.startsWith("face")) {
@@ -277,7 +277,7 @@ export async function readTexture(name: string): Promise<string> {
         return "";
     }
     const customDicePath = getCustomTypePath(name);
-    const files = await RNFS.readDir(customDicePath);
+    const files = await RNFS.readDir(ensureAndroidCompatible(customDicePath));
     for (const elem of files) {
         if (elem.name.startsWith("texture$$") && elem.name.endsWith(".jpg")) {
             return "file://" + elem.path;
@@ -310,16 +310,16 @@ export function isValidFilename(filename: string): boolean {
 }
 
 export function existsFolder(name: string): Promise<boolean> {
-    return RNFS.exists(`${RNFS.DocumentDirectoryPath}/${name}`);
+    return RNFS.exists(ensureAndroidCompatible(`${RNFS.DocumentDirectoryPath}/${name}`));
 }
 
 export async function renameDiceFolder(currName: string, newName: string) {
     const srcPath = getCustomTypePath(currName);
     const destPath = getCustomTypePath(newName);
-    if (await RNFS.exists(srcPath)) {
-        await RNFS.moveFile(srcPath, destPath);
+    if (await RNFS.exists(ensureAndroidCompatible(srcPath))) {
+        await RNFS.moveFile(ensureAndroidCompatible(srcPath), ensureAndroidCompatible(destPath));
     } else {
-        await RNFS.mkdir(destPath);
+        await RNFS.mkdir(ensureAndroidCompatible(destPath));
     }
 
     // change saved settings and profiles including old dice name
@@ -347,7 +347,7 @@ export async function renameDiceFolder(currName: string, newName: string) {
 
 export async function deleteDice(name: string) {
     const srcPath = getCustomTypePath(name);
-    await RNFS.unlink(srcPath);
+    await RNFS.unlink(ensureAndroidCompatible(srcPath));
 
     // Check all profile with the deleted die and change die to a default (dots)
     const allProfiles = await listProfiles();
@@ -393,7 +393,7 @@ export async function getNextDieName(transKey: string): Promise<string> {
     let exists = false;
     do {
         const diePath = getCustomTypePath(newCubeName);
-        exists = await RNFS.exists(diePath);
+        exists = await RNFS.exists(ensureAndroidCompatible(diePath));
         if (exists) {
             counter++;
             newCubeName = fTranslate(transKey, counter);

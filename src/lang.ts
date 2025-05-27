@@ -449,7 +449,7 @@ function findMissing() {
     console.log(missing);
 
 }
-findMissing();
+//findMissing();
 
 
 const currStrings = strings[deviceLanguage];

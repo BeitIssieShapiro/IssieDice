@@ -21,6 +21,11 @@ Users may choose to **export** their content or **import** content shared by oth
 
 All content remains on your device. IssieDice does not transmit data over the internet and does not use cloud storage. We do not collect analytics or usage information.
 
+## Permissions Used
+- **Camera**: Used only to take photos within the app for dice faces, never stored or transmitted externally.
+- **Microphone**: Used only to record audio for dice faces, never stored or transmitted externally.
+- **Photos**: Used only to use photos within the app, as dice faces background, never stored or transmitted externally.
+
 ## Changes to This Privacy Policy
 
 We reserve the right to update or change our Privacy Policy at any time. Any changes will be posted on this page. Your continued use of IssieDice after any changes to this Privacy Policy will constitute your acceptance of such changes.

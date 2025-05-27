@@ -25,12 +25,16 @@ import { useSharedValue } from "react-native-worklets-core"
 import { Bounds, Dice, Profile, Templates, templatesList } from "./models";
 import { animateYaw, computeFloorBounds, computeVerticalFov, darkenHexColor, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
 import { createDieShape, createFloor, createWall } from "./scene-elements";
-import { playAudio, playBundledAudio, Sounds } from "./audio";
+import { playAudio, playBundledAudio } from "./audio";
+import { getAssetLocalPath, Sounds } from "./assets";
 
 
-const DiceModel = require("../assets/dice-empty.glb");
+const DiceModel = { uri: getAssetLocalPath("dice-empty.glb", true) };
+const TransparentShadowMaterial = { uri: getAssetLocalPath("transparent_shadow_material.filamat", true) };
+
+//require("../assets/dice-empty.glb");
 //const FloorModel = require("../assets/floor.glb");
-const TransparentShadowMaterial = require('../assets/transparent_shadow_material.filamat');
+//require('../assets/transparent_shadow_material.filamat');
 
 
 LogBox.ignoreLogs([

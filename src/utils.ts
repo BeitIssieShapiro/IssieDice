@@ -1,4 +1,4 @@
-import { Platform, PermissionsAndroid } from "react-native";
+import { Platform, PermissionsAndroid, ImageURISource } from "react-native";
 import Quaternion from "quaternion";
 import { defaultFloorColor } from "./color-picker";
 import * as CANNON from "cannon-es";
@@ -15,6 +15,30 @@ export function ensureAndroidCompatible(path: string, forceFilePrefix?: boolean)
   }
   return path
 }
+
+const findFilePrefix = "com.issiedice/files"
+const findCachePrefix = "com.issiedice/cache";
+
+export function normalizeImgSrc4Android(imgSrc: ImageURISource | undefined): ImageURISource | undefined {
+
+  let res = imgSrc;
+  if (imgSrc && Platform.OS === 'android' && imgSrc.uri && !imgSrc.uri.startsWith("content")) {
+    let pos = imgSrc.uri.indexOf(findFilePrefix);
+    if (pos >= 0) {
+      let uri = "content://com.issiedice.provider" + imgSrc.uri.substring(pos + findFilePrefix.length);
+      res = { ...imgSrc, uri };
+    } else {
+      pos = imgSrc.uri.indexOf(findCachePrefix);
+      if (pos >= 0) {
+        let uri = "content://com.issiedice.provider/cache_files" + imgSrc.uri.substring(pos + findCachePrefix.length);
+        res = { ...imgSrc, uri };
+      }
+    }
+  }
+  return res;
+}
+
+
 
 export interface WinSize {
   width: number;
@@ -221,4 +245,138 @@ export function darkenHexColor(hex: string, factor: number): string {
   g = Math.floor(g * factor);
   b = Math.floor(b * factor);
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+
+//-------
+type Matrix4x4 = number[]; // 16 elements, column-major order
+
+function degToRad(deg: number | string): number {
+  return (typeof deg === "string" ? parseFloat(deg) : deg) * Math.PI / 180;
+}
+
+function resetIdentity(): Matrix4x4 {
+  return [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ];
+}
+
+function multiply4x4(a: Matrix4x4, b: Matrix4x4): Matrix4x4 {
+  const out = new Array(16).fill(0);
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 4; col++) {
+      for (let k = 0; k < 4; k++) {
+        out[col * 4 + row] += a[k * 4 + row] * b[col * 4 + k];
+      }
+    }
+  }
+  return out;
+}
+
+function applyRotateX(rad: number): Matrix4x4 {
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return [
+    1, 0, 0, 0,
+    0, cos, sin, 0,
+    0, -sin, cos, 0,
+    0, 0, 0, 1,
+  ];
+}
+
+function applyRotateY(rad: number): Matrix4x4 {
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return [
+    cos, 0, -sin, 0,
+    0, 1, 0, 0,
+    sin, 0, cos, 0,
+    0, 0, 0, 1,
+  ];
+}
+
+function applyScaleXY(sx: number, sy: number): Matrix4x4 {
+  return [
+    sx, 0, 0, 0,
+    0, sy, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  ];
+}
+
+function applyPerspective(perspective: number): Matrix4x4 {
+  const m = resetIdentity();
+  m[11] = -1 / perspective;
+  return m;
+}
+
+export function makeSkewX3DMatrix(skewDeg: number | string): Matrix4x4 {
+  const skewRad = degToRad(skewDeg);
+  const rotateYRad = degToRad(45);
+  const sinY = Math.sin(rotateYRad);
+
+  const rotateXRad = Math.atan((1 / sinY) * Math.tan(skewRad));
+  const scaleX = 1 / Math.cos(rotateYRad);
+  const scaleY = 1 / Math.cos(rotateXRad);
+
+  // Build transforms
+  const rotY = applyRotateY(rotateYRad);
+  const rotX = applyRotateX(rotateXRad);
+  const scale = applyScaleXY(scaleX, scaleY);
+  const persp = applyPerspective(100000);
+
+  // Compose: final = persp × scale × rotX × rotY
+  return [persp, scale, rotX, rotY].reduce((acc, mat) => multiply4x4(acc, mat));
+}
+
+
+function makeRotateZMatrix(degrees: string | number): Matrix4x4 {
+  const rad = degToRad(degrees);
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  return [
+    cos, sin, 0, 0,
+    -sin, cos, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  ];
+}
+
+export function buildFullMatrix(
+
+  rotateDeg: string | number,
+  skewXDeg: string | number,
+  scaleY: number
+): Matrix4x4 {
+  const rotateZ = makeRotateZMatrix(rotateDeg);
+  const skewX3D = makeSkewX3DMatrix(skewXDeg);
+  const scale = applyScaleXY(1, scaleY);
+
+  // final = scaleY × skewX3D × rotateZ
+  return [scale, skewX3D, rotateZ].reduce((acc, m) => multiply4x4(acc, m));
+}
+
+// function applyTransformOrigin(matrix: Matrix4x4, ox: number, oy: number): Matrix4x4 {
+//   const t1 = applyTranslate(-ox, -oy, 0);
+//   const t2 = applyTranslate(ox, oy, 0);
+//   return multiply4x4(multiply4x4(t2, matrix), t1);
+// }
+
+export function applyTranslate(x: number, y: number, z: number): number[] {
+  return [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    x, y, z, 1,
+  ];
+}
+
+export function simulateTransformOrigin(matrix: number[], originX = 0, originY = 0): number[] {
+  const toOrigin = applyTranslate(-originX, -originY, 0);
+  const back = applyTranslate(originX, originY, 0);
+  return multiply4x4(multiply4x4(back, matrix), toOrigin);
 }
