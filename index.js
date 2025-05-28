@@ -8,7 +8,7 @@ import App from './src/main';
 import { Init } from './src/settings-storage';
 import { useEffect, useState } from 'react';
 import SplashScreen from 'react-native-splash-screen';
-import { initAssets } from './src/assets';
+import { getAssetLocalPath, initAssets } from './src/assets';
 
 Init();
 
@@ -44,6 +44,7 @@ const AppWithCtx = (props) => {
     }}>
         <SafeAreaProvider>
             {assetsReady && <App />}
+            {/* <SkewedImageFilament imageSrc={getAssetLocalPath("dots.png")}/> */}
             {/*<App />
             {/* <View
                 style={{

@@ -19,6 +19,8 @@ import { ImportInfoDialog } from "./import-info-dialog";
 
 import { NativeModules } from 'react-native';
 import { useIncomingURL } from "./linking-hook";
+import { getAssetLocalPath } from "./assets";
+import { DiePreview2 } from "./app2";
 
 const { FileCopyModule } = NativeModules;
 

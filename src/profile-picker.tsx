@@ -9,6 +9,7 @@ import { RadioButton } from "./radio-button";
 import { List, Templates } from "./models";
 import { Folders } from "./disk";
 import { colors, gStyles, menuActionIcon } from "./common-style";
+import { DiePreview } from "./die-preview";
 
 
 
@@ -51,7 +52,6 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
         }
     }, [open, exclude, revision]);
 
-    console.log("profiles", list)
     const create = onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />
     return <FadeInView height={open ? height : 0} style={[gStyles.pickerView]} onClose={onClose}>
         <View style={[gStyles.pickerTitleHost, { direction: isRTL() ? "rtl" : "ltr" }]}>
@@ -157,8 +157,12 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
                                 <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
                                     <RadioButton selected={currentDie == item.key} />
                                     <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
-                                        {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
-                                        {item && !item.image && <DicePreview size={45} facesInfo={item.faces!} />}
+                                        {item && item.image && <DiePreview
+                                            imageSrc={ item.image.uri} size={45} style={{  }}/>}
+
+
+                                         {/* {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
+                                         {item && !item.image && <DicePreview size={45} facesInfo={item.faces!} />} */}
                                         <Text
                                             allowFontScaling={false}
                                             numberOfLines={1}

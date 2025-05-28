@@ -5,6 +5,7 @@ import { IconButton, MyIcon, Spacer } from "./components";
 import { DicePreview } from "./edit-dice";
 import { colors, gStyles } from "./common-style";
 import { Switch } from "@rneui/themed";
+import { DiePreview } from "./die-preview";
 
 interface DiceSettingsProps {
     width: number,
@@ -13,15 +14,13 @@ interface DiceSettingsProps {
     onOpenLoadDice: () => void;
     onSetActive: (active: boolean) => void;
     onEditDice?: () => void;
-
 }
 
 export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onOpenLoadDice }: DiceSettingsProps) {
 
     let templ = templatesList.find(t => t.key == dice.template)!;
-
-    const isMobile = width < 300 || height < 300;
-    const isNarrow = width < 300;
+    const isMobile = width < 280 || height < 280;
+    const isNarrow = width < 280;
 
     const dirStyle: any = { flexDirection: (isRTL() ? "row-reverse" : "row") }
 
@@ -38,11 +37,14 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
         </View>
         <View style={gStyles.cardBody}>
             <Spacer h={isMobile ? 5 : 20} />
-
-            {dice.faces && dice.faces.length > 0 ?
+            {/* {dice.faces && dice.faces.length > 0 ?
                 <DicePreview facesInfo={dice.faces} size={width / 3} /> :
                 <DicePreview facesInfo={templ?.image} size={width / 3} />
-            }
+            } */}
+            <DiePreview 
+                imageSrc={dice.texture? dice.texture : templ?.image.uri} size={width / 3} style={{ }} 
+                autoRotate={true} />
+
         </View>
         <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: isNarrow ? "space-between" : "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>
             <IconButton icon={{ name: "list", type: "Ionicons", size: 30, color: colors.titleBlue }} text={isMobile ? "" : translate("List")} onPress={() => onOpenLoadDice()} />

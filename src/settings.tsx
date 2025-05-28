@@ -13,7 +13,7 @@ import { Alert } from "react-native";
 import Toast from "react-native-toast-message";
 import Share from 'react-native-share';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { safeColor } from "./utils";
+import { safeColor, useMove } from "./utils";
 import { EditText } from "./edit-text";
 import { AlreadyExists, Folders, InvalidCharachters, InvalidFileName } from "./disk";
 import { EmptyDice, EmptyProfile, isStaticDie, Profile, Templates } from "./models";
@@ -136,7 +136,6 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const handleProfileDelete = async (name: string, afterDelete: () => void, force = false) => {
         const currName = Settings.getString(SettingsKeys.CurrentProfileName, "");
         const isCurrent = name == currName;
-        console.log("xx", name, currName, isCurrent)
 
         if (!force) {
             const msg = isCurrent ?
@@ -309,7 +308,6 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         return <About onClose={() => setShowAbout(false)} />
     }
 
-    console.log("insets", getInsetsLimit(insets))
     return <View style={[gStyles.screenContainer, getInsetsLimit(insets), { height: windowSize.height - insets.top - insets.bottom }]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
@@ -450,6 +448,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 {
                     [0, 1, 2, 3].map((i: any) => (
                         <DiceSettings
+                            
                             width={cubeSettingSize}
                             height={cubeSettingSize * .8}
                             key={i}

@@ -237,6 +237,7 @@ export async function listCustomDice(ommitFaces = false): Promise<List[]> {
                 key: folder.name,
                 name: folder.name,
                 faces: ommitFaces ? [] : await loadFaceImages(folder.name),
+                image: {uri:await readTexture(folder.name)}
             })
         }
         return list;

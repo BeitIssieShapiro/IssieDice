@@ -29,7 +29,7 @@ import { playAudio, playBundledAudio } from "./audio";
 import { getAssetLocalPath, Sounds } from "./assets";
 
 
-const DiceModel = { uri: getAssetLocalPath("dice-empty.glb", true) };
+export const DiceModel = { uri: getAssetLocalPath("dice-empty.glb", true) };
 const TransparentShadowMaterial = { uri: getAssetLocalPath("transparent_shadow_material.filamat", true) };
 
 //require("../assets/dice-empty.glb");

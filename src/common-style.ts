@@ -98,6 +98,7 @@ export const gStyles = StyleSheet.create({
         borderBottomWidth: 2,
     },
     cardBody: {
+        position:"relative",
         width: "100%",
         flexDirection: "column",
         alignItems: "center",
