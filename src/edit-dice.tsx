@@ -8,39 +8,11 @@ import path from "path";
 import { EditText } from "./edit-text";
 import { EditFace, FaceText } from "./edit-face";
 import * as RNFS from 'react-native-fs';
-import { buildFullMatrix, normalizeImgSrc4Android, WinSize } from "./utils";
+import {  normalizeImgSrc4Android, WinSize } from "./utils";
 import { playAudio } from "./audio";
 import { emptyFaceInfo, FaceInfo } from "./models";
 import { copyFileToFolder, getCacheBusterSuffix, InvalidCharachters, unlinkFile, writeFileWithCacheBuster } from "./disk";
 import { colors, gStyles } from "./common-style";
-
-const faces = {
-    top: {a:250,s:-30, sc: 0.864},
-    left: {a:95,s:30, sc: 1.05},
-    right: {a:10,s:-30, sc:0.864}
-};
-
-const faceTransform = (angle: any) => ({
-    transform: [
-        {
-            matrix: buildFullMatrix(
-                angle.a,
-                angle.s,
-                angle.sc,
-            ),
-        },
-    ],
-});
-
-const faceTransTop = faceTransform(faces.top)
-const faceTransLeft = faceTransform(faces.left)
-const faceTransRight = faceTransform(faces.right)
-
-// const skewXminus30 =  { matrix: makeSkewX3DMatrix(-30) };
-
-// const uppFace = { transform: [{ rotate: "210deg" }, skewXminus30, { scaleY: 0.864 }] }
-// const leftFace = { transform: [{ rotate: "90deg" }, skewXminus30, { scaleY: 0.864 }] }
-// const rightFace = { transform: [{ rotate: "-30deg" }, skewXminus30, { scaleY: 0.864 }] }
 
 interface EditDiceProps {
     name: string;
