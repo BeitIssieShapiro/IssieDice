@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Icon from 'react-native-vector-icons/AntDesign';
+import Icon from '@react-native-vector-icons/ant-design';
 import ColorPicker from 'react-native-wheel-color-picker'
 import { Settings } from './setting-storage';
 import { ColorButton, FadeInView } from "./components";

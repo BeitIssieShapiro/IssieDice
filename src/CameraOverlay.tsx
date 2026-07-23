@@ -4,7 +4,7 @@ import { Camera, CameraApi, CameraType } from 'react-native-camera-kit';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { translate } from './lang';
 import { IconButton } from './components';
-import IconMCI from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconMCI from '@react-native-vector-icons/material-design-icons';
 
 interface CameraOverlayProps {
   onClose: () => void;

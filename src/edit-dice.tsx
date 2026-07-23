@@ -7,7 +7,7 @@ import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { EditText } from "./edit-text";
 import { EditFace, FaceText } from "./edit-face";
-import * as RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import {  normalizeImgSrc4Android, WinSize } from "./utils";
 import { playAudio } from "./audio";
 import { emptyFaceInfo, FaceInfo } from "./models";

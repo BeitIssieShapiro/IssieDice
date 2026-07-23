@@ -6,15 +6,13 @@ import Animated, {
     Easing,
     useAnimatedReaction,
 } from 'react-native-reanimated';
-import { audioRecorderPlayer } from '../index.js';
 import { Alert, Image, PermissionsAndroid, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { AudioEncoderAndroidType, OutputFormatAndroidType, RecordBackType } from 'react-native-audio-recorder-player';
-import Sound from 'react-native-sound';
-Sound.setCategory('Playback');
-import * as RNFS from 'react-native-fs';
+import { AudioEncoderAndroidType, OutputFormatAndroidType, RecordBackType } from 'react-native-nitro-sound';
+import NitroSound from 'react-native-nitro-sound';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import path from 'path';
 
-export interface AudioAsset { name: string, asset: any, sound?: Sound }
+export interface AudioAsset { name: string, asset: any, sound?: any }
 
 
 interface RecordButtonProps {
@@ -28,13 +26,13 @@ interface RecordButtonProps {
 export async function playAudio(uri: string, volume?: number) {
     try {
         // Start player and handle potential errors
-        await audioRecorderPlayer.stopPlayer();
+        await NitroSound.stopPlayer();
         // uri = "content://com.issiedice.provider/custom-dice/android 1/face_4$$12682.mp4"
         // await audioRecorderPlayer.startPlayer( uri);
         if (!uri.startsWith("file://")) {
             uri = "file://" + uri;
         }
-        await audioRecorderPlayer.startPlayer(uri);
+        await NitroSound.startPlayer(uri);
 
         console.log('Player started', uri);
 
@@ -48,7 +46,7 @@ export async function playAudio(uri: string, volume?: number) {
 export async function playBundledAudio(asset: AudioAsset, volume: number = 1.0) {
     try {
         // Stop any previous playback
-        await audioRecorderPlayer.stopPlayer();
+        await NitroSound.stopPlayer();
         // if (!asset.sound) {
         //     const fileName = "file://" + path.join(RNFS.TemporaryDirectoryPath, asset.name + ".mp3");
         //     const src = Image.resolveAssetSource(asset.asset);
@@ -112,7 +110,7 @@ export const RecordButton = ({
             }
         }
         try {
-            await audioRecorderPlayer.startRecorder(undefined, {
+            await NitroSound.startRecorder(undefined, {
                 AudioEncoderAndroid: AudioEncoderAndroidType.AAC, // or AMR_WB
                 OutputFormatAndroid: OutputFormatAndroidType.MPEG_4, // or THREE_GPP
                 AudioSourceAndroid: 1, // MIC
@@ -121,7 +119,7 @@ export const RecordButton = ({
                 AudioEncodingBitRateAndroid: 96000, // or 128000
             });
             console.log("Recording started...");
-            audioRecorderPlayer.addRecordBackListener(recordingProgressCallback);
+            NitroSound.addRecordBackListener(recordingProgressCallback);
         } catch (err) {
             console.log("Failed to start recording...", err);
             throw err;
@@ -131,8 +129,8 @@ export const RecordButton = ({
     // Function to stop recording
     const _stopRecording = async () => {
         try {
-            const fileName = await audioRecorderPlayer.stopRecorder();
-            audioRecorderPlayer.removeRecordBackListener();
+            const fileName = await NitroSound.stopRecorder();
+            NitroSound.removeRecordBackListener();
             return fileName;
         } catch (err) {
             console.log("Failed to stop recording...", err);

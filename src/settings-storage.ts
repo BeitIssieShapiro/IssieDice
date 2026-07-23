@@ -1,7 +1,8 @@
-import { MMKV } from "react-native-mmkv";
+import { createMMKV } from "react-native-mmkv";
+import type { MMKV } from "react-native-mmkv";
 import { ensureAndroidCompatible, joinPaths } from "./utils";
 import path from "path";
-import * as RNFS from "react-native-fs";
+import * as RNFS from "@dr.pogodin/react-native-fs";
 import { Folders } from "./disk";
 
 
@@ -24,7 +25,7 @@ export async function Init() {
 
     console.log("Initializing MMKV storage");
     try {
-        storage = new MMKV({
+        storage = createMMKV({
             id: 'IssieDiceStorage',
         });
         console.log("Initializing MMKV storage Success");

@@ -13,7 +13,7 @@ import {
 import { isRTL, translate } from "./lang";
 import { ColumnChip, getInsetsLimit, IconButton, LabeledIconButton, MyIcon, NumberSelector, ScreenTitle, Section, Spacer } from "./components";
 import { MyColorPicker } from "./color-picker";
-import IconIonic from 'react-native-vector-icons/Ionicons';
+import IconIonic from '@react-native-vector-icons/ionicons';
 import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize } from "./edit-dice";
 import { SelectFromGallery } from "./image-select";
 import { CameraOverlay } from "./CameraOverlay";

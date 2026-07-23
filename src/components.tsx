@@ -1,22 +1,12 @@
 import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from "react-native";
 import { isRTL, translate } from "./lang";
-import IconAnt from 'react-native-vector-icons/AntDesign';
-import IconIonicons from 'react-native-vector-icons/Ionicons';
-import MCIIcon from "react-native-vector-icons/MaterialCommunityIcons";
-import FWIcon from "react-native-vector-icons/FontAwesome";
-
-
 import { useEffect, useRef, useState } from "react";
 import { colors, gStyles } from "./common-style";
 import { BlurView } from "@react-native-community/blur";
-
-
-export interface IconProps {
-    name: string;
-    type?: "MCI" | "Ionicons" | "AntDesign" | "FontAwesome";
-    color?: string;
-    size?: number;
-}
+import IconAnt from "@react-native-vector-icons/ant-design";
+import IconIonicons from "@react-native-vector-icons/ionicons";
+import IconMDI from "@react-native-vector-icons/material-design-icons";
+export { IconProps, MyIcon } from "./icons";
 
 export function LabeledIconButton({ type, icon, label, onPress, size = 40, color = "black" }:
     {
@@ -28,19 +18,12 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
         color?: string,
     }) {
     const IconElem = type == "Ionicon" ? IconIonicons :
-        (type == "MCI" ? MCIIcon : IconAnt);
+        (type == "MCI" ? IconMDI : IconAnt);
 
     return <Pressable onPress={onPress} style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", width: 70 }}>
         <IconElem name={icon} size={size} color={color} />
         <Text allowFontScaling={false} style={gStyles.labeledIconText}>{label}</Text>
     </Pressable>
-}
-
-export function MyIcon({ info, onPress }: { info: IconProps, onPress?: () => void }) {
-    const IconElem = info.type == "Ionicons" ? IconIonicons :
-        (info.type == "MCI" ? MCIIcon :
-            (info.type == "FontAwesome" ? FWIcon : IconAnt));
-    return <IconElem name={info.name} size={info.size || 22} color={info.color || colors.defaultIconColor} style={{ width: info.size, height: info.size, margin: 0, padding: 0 }} onPress={onPress} />
 }
 
 export function IconButton({ icon, onPress, text, backgroundColor }:
@@ -215,7 +198,7 @@ export function ScreenSubTitle({ titleIcon, elementTitle, elementName, actionNam
 export function Section({ title, component, iconName, marginHorizontal }: { title: string, component: any, iconName?: string, marginHorizontal: number }) {
     return <View style={[gStyles.sectionHost, { direction: isRTL() ? "rtl" : "ltr", marginHorizontal }]}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-            {iconName && <MCIIcon name={iconName} color={colors.sectionIconColor} size={35} style={{ marginInlineEnd: 10 }} />}
+            {iconName && <IconMDI name={iconName} color={colors.sectionIconColor} size={35} style={{ marginInlineEnd: 10 }} />}
             <Text allowFontScaling={false} style={{ fontSize: 25 }}>{title}</Text>
         </View>
         {component}

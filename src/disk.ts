@@ -1,5 +1,5 @@
 // disk.ts
-import * as RNFS from "react-native-fs";
+import * as RNFS from "@dr.pogodin/react-native-fs";
 import { ensureAndroidCompatible } from "./utils";
 import path from "path";
 

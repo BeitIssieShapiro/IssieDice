@@ -1,10 +1,9 @@
 import path from "path";
 import { AudioAsset } from "./audio";
-import { copyFileAssets, downloadFile, exists, TemporaryDirectoryPath } from "react-native-fs";
+import { copyFileAssets, downloadFile, exists, TemporaryDirectoryPath } from "@dr.pogodin/react-native-fs";
 import { ImageSourcePropType, Platform } from "react-native";
 import { Image } from "@rneui/base";
 import { ensureAndroidCompatible } from "./utils";
-import Sound from "react-native-sound";
 
 const assets = [
     { name: "dice-sound.mp3", asset: require("../assets/dice-sound.mp3") },
@@ -21,17 +20,7 @@ export function initAssets() {
     assets.forEach((asset) => {
         waitFor.push(loadAsset(asset));
     });
-    return Promise.all(waitFor).then(() => {
-        Object.keys(Sounds).forEach((key) => {
-            Sounds[key].sound = new Sound(Sounds[key].asset, undefined, (error) => {
-                if (error) {
-                    console.log("Error loading sound", error);
-                } else {
-                    console.log("Sound loaded");
-                }
-            })
-        })
-    });
+    return Promise.all(waitFor);
 }
 
 export function getAssetLocalPath(name: string, forceFilePrefix: boolean = false) {

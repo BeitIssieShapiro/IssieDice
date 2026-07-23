@@ -1,4 +1,4 @@
-import * as RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import * as path from 'path';
 import { Settings } from './setting-storage';
 import { Platform, Settings as RNSettings } from 'react-native'

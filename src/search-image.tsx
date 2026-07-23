@@ -2,8 +2,8 @@ import { useRef, useState } from "react";
 import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import ImageLibrary from "./image-library";
 import { isRTL, translate } from "./lang";
-import Icon from "react-native-vector-icons/Ionicons";
-import { downloadFile } from "react-native-fs";
+import Icon from "@react-native-vector-icons/ionicons";
+import { downloadFile } from "@dr.pogodin/react-native-fs";
 
 interface SearchImageProps {
     onSelectImage: (filePath: string) => void

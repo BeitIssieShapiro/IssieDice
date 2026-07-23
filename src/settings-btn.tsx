@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Pressable, View, Text, StyleSheet, ViewStyle } from 'react-native';
-import IconAntDesign from 'react-native-vector-icons/AntDesign';
+import IconAntDesign from '@react-native-vector-icons/ant-design';
 import { fTranslate } from './lang';
 
 interface CountdownButtonProps {

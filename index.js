@@ -1,20 +1,19 @@
-import { AppRegistry, Image, View } from 'react-native';
+import { AppRegistry } from 'react-native';
 import { GlobalContext } from './src/global-context';
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { InitCrashCatch } from './src/crash-catch';
 import { name as appName } from './app.json';
 import App from './src/main';
 import { Init } from './src/settings-storage';
 import { useEffect, useState } from 'react';
-import SplashScreen from 'react-native-splash-screen';
-import { getAssetLocalPath, initAssets } from './src/assets';
+import BootSplash from 'react-native-bootsplash';
+import { initAssets } from './src/assets';
 
 Init();
 
 InitCrashCatch();
 
-export const audioRecorderPlayer = new AudioRecorderPlayer();
+export const audioRecorderPlayer = null; // kept for compat — use NitroSound directly
 
 const AppWithCtx = (props) => {
     const [assetsReady, setAssetsReady] = useState(false);
@@ -34,8 +33,7 @@ const AppWithCtx = (props) => {
         console.log("Splash delay remaining:", remaining);
 
         setTimeout(() => {
-            console.log("Splash Closed");
-            SplashScreen.hide();
+            BootSplash.hide({ fade: true });
         }, remaining);
     }, []);
 

@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import { ListElements } from "./profile";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { DefaultProfileName, isRTL, translate } from "./lang";
-import Icon from 'react-native-vector-icons/AntDesign';
+import Icon from '@react-native-vector-icons/ant-design';
 import { FadeInView, IconButton } from "./components";
 import { DicePreview } from "./edit-dice";
 import { RadioButton } from "./radio-button";

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from '@react-native-vector-icons/material-design-icons';
 import { isRTL, translate } from './lang';
 import { FadeInView } from './components';
-import IconIonic from 'react-native-vector-icons/Ionicons';
+import IconIonic from '@react-native-vector-icons/ionicons';
 import { gStyles } from './common-style';
 export const FONTS = [
     { label: "NoFont", value: undefined },
