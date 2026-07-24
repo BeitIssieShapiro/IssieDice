@@ -430,7 +430,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
         />}
 
-        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} icon={{ name: "check-bold", type: "MCI", size: 30, color: colors.titleBlue }} />
+        <ScreenTitle title={translate("Settings")} onClose={() => onClose()} onAbout={() => onAbout()} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
 
         {/* Profile Name */}
         <ScreenSubTitle

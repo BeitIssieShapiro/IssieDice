@@ -342,7 +342,7 @@ function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpen
 
     return <View style={[styles.faceEditSection, { height, flexDirection: isRTL() ? "row-reverse" : "row", justifyContent: "space-around" }]}>
 
-        <LabeledIconButton icon="view-gallery-outline" type="MCI" label={translate("SrcFromGallery")} onPress={() => {
+        <LabeledIconButton icon="view-gallery-outline" type="MDI" label={translate("SrcFromGallery")} onPress={() => {
             const filePath = getTempFileName("jpg")
             setBusy(true);
             SelectFromGallery(filePath).then(() => {
@@ -354,17 +354,17 @@ function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpen
                 .finally(() => setBusy(false));
         }} />
 
-        <LabeledIconButton icon="image-search-outline" type="MCI" label={translate("SrcFromSearch")} onPress={() => {
+        <LabeledIconButton icon="image-search-outline" type="MDI" label={translate("SrcFromSearch")} onPress={() => {
             setBusy(true);
             onOpenSearch()
         }} />
 
-        <LabeledIconButton icon="camera-plus-outline" type="MCI" label={translate("SrcFromCamera")} onPress={() => {
+        <LabeledIconButton icon="camera-plus-outline" type="MDI" label={translate("SrcFromCamera")} onPress={() => {
             setBusy(true);
             onOpenCamera()
         }} />
 
-        <LabeledIconButton icon="circle" type="MCI" label={translate("FaceBackgroundColor")}
+        <LabeledIconButton icon="circle" type="MDI" label={translate("FaceBackgroundColor")}
             color={backgroundColor && backgroundColor != "" ? backgroundColor : DefaultFaceBackgroundColor}
             onPress={() => onOpenColorPicker({
                 color: backgroundColor && backgroundColor != "" ? backgroundColor : DefaultFaceBackgroundColor,

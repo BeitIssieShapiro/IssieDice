@@ -204,7 +204,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
     </View>)
 
     return <View style={[gStyles.screenContainer]}>
-        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} icon={{ name: "check-bold", type: "MCI", size: 30, color: colors.titleBlue }} />
+        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
         <ScreenSubTitle
             elementTitle={translate("DiceName")} elementName={editedName}
             actionName={translate("EditDieName")}

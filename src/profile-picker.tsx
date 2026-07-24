@@ -15,7 +15,7 @@ import { DiePreview } from "./die-preview";
 interface ButtonInfo {
     name?: string;
     icon?: string;
-    type?: "MCI" | "Ionicon";
+    type?: "MDI" | "Ionicon";
 }
 
 interface ProfilePickerProps {

@@ -81,7 +81,7 @@ export function About({ onClose }: { onClose: () => void }) {
     const insets = useSafeAreaInsets();
 
     return <View style={[gStyles.screenContainer, getInsetsLimit(insets)]}>
-        <ScreenTitle title={translate("About")} onClose={() => onClose()} icon={{ name: "close", type: "MCI", size: 30, color: colors.titleBlue }} />
+        <ScreenTitle title={translate("About")} onClose={() => onClose()} icon={{ name: "close", type: "MDI", size: 30, color: colors.titleBlue }} />
 
         <ScrollView style={{ margin: 30, marginTop: 50, width: "90%" }} contentContainerStyle={{ justifyContent: "center" }}>
             {loadAbout()}

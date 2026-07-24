@@ -24,7 +24,7 @@ export function LabeledIconButton({ type, icon, label, onPress, size = 40, color
 }
 
 export function IconButton({ icon, onPress, text, backgroundColor }:
-    { icon?: IconProps, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MCI" }) {
+    { icon?: IconProps, text?: string, backgroundColor?: string, onPress: () => void, type?: undefined | "Ionicon" | "MDI" }) {
 
     return <TouchableOpacity style={
         [styles.iconButton, { flexDirection: "row", direction: isRTL() ? "rtl" : "ltr" },
@@ -90,9 +90,9 @@ export interface NumberSelectorProps {
 export function NumberSelector({ min, max, value, onUp, onDown }: NumberSelectorProps) {
     return (
         <View style={styles.numberSelector}>
-            <MyIcon info={{name:"minuscircleo", color:value == min ? "lightgray" : gStyles.iconBtnColor.color, size:30}} onPress={value > min ? onDown : undefined} />
+            <MyIcon info={{name:"minus-circle-outline", type:"MDI", color:value == min ? "lightgray" : gStyles.iconBtnColor.color, size:30}} onPress={value > min ? onDown : undefined} />
             <Text allowFontScaling={false} style={{ fontSize: 27, marginHorizontal: 10 }}>{value}</Text>
-            <MyIcon info={{name:"pluscircleo", color:value == max ? "lightgray" : gStyles.iconBtnColor.color, size:30}} onPress={value < max ? onUp : undefined} />
+            <MyIcon info={{name:"plus-circle-outline", type:"MDI", color:value == max ? "lightgray" : gStyles.iconBtnColor.color, size:30}} onPress={value < max ? onUp : undefined} />
         </View>
     )
 }
@@ -147,7 +147,7 @@ export const FadeInView = (props: any) => {
 export function ScreenTitle({ title, onClose, onAbout, icon }: { title: string, onClose: () => void, onAbout?: () => void, icon?: IconProps }) {
     return <View style={gStyles.screenTitle}>
         {onAbout ?
-            <MyIcon info={{name:"infocirlceo", color:gStyles.screenTitleText.color, size:35}} onPress={onAbout} /> :
+            <MyIcon info={{name:"information-variant-circle-outline", type:"MDI", color:gStyles.screenTitleText.color, size:35}} onPress={onAbout} /> :
             <Spacer h={10} />}
         <Text allowFontScaling={false} style={gStyles.screenTitleText}>{title}</Text>
         <IconButton
@@ -195,7 +195,7 @@ export function ScreenSubTitle({ titleIcon, elementTitle, elementName, actionNam
 export function Section({ title, component, iconName, marginHorizontal }: { title: string, component: any, iconName?: string, marginHorizontal: number }) {
     return <View style={[gStyles.sectionHost, { direction: isRTL() ? "rtl" : "ltr", marginHorizontal }]}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-            {iconName && <MyIcon info={{name:iconName, type:"MCI", color:colors.sectionIconColor, size:35}} style={{ marginInlineEnd: 10 }} />}
+            {iconName && <MyIcon info={{name:iconName, type:"MDI", color:colors.sectionIconColor, size:35}} style={{ marginInlineEnd: 10 }} />}
             <Text allowFontScaling={false} style={{ fontSize: 25 }}>{title}</Text>
         </View>
         {component}

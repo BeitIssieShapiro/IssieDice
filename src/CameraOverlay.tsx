@@ -77,7 +77,7 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone })
         <IconButton icon="close" text={translate("CancelBtn")} onPress={onClose} backgroundColor='white' />
 
       </View>
-      <MyIcon info={{name:"camera-flip-outline", type:"MCI", size:45, color:"white"}} style={styles.flipContainer}
+      <MyIcon info={{name:"camera-flip-outline", type:"MDI", size:45, color:"white"}} style={styles.flipContainer}
         onPress={() => setCameraType(prev => prev == CameraType.Front ? CameraType.Back : CameraType.Front)}
       />
       <View style={styles.bottomContainer}>

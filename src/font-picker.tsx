@@ -38,7 +38,7 @@ export const FontPicker: React.FC<FontPickerProps> = ({
         >
 
             <View style={gStyles.pickerTitleHost}>
-                <MyIcon info={{name:"close", type:"MCI", size:45, color:"black"}} onPress={onClose} style={styles.closeButton} />
+                <MyIcon info={{name:"close", type:"MDI", size:45, color:"black"}} onPress={onClose} style={styles.closeButton} />
                 <Text allowFontScaling={false} style={gStyles.pickerTitleText}>{translate("SelectFont")}</Text>
             </View>
             <View style={gStyles.horizontalSeperator} />

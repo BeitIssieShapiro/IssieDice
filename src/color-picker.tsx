@@ -105,7 +105,7 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
                 size={colorButtonSize}
                 icon={openMore ? "chevron-up" : "chevron-down"}
                 iconColor="black"
-                type="MCI"
+                type="MDI"
             />}
 
         </View>
@@ -125,7 +125,7 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
                         size={colorButtonSize}
                         icon={c == color ? "check" : undefined}
                         index={i}
-                        iconType="MCI"
+                        iconType="MDI"
                     />
                 </View>
                 )}
@@ -149,7 +149,7 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
                             callback={_handleSelect}
                             color={composedColor}
                             size={colorButtonSize}
-                            iconType="MCI"
+                            iconType="MDI"
                         //false)}
                         />
                     </View>
