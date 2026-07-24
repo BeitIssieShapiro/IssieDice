@@ -64,6 +64,10 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>AntDesign.ttf</string>
+		<string>FontAwesome.ttf</string>
+		<string>Ionicons.ttf</string>
+		<string>MaterialCommunityIcons.ttf</string>
 		<string>Gveret Levin AlefAlefAlef-Regular.ttf</string>
 		<string>DanaYadAlefAlefAlef-Normal.otf</string>
 		<string>Alef-regular.ttf</string>

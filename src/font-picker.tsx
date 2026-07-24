@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import Icon from '@react-native-vector-icons/material-design-icons';
 import { isRTL, translate } from './lang';
-import { FadeInView } from './components';
-import IconIonic from '@react-native-vector-icons/ionicons';
+import { FadeInView, MyIcon } from './components';
 import { gStyles } from './common-style';
 export const FONTS = [
     { label: "NoFont", value: undefined },
@@ -40,7 +38,7 @@ export const FontPicker: React.FC<FontPickerProps> = ({
         >
 
             <View style={gStyles.pickerTitleHost}>
-                <Icon name="close" size={45} color="black" onPress={onClose} style={styles.closeButton} />
+                <MyIcon info={{name:"close", type:"MCI", size:45, color:"black"}} onPress={onClose} style={styles.closeButton} />
                 <Text allowFontScaling={false} style={gStyles.pickerTitleText}>{translate("SelectFont")}</Text>
             </View>
             <View style={gStyles.horizontalSeperator} />
@@ -53,7 +51,7 @@ export const FontPicker: React.FC<FontPickerProps> = ({
                     <Pressable key={fontFamily || item.label} onPress={() => onSelect(fontFamily)}>
                         <View style={styles.itemContainer}>
                             {currentFont === fontFamily && (
-                                <IconIonic name="checkmark-outline" color="blue" size={20} />
+                                <MyIcon info={{name:"checkmark-outline", type:"Ionicons", color:"blue", size:20}} />
                             )}
                             <Text
                                 style={[

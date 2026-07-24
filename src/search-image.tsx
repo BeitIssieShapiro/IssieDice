@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import ImageLibrary from "./image-library";
 import { isRTL, translate } from "./lang";
-import Icon from "@react-native-vector-icons/ionicons";
+import { MyIcon } from "./components";
 import { downloadFile } from "@dr.pogodin/react-native-fs";
 
 interface SearchImageProps {
@@ -32,7 +32,7 @@ export function SearchImage({ onSelectImage, onClose, width, targetFile }: Searc
         <View style={[StyleSheet.absoluteFill, styles.overlay]}>
             <View style={[styles.container, { width: "95%", overflow: "hidden" }]}>
                 <View style={styles.closeButton}>
-                    <Icon name="close" size={45} onPress={onClose} />
+                    <MyIcon info={{name:"close", type:"Ionicons", size:45}} onPress={onClose} />
                 </View>
                 <Text allowFontScaling={false} style={styles.pickerTitle}>{translate("SearchImageTitle")}</Text>
                 <View style={styles.searchRoot}>

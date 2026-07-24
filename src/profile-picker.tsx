@@ -2,8 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import { ListElements } from "./profile";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { DefaultProfileName, isRTL, translate } from "./lang";
-import Icon from '@react-native-vector-icons/ant-design';
-import { FadeInView, IconButton } from "./components";
+import { FadeInView, IconButton, MyIcon } from "./components";
 import { DicePreview } from "./edit-dice";
 import { RadioButton } from "./radio-button";
 import { List, Templates } from "./models";
@@ -60,7 +59,7 @@ export function ProfilePicker({ open, height, onClose, onSelect, exclude, folder
             }</Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
                 {!isNarrow && create}
-                <Icon name="close" size={45} onPress={onClose} />
+                <MyIcon info={{name:"close", size:45}} onPress={onClose} />
             </View>
         </View>
         {isNarrow && <View style={{}} >{create}</View>}
@@ -138,7 +137,7 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
             }</Text>
             <View style={[{ flexDirection: "row", alignItems: "center" }, dir]}>
                 {!isNarrow && create}
-                <Icon name="close" size={45} onPress={onClose} />
+                <MyIcon info={{name:"close", size:45}} onPress={onClose} />
             </View>
 
 

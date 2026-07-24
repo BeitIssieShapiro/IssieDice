@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Icon from '@react-native-vector-icons/ant-design';
 import ColorPicker from 'react-native-wheel-color-picker'
 import { Settings } from './setting-storage';
-import { ColorButton, FadeInView } from "./components";
+import { ColorButton, FadeInView, MyIcon } from "./components";
 import { SettingsKeys } from "./settings-storage";
 
 export const defaultFloorColor = '#0F870D' //deep green
@@ -78,7 +77,7 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
         style={[styles.pickerView, { bottom: 0, left: 0, right: 0 }]}>
         <Text allowFontScaling={false} style={{ fontSize: 25, margin: 25 }}>{title}</Text>
         <View style={styles.closeButton}>
-            <Icon name="close" size={45} onPress={() => onClose()} />
+            <MyIcon info={{ name: "close", size: 45 }} onPress={() => onClose()} />
         </View>
 
 
@@ -125,9 +124,9 @@ export function MyColorPicker({ open, color, title, width, height, isScreenNarro
                         color={c}
                         size={colorButtonSize}
                         icon={c == color ? "check" : undefined}
-                        index={i} 
+                        index={i}
                         iconType="MCI"
-                        />
+                    />
                 </View>
                 )}
 

@@ -13,7 +13,6 @@ import {
 import { isRTL, translate } from "./lang";
 import { ColumnChip, getInsetsLimit, IconButton, LabeledIconButton, MyIcon, NumberSelector, ScreenTitle, Section, Spacer } from "./components";
 import { MyColorPicker } from "./color-picker";
-import IconIonic from '@react-native-vector-icons/ionicons';
 import { DefaultFaceBackgroundColor, FacePreview, FacePreviewSize } from "./edit-dice";
 import { SelectFromGallery } from "./image-select";
 import { CameraOverlay } from "./CameraOverlay";
@@ -207,7 +206,7 @@ export const EditFace: React.FC<EditFaceProps> = ({
                     </View>}
                     <View>
                         {backgroundImage && <View style={styles.cropButton}>
-                            <IconIonic size={35} name="crop" onPress={() => {
+                            <MyIcon info={{name:"crop", type:"Ionicons", size:35}} onPress={() => {
                                 setEditImage(true);
                             }} />
                         </View>}

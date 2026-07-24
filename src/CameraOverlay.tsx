@@ -3,8 +3,7 @@ import { View, StyleSheet, Platform, Text, TouchableOpacity } from 'react-native
 import { Camera, CameraApi, CameraType } from 'react-native-camera-kit';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { translate } from './lang';
-import { IconButton } from './components';
-import IconMCI from '@react-native-vector-icons/material-design-icons';
+import { IconButton, MyIcon } from './components';
 
 interface CameraOverlayProps {
   onClose: () => void;
@@ -78,7 +77,7 @@ export const CameraOverlay: React.FC<CameraOverlayProps> = ({ onClose, onDone })
         <IconButton icon="close" text={translate("CancelBtn")} onPress={onClose} backgroundColor='white' />
 
       </View>
-      <IconMCI name={"camera-flip-outline"} size={45} color={"white"} style={styles.flipContainer}
+      <MyIcon info={{name:"camera-flip-outline", type:"MCI", size:45, color:"white"}} style={styles.flipContainer}
         onPress={() => setCameraType(prev => prev == CameraType.Front ? CameraType.Back : CameraType.Front)}
       />
       <View style={styles.bottomContainer}>

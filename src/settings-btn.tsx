@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Pressable, View, Text, StyleSheet, ViewStyle } from 'react-native';
-import IconAntDesign from '@react-native-vector-icons/ant-design';
+import IconAntDesign from 'react-native-vector-icons/AntDesign';
 import { fTranslate } from './lang';
+import { MyIcon } from './components';
 
 interface CountdownButtonProps {
     onComplete: () => void;
@@ -62,8 +63,8 @@ export const CountdownButton: React.FC<CountdownButtonProps> = ({
             onPressOut={handlePressOut}
             style={[styles.button, style, { flexDirection: textLocation == "left" ? "row-reverse" : "row" }]}
         >
-            <IconAntDesign name={icon} size={iconSize} color={"white"} />
-            {countdown !== null && (
+        <MyIcon info={{name:icon, size:iconSize, color:"white"}}/>
+        {countdown !== null && (
                 <Text allowFontScaling={false} style={styles.countdownText}>{fTranslate(textKey, countdown)}</Text>
             )}
         </Pressable>
