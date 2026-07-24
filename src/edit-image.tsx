@@ -45,7 +45,7 @@ export const EditImage: React.FC<EditImageProps> = ({ uri, onClose, onDone }) =>
             <View style={styles.buttonContainer}>
                 <IconButton icon={{ name: "check" }} text={translate("DoneBtn")} onPress={handleDone} />
                 <IconButton icon={{ name: "close" }} text={translate("CancelBtn")} onPress={onClose} />
-                <IconButton icon={{ name: "reload1" }} text={translate("Rotate")} onPress={handleRotate} />
+                <IconButton icon={{ name: "rotate-right", type:"MDI" }} text={translate("Rotate")} onPress={handleRotate} />
             </View>
         </View>
     );

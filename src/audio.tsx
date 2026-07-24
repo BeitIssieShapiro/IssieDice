@@ -45,34 +45,12 @@ export async function playAudio(uri: string, volume?: number) {
 
 export async function playBundledAudio(asset: AudioAsset, volume: number = 1.0) {
     try {
-        // Stop any previous playback
         await NitroSound.stopPlayer();
-        // if (!asset.sound) {
-        //     const fileName = "file://" + path.join(RNFS.TemporaryDirectoryPath, asset.name + ".mp3");
-        //     const src = Image.resolveAssetSource(asset.asset);
-        //     let downloadInfo = await RNFS.downloadFile({
-        //         fromUrl: src.uri,
-        //         toFile: fileName
-        //     });
-        //     await downloadInfo.promise;
-        //     const soundLoads = new Promise<void>((resolve, reject) => {
-        //         asset.sound = new Sound(fileName, undefined, (error) => {
-        //             if (error) {
-        //                 console.log("Error loading sound", error);
-        //             }
-        //             resolve();
-        //         })
-        //     })
-
-        //     await soundLoads;
-        // }
-        if (asset.sound) {
-            // Set the playback volume (0.0 to 1.0).
-            asset.sound.setVolume(volume);
-
-            // Play the sound without stopping any other sound.
-            asset.sound.play();
+        let uri = asset.asset as string;
+        if (!uri.startsWith("file://")) {
+            uri = "file://" + uri;
         }
+        await NitroSound.startPlayer(uri);
     } catch (error) {
         console.error("Error playing bundled audio:", error);
         return false;
