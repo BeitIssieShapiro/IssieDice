@@ -11,10 +11,7 @@ import {
     ModelRenderer,
     getAssetFromModel,
     useBuffer,
-    useDisposableResource,
     useWorkletCallback,
-    useWorkletMemo,
-    useEntityInScene,
     FilamentModel,
     EntitySelector,
     Float4
@@ -30,7 +27,6 @@ import { getAssetLocalPath, Sounds } from "./assets";
 
 
 export const DiceModel = { uri: getAssetLocalPath("dice-empty.glb", true) };
-const TransparentShadowMaterial = { uri: getAssetLocalPath("transparent_shadow_material.filamat", true) };
 
 //require("../assets/dice-empty.glb");
 //const FloorModel = require("../assets/floor.glb");
@@ -138,38 +134,8 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
     ];
 
     const generalDiceAsset = generalDiceModel.map(d => getAssetFromModel(d));
-    const generalEntity = generalDiceAsset.map(de => de?.getRenderableEntities()[0]).map((e) => {
-        if (e) renderableManager.setCastShadow(e, true)
-        if (e) renderableManager.setReceiveShadow(e, true)
-        return e
-    });
+    const generalEntity = generalDiceAsset.map(de => de?.getRenderableEntities()[0]);
 
-
-    //#region Setup shadow plane
-    const shadowMaterialBuffer = useBuffer({ source: TransparentShadowMaterial })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const shadowMaterial = useDisposableResource(
-        useWorkletCallback(() => {
-            'worklet'
-            if (shadowMaterialBuffer == null) return undefined
-
-            const material = engine.createMaterial(shadowMaterialBuffer)
-            material.setDefaultFloatParameter('strength', 0.2)
-            return material
-        }),
-        [engine, shadowMaterialBuffer])
-
-    // Create Shadow plane
-    const shadowPlane = useWorkletMemo(() => {
-        'worklet'
-        if (shadowMaterial == null) return undefined
-        console.log("shadow plane loaded")
-        const entity = renderableManager.createPlane(shadowMaterial, 150, 0.1, 150)
-        renderableManager.setReceiveShadow(entity, true)
-        return entity
-    }, [renderableManager, shadowMaterial])
-
-    useEntityInScene(scene, shadowPlane)
 
     const worldRef = useRef<CANNON.World | null>(null);
     useEffect(() => {
