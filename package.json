@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "postinstall": "npx patch-package"
+    "postinstall": "npx patch-package",
+    "deploy:android": "PROJECT_ROOT=$(pwd) ../issie-shared/android/deploy.sh issiedice com.issiedice"
   },
   "dependencies": {
     "@dr.pogodin/react-native-fs": "^2.39.2",
