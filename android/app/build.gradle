@@ -76,6 +76,13 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Load version from version.properties
+def versionPropsFile = file('../../android/version.properties')
+def versionProps = new Properties()
+if (versionPropsFile.exists()) {
+    versionProps.load(new FileInputStream(versionPropsFile))
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -86,8 +93,8 @@ android {
         applicationId "com.issiedice"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.0"
+        versionCode versionProps['issiedice.versionCode']?.toInteger() ?: 1
+        versionName versionProps['issiedice.versionName'] ?: "1.0"
     }
     signingConfigs {
         debug {
