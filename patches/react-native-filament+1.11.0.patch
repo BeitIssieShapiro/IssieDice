@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp b/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp
-index b86b4a3..25a455a 100644
+index b86b4a3..d74abad 100644
 --- a/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp
 +++ b/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp
-@@ -138,20 +138,37 @@ void RenderableManagerImpl::changeMaterialTextureMap(std::shared_ptr<EntityWrapp
+@@ -138,20 +138,33 @@ void RenderableManagerImpl::changeMaterialTextureMap(std::shared_ptr<EntityWrapp
    MaterialInstance* materialInstance = renderableManager.getMaterialInstanceAt(instance, primitiveIndex);
  
    // The texture might not be loaded yet, but we can already set it on the material instance
@@ -29,13 +29,9 @@ index b86b4a3..25a455a 100644
    Texture* texture = createTextureFromBuffer(textureBuffer, textureFlags);
    newInstance->setParameter("baseColorMap", texture, sampler);
 +
-+  // Get the old tracked instance for this slot (if any) and remove it
 +  MaterialInstance* oldInstance = renderableManager.getMaterialInstanceAt(instance, primitiveIndex);
-+
-+  // Set new instance first so old one is no longer bound to the renderable
    renderableManager.setMaterialInstanceAt(instance, primitiveIndex, newInstance.get());
 +
-+  // Remove old tracked entry (its deleter fires safely now — renderable no longer references it)
 +  _materialInstances.erase(
 +    std::remove_if(_materialInstances.begin(), _materialInstances.end(),
 +      [oldInstance](const std::shared_ptr<MaterialInstance>& t) {
@@ -48,10 +44,10 @@ index b86b4a3..25a455a 100644
  
    // Load the texture
 diff --git a/node_modules/react-native-filament/lib/module/react/EntitySelector.js b/node_modules/react-native-filament/lib/module/react/EntitySelector.js
-index 052356e..7d60dda 100644
+index 3a204be..1b9ae1f 100644
 --- a/node_modules/react-native-filament/lib/module/react/EntitySelector.js
 +++ b/node_modules/react-native-filament/lib/module/react/EntitySelector.js
-@@ -73,7 +73,11 @@ function TextureModifier({
+@@ -82,7 +82,11 @@ function TextureModifier({
    useWorkletEffect(() => {
      'worklet';
  
@@ -65,13 +61,13 @@ index 052356e..7d60dda 100644
    return null;
  }
 diff --git a/node_modules/react-native-filament/lib/module/react/FilamentView.js b/node_modules/react-native-filament/lib/module/react/FilamentView.js
-index bee55ff..0a917d7 100644
+index e665d47..1fda3ac 100644
 --- a/node_modules/react-native-filament/lib/module/react/FilamentView.js
 +++ b/node_modules/react-native-filament/lib/module/react/FilamentView.js
-@@ -58,6 +58,13 @@ export class FilamentView extends React.PureComponent {
+@@ -59,6 +59,13 @@ export class FilamentView extends React.PureComponent {
      // When requesting to update the render callback we have to assume that the previous one is not valid anymore
      // ie. its pointing to already released resources from useDisposableResource:
-     (_this$renderCallbackL = this.renderCallbackListener) === null || _this$renderCallbackL === void 0 || _this$renderCallbackL.remove();
+     this.renderCallbackListener?.remove();
 +    this.renderCallbackListener = undefined;
 +
 +    // If no callback, stop the choreographer to avoid keeping the native thread alive (prevents GC suspension timeout on Android)

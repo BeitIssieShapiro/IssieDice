@@ -188,7 +188,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
           importInfo && <ImportInfoDialog importInfo={importInfo} onClose={() => setImportInfo(undefined)} />
         }
 
-        {profile && <FilamentScene>
+        {profile && <FilamentScene backend="opengl">
           <DiceScene
             setInRecovery={setInRecovery}
             ref={sceneRef}
