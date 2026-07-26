@@ -96,6 +96,11 @@ android {
         versionCode versionProps['issiedice.versionCode']?.toInteger() ?: 1
         versionName versionProps['issiedice.versionName'] ?: "1.0"
     }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
