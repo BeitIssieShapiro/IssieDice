@@ -1,11 +1,11 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { Dice, templatesList } from "./models";
 import { isRTL, translate } from "./lang";
 import { IconButton, MyIcon, Spacer } from "./components";
 import { DicePreview } from "./edit-dice";
 import { colors, gStyles } from "./common-style";
 import { Switch } from "@rneui/themed";
-import { DiePreview } from "./die-preview";
+import { IsoCubePreview } from "./iso-cube-preview";
 
 interface DiceSettingsProps {
     width: number,
@@ -37,13 +37,10 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
         </View>
         <View style={gStyles.cardBody}>
             <Spacer h={isMobile ? 5 : 20} />
-            {/* {dice.faces && dice.faces.length > 0 ?
-                <DicePreview facesInfo={dice.faces} size={width / 3} /> :
-                <DicePreview facesInfo={templ?.image} size={width / 3} />
-            } */}
-            <DiePreview 
-                imageSrc={dice.texture? dice.texture : templ?.image.uri} size={width / 3} style={{ }} 
-                autoRotate={true} />
+            {dice.faces && dice.faces.length > 0 ?
+                (Platform.OS === 'android' ? <IsoCubePreview facesInfo={dice.faces} size={width / 3} /> : <DicePreview facesInfo={dice.faces} size={width / 3} />) :
+                (Platform.OS === 'android' ? <IsoCubePreview facesInfo={templ?.image} size={width / 3} /> : <DicePreview facesInfo={templ?.image} size={width / 3} />)
+            }
 
         </View>
         <View style={[gStyles.cardFooter, { flexDirection: "row", justifyContent: isNarrow ? "space-between" : "flex-start", alignItems: "center", direction: (isRTL() ? "rtl" : "ltr") }]}>

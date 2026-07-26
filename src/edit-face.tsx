@@ -377,7 +377,7 @@ function FaceBackgroud({ setBackgroundImage, setBusy, setBackgroundColor, onOpen
             size={40}
         />
 
-        <LabeledIconButton icon="close-outline" type="Ionicon" label={translate("NoBackground")}
+        <LabeledIconButton icon="close-outline" type="Ionicons" label={translate("NoBackground")}
             color="red"
             onPress={() => {
                 setBackgroundImage(undefined);

@@ -45,7 +45,7 @@ export async function playAudio(uri: string, volume?: number) {
 
 export async function playBundledAudio(asset: AudioAsset, volume: number = 1.0) {
     try {
-        await NitroSound.stopPlayer();
+        try { await NitroSound.stopPlayer(); } catch (_) {}
         let uri = asset.asset as string;
         if (!uri.startsWith("file://")) {
             uri = "file://" + uri;

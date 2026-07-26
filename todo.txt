@@ -1,4 +1,10 @@
 android:
+- remove face image - icon
+-cam or gallery
+- edit name
+
+
+
 V- face with image is not saved
 - skew not working
 V- scroll settings to see backup not working

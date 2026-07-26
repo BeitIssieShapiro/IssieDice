@@ -1,12 +1,11 @@
 diff --git a/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp b/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp
-index b86b4a3..abab755 100644
+index b86b4a3..25a455a 100644
 --- a/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp
 +++ b/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.cpp
-@@ -137,22 +137,38 @@ void RenderableManagerImpl::changeMaterialTextureMap(std::shared_ptr<EntityWrapp
-   // This material instance still belongs to the original asset and will be cleaned up when the asset is destroyed
+@@ -138,20 +138,37 @@ void RenderableManagerImpl::changeMaterialTextureMap(std::shared_ptr<EntityWrapp
    MaterialInstance* materialInstance = renderableManager.getMaterialInstanceAt(instance, primitiveIndex);
  
--  // The texture might not be loaded yet, but we can already set it on the material instance
+   // The texture might not be loaded yet, but we can already set it on the material instance
 -  auto engine = _engine;
 -  auto dispatcher = _rendererDispatcher;
 +  std::weak_ptr<Engine> weakEngine = _engine;
@@ -35,71 +34,24 @@ index b86b4a3..abab755 100644
 +
 +  // Set new instance first so old one is no longer bound to the renderable
    renderableManager.setMaterialInstanceAt(instance, primitiveIndex, newInstance.get());
--  _materialInstances.push_back(newInstance);
 +
 +  // Remove old tracked entry (its deleter fires safely now — renderable no longer references it)
 +  _materialInstances.erase(
 +    std::remove_if(_materialInstances.begin(), _materialInstances.end(),
-+      [oldInstance](const TrackedMaterialInstance& t) {
-+        return t.instance.get() == oldInstance;
++      [oldInstance](const std::shared_ptr<MaterialInstance>& t) {
++        return t.get() == oldInstance;
 +      }),
 +    _materialInstances.end()
 +  );
 +
-+  _materialInstances.push_back({newInstance, entityInstance, primitiveIndex});
+   _materialInstances.push_back(newInstance);
  
    // Load the texture
-   startUpdateResourceLoading();
-diff --git a/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.h b/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.h
-index 5b968c7..84fbb97 100644
---- a/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.h
-+++ b/node_modules/react-native-filament/cpp/core/RNFRenderableManagerImpl.h
-@@ -33,6 +33,26 @@ public:
-     _textureProvider = std::shared_ptr<TextureProvider>(filament::gltfio::createStbProvider(_engine.get()));
-   }
- 
-+  ~RenderableManagerImpl() {
-+    if (_engine) {
-+      RenderableManager& rm = _engine->getRenderableManager();
-+      for (auto& tracked : _materialInstances) {
-+        if (tracked.instance) {
-+          // Detach from renderable first, then it's safe to destroy
-+          RenderableManager::Instance ri = rm.getInstance(tracked.entity);
-+          if (ri.isValid()) {
-+            // Set back to the material's own default instance before destroying our duplicate
-+            MaterialInstance* defaultMI = const_cast<MaterialInstance*>(tracked.instance->getMaterial()->getDefaultInstance());
-+            rm.setMaterialInstanceAt(ri, tracked.primitiveIndex, defaultMI);
-+          }
-+          _engine->destroy(tracked.instance.get());
-+          tracked.instance = std::shared_ptr<MaterialInstance>(tracked.instance.get(), [](MaterialInstance*){});
-+        }
-+      }
-+    }
-+    _materialInstances.clear();
-+  }
-+
- public: // Public API
-   int getPrimitiveCount(std::shared_ptr<EntityWrapper> entity);
-   std::shared_ptr<MaterialInstanceWrapper> getMaterialInstanceAt(std::shared_ptr<EntityWrapper> entity, int index);
-@@ -92,7 +112,12 @@ private:
-   std::shared_ptr<Dispatcher> _rendererDispatcher;
-   std::shared_ptr<TextureProvider> _textureProvider;
-   // Keep a list of all material instances the RenderableManager creates, so we can clean them up when the RenderableManager is
--  std::vector<std::shared_ptr<MaterialInstance>> _materialInstances;
-+  struct TrackedMaterialInstance {
-+    std::shared_ptr<MaterialInstance> instance;
-+    Entity entity;
-+    size_t primitiveIndex;
-+  };
-+  std::vector<TrackedMaterialInstance> _materialInstances;
-   std::vector<std::unique_ptr<DebugVertex[]>> _debugVerticesList;
- 
- private:
 diff --git a/node_modules/react-native-filament/lib/module/react/EntitySelector.js b/node_modules/react-native-filament/lib/module/react/EntitySelector.js
-index 3a204be..1b9ae1f 100644
+index 052356e..7d60dda 100644
 --- a/node_modules/react-native-filament/lib/module/react/EntitySelector.js
 +++ b/node_modules/react-native-filament/lib/module/react/EntitySelector.js
-@@ -82,7 +82,11 @@ function TextureModifier({
+@@ -73,7 +73,11 @@ function TextureModifier({
    useWorkletEffect(() => {
      'worklet';
  
@@ -112,3 +64,21 @@ index 3a204be..1b9ae1f 100644
    });
    return null;
  }
+diff --git a/node_modules/react-native-filament/lib/module/react/FilamentView.js b/node_modules/react-native-filament/lib/module/react/FilamentView.js
+index bee55ff..0a917d7 100644
+--- a/node_modules/react-native-filament/lib/module/react/FilamentView.js
++++ b/node_modules/react-native-filament/lib/module/react/FilamentView.js
+@@ -58,6 +58,13 @@ export class FilamentView extends React.PureComponent {
+     // When requesting to update the render callback we have to assume that the previous one is not valid anymore
+     // ie. its pointing to already released resources from useDisposableResource:
+     (_this$renderCallbackL = this.renderCallbackListener) === null || _this$renderCallbackL === void 0 || _this$renderCallbackL.remove();
++    this.renderCallbackListener = undefined;
++
++    // If no callback, stop the choreographer to avoid keeping the native thread alive (prevents GC suspension timeout on Android)
++    if (callback == null) {
++      choreographer.stop();
++      return;
++    }
+ 
+     // Adding a new render callback listener is an async operation
+     Logger.debug('Setting render callback');

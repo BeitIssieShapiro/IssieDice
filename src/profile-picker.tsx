@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { ListElements } from "./profile";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { DefaultProfileName, isRTL, translate } from "./lang";
 import { FadeInView, IconButton, MyIcon } from "./components";
 import { DicePreview } from "./edit-dice";
@@ -8,7 +8,7 @@ import { RadioButton } from "./radio-button";
 import { List, Templates } from "./models";
 import { Folders } from "./disk";
 import { colors, gStyles, menuActionIcon } from "./common-style";
-import { DiePreview } from "./die-preview";
+import { IsoCubePreview } from "./iso-cube-preview";
 
 
 
@@ -156,12 +156,8 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
                                 <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
                                     <RadioButton selected={currentDie == item.key} />
                                     <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
-                                        {item && item.image && <DiePreview
-                                            imageSrc={ item.image.uri} size={45} style={{  }}/>}
-
-
-                                         {/* {item && item.image && <DicePreview size={45} facesInfo={item.image} />}
-                                         {item && !item.image && <DicePreview size={45} facesInfo={item.faces!} />} */}
+                                        {item && item.image && (Platform.OS === 'android' ? <IsoCubePreview size={45} facesInfo={item.image} /> : <DicePreview size={45} facesInfo={item.image} />)}
+                                        {item && !item.image && (Platform.OS === 'android' ? <IsoCubePreview size={45} facesInfo={item.faces!} /> : <DicePreview size={45} facesInfo={item.faces!} />)}
                                         <Text
                                             allowFontScaling={false}
                                             numberOfLines={1}
