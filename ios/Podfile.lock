@@ -2639,6 +2639,51 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNSVG (15.15.5):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNSVG/common (= 15.15.5)
+    - Yoga
+  - RNSVG/common (15.15.5):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNWorklets (0.11.2):
     - hermes-engine
     - RCTRequired
@@ -2840,6 +2885,7 @@ DEPENDENCIES:
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNShare (from `../node_modules/react-native-share`)
+  - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - RNZipArchive (from `../node_modules/react-native-zip-archive`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -3053,6 +3099,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNShare:
     :path: "../node_modules/react-native-share"
+  RNSVG:
+    :path: "../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
   RNZipArchive:
@@ -3062,7 +3110,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FBLazyVector: b3e7ad108f0d882e30445c5527d774e3fd432f3d
-  hermes-engine: fb4e2914c6a68f48a27cd91dabd0d7709ac98a06
+  hermes-engine: 7f127e982cdb5bc38ddd36afeb393ba088d2952f
   MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
   NitroMmkv: 85a251e15c39d7c95fe58cf40786fa126b8d143c
   NitroModules: b4174dd303728e16ad1afb79f64c1a5c69a3b373
@@ -3162,6 +3210,7 @@ SPEC CHECKSUMS:
   RNPermissions: a77964263c6a8b6be73019dc899eef230e8dbcab
   RNReanimated: 5aa9e73d0f8d3c40d5c9bec396d6a61098db31f0
   RNShare: 7344a3a7d4e5df58c356ad0f79e4a3ef1325c635
+  RNSVG: 6cae8d4082913be2eb43eaec2a456222c42195ed
   RNWorklets: 9bf25999c209ff026d21c9e0521a845550f648bc
   RNZipArchive: cb55861573e292fb6e616f6311d35d9a4d8bfa4c
   SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4
@@ -3169,6 +3218,6 @@ SPEC CHECKSUMS:
   TOCropViewController: 20a14b6a7a098308bf369e7c8d700dc983a974e6
   Yoga: fe50ab299e578f397fef753cf309c6703a4db29b
 
-PODFILE CHECKSUM: ee181b0cefc7939ec77fd60aeb258b2934ef6eec
+PODFILE CHECKSUM: 5a5019351ca8e0e6b37c88adb925df32cedaf8dd
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0
