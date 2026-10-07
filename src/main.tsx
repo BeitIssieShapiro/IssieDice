@@ -197,7 +197,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
         {profile && <FilamentScene backend={filamentBackend}>
           {profile.spinner ?
             <SpinnerScene
-              key="spinner"
+              key={"spinner-" + profile.spinnerShape}
               setInRecovery={setInRecovery}
               ref={sceneRef}
               freeze={openSettings > 0}

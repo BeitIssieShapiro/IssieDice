@@ -101,6 +101,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
+    function handleSetRoundedSpinner(rounded: boolean) {
+        Settings.set(SettingsKeys.SpinnerShape, rounded ? "rounded" : "classic");
+        setRevision(old => old + 1);
+    }
+
     function handleSetSpinnerMusic(enabled: boolean) {
         Settings.set(SettingsKeys.SpinnerMusic, enabled);
         setRevision(old => old + 1);
@@ -480,6 +485,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                         width={cubeSettingSize}
                         height={cubeSettingSize * .8}
                         isSpinner={true}
+                        spinnerShape={profile.spinnerShape}
                         dice={profile.spinnerDie}
                         onSetActive={() => { }}
                         onOpenLoadDice={() => setOpenSelectTemplate(SpinnerIndex)}
@@ -559,6 +565,20 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                     />}
                 title={translate(profile.spinner ? "EnableSpinnerSound" : "EnableSound")}
             />
+
+            {/* Spinner Shape */}
+            {profile.spinner && <Section
+                marginHorizontal={marginHorizontal}
+
+                iconName="spin"
+                component={
+                    <Switch
+                        value={profile.spinnerShape == "rounded"}
+                        onValueChange={(rounded) => handleSetRoundedSpinner(rounded)}
+                        color={colors.switchColor}
+                    />}
+                title={translate("RoundedSpinner")}
+            />}
 
             {/* Spinner Music */}
             {profile.spinner && <Section

@@ -21,11 +21,11 @@ describe("SpinnerSim", () => {
         }
     });
 
-    test("spins, falls and settles on one of the 4 faces", () => {
+    test.each(["classic", "rounded"] as const)("%s spinner spins, falls and settles on one of the 4 faces", (shape) => {
         const counts = [0, 0, 0, 0];
         const runs = 100;
         for (let run = 0; run < runs; run++) {
-            const sim = new SpinnerSim(mulberry32(run + 1));
+            const sim = new SpinnerSim(mulberry32(run + 1), shape);
             // alternate wide bounds and the tight ones of a tilted camera on a tablet
             const bounds = run % 2 ? { left: -12, right: 12, bottom: -9, top: 9 } : { left: -4, right: 4, bottom: -5.8, top: 5.8 };
             sim.setBounds(bounds);
@@ -61,7 +61,7 @@ describe("SpinnerSim", () => {
             expect(Math.abs(sim.body.position.z)).toBeLessThan(bounds.top);
             counts[settled]++;
         }
-        console.log("face distribution", counts);
+        console.log(shape, "face distribution", counts);
         counts.forEach(c => expect(c).toBeGreaterThan(runs / 10));
     });
 

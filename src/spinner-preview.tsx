@@ -1,19 +1,23 @@
 import React from 'react';
 import { ImageSourcePropType } from 'react-native';
 import Svg, { G, Rect, Polygon, Image as SvgImage, Defs, ClipPath, Text as SvgText } from 'react-native-svg';
-import { FaceInfo } from './models';
+import { FaceInfo, SpinnerShape } from './models';
 import { ensureAndroidCompatible } from './utils';
 import { DefaultFaceBackgroundColor, FontFactor } from './edit-dice';
+import { roundedBottomRing } from './scene-elements';
 
 interface SpinnerPreviewProps {
     facesInfo: FaceInfo[] | ImageSourcePropType;
     size: number;
+    shape?: SpinnerShape;
 }
 
 // Model dimensions - same as design-resources/generate-spinner-glb.js (body half size is 1)
 const TipY = -2.2;
 const HandleTop = 2.2;
 const HandleRadius = 0.18;
+const RoundedHandleRadius = 0.14;
+const RoundedRings = 8;
 
 // Isometric projection, looking from the corner between the +z (face 0) and +x (face 1) faces
 const Unit = 25;
@@ -44,13 +48,20 @@ const BodyColorLight = "#EBBD6A";
 /**
  * A static 2D preview of the spinner (sevivon) showing faces 1 and 2.
  */
-export function SpinnerPreview({ facesInfo, size }: SpinnerPreviewProps) {
+export function SpinnerPreview({ facesInfo, size, shape }: SpinnerPreviewProps) {
     const singleImageUri = !Array.isArray(facesInfo) ? (facesInfo as any)?.uri as string | undefined : undefined;
     const faces = Array.isArray(facesInfo) ? facesInfo as FaceInfo[] : undefined;
 
     const handleBase = project(0, 1.1, 0);
     const handleTopPt = project(0, HandleTop, 0);
-    const handleWidth = 2 * HandleRadius * Unit;
+    const handleWidth = 2 * (shape == "rounded" ? RoundedHandleRadius : HandleRadius) * Unit;
+
+    // the rounded bottom of the 2 visible sides: down the left edge to the tip, and back up the right edge
+    const rings = Array.from({ length: RoundedRings + 1 }, (_, k) => roundedBottomRing(k, RoundedRings));
+    const roundedSide = (edge: (h: number) => [[number, number], [number, number]]) => [
+        ...rings.map(({ y, h }) => [edge(h)[0][0], y, edge(h)[0][1]] as [number, number, number]),
+        ...rings.slice().reverse().map(({ y, h }) => [edge(h)[1][0], y, edge(h)[1][1]] as [number, number, number]),
+    ];
 
     return (
         <Svg width={size} height={size} viewBox="-57 -57 114 114">
@@ -61,8 +72,13 @@ export function SpinnerPreview({ facesInfo, size }: SpinnerPreviewProps) {
             </Defs>
 
             {/* tip */}
-            <Polygon points={points([-1, -1, 1], [1, -1, 1], [0, TipY, 0])} fill={BodyColor} />
-            <Polygon points={points([1, -1, 1], [1, -1, -1], [0, TipY, 0])} fill={BodyColorDark} />
+            {shape == "rounded" ? <>
+                <Polygon points={points(...roundedSide(h => [[-h, h], [h, h]]))} fill={BodyColor} />
+                <Polygon points={points(...roundedSide(h => [[h, h], [h, -h]]))} fill={BodyColorDark} />
+            </> : <>
+                <Polygon points={points([-1, -1, 1], [1, -1, 1], [0, TipY, 0])} fill={BodyColor} />
+                <Polygon points={points([1, -1, 1], [1, -1, -1], [0, TipY, 0])} fill={BodyColorDark} />
+            </>}
 
             {/* top */}
             <Polygon points={points([-1, 1, 1], [1, 1, 1], [1, 1, -1], [-1, 1, -1])} fill={BodyColorLight} />

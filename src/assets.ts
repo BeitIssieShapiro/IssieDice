@@ -14,6 +14,7 @@ const assets = [
     { name: "hanukkah.png", asset: require("../assets/hanukkah.png") },
     { name: "dice-empty.glb", asset: require("../assets/dice-empty.glb") },
     { name: "spinner.glb", asset: require("../assets/spinner.glb") },
+    { name: "spinner-rounded.glb", asset: require("../assets/spinner-rounded.glb") },
     { name: "transparent_shadow_material.filamat", asset: require("../assets/transparent_shadow_material.filamat") },
 ]
 

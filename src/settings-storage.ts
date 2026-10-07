@@ -19,6 +19,7 @@ export const SettingsKeys = {
     Spinner: "Spinner",
     SpinnerTemplate: "SpinnerTemplate",
     SpinnerMusic: "SpinnerMusic",
+    SpinnerShape: "SpinnerShape",
     LastColors: "LastColors",
 }
 

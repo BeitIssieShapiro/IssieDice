@@ -14,14 +14,17 @@ import {
     EntitySelector,
 } from "react-native-filament";
 import { useSharedValue } from "react-native-worklets-core";
-import { isStaticDie, Profile, Templates, templatesList } from "./models";
+import { isStaticDie, Profile, SpinnerShape, Templates, templatesList } from "./models";
 import { computeFloorBounds, WinSize } from "./utils";
 import { playAudio, playBundledAudio, playMusic, stopMusic } from "./audio";
 import { getAssetLocalPath, Sounds } from "./assets";
 import { cameraHeight, computeDiceScale, DiceSceneMethods, focalLength, fov, quaternionToAngleAxis } from "./diceScene";
 import { computeVisibleFloorBounds, SpinnerSim } from "./spinner-sim";
 
-export const SpinnerModel = { uri: getAssetLocalPath("spinner.glb", true) };
+export const SpinnerModels: Record<SpinnerShape, { uri: string }> = {
+    classic: { uri: getAssetLocalPath("spinner.glb", true) },
+    rounded: { uri: getAssetLocalPath("spinner-rounded.glb", true) },
+};
 
 // The camera looks at the spinner from south-south-west (south is the bottom of the screen, west is left)
 const CameraElevation = 55 * Math.PI / 180;  // above the floor (90 would be straight from the top)
@@ -49,6 +52,7 @@ interface SpinnerRotation {
 /**
  * A single spinner (sevivon) using the faces 1-4 of the profile's spinner template.
  * Exposes the same methods as DiceScene so App can use either.
+ * The spinner's shape is taken from the initial profile - remount (key) to change it.
  */
 export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInRecovery }: SpinnerSceneProps, ref: any) => {
     const [currWindowSize, setCurrWindowSize] = useState<WinSize>(windowSize);
@@ -59,11 +63,11 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
 
     const simRef = useRef<SpinnerSim>(undefined);
     if (!simRef.current) {
-        simRef.current = new SpinnerSim();
+        simRef.current = new SpinnerSim(Math.random, profile.spinnerShape);
     }
     const sim = simRef.current;
 
-    const model = useModel(SpinnerModel);
+    const model = useModel(SpinnerModels[profile.spinnerShape] ?? SpinnerModels.classic);
     const entity = getAssetFromModel(model)?.getRenderableEntities()[0];
     if (entity) {
         renderableManager.setCastShadow(entity, true);
@@ -80,6 +84,8 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
     const scaleShared = useSharedValue<number>(scale);
 
     const freezeTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    // locked from the start of a spin until recoveryTime seconds after the spinner rests
+    const lockedRef = useRef<boolean>(false);
     const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     const syncPose = useCallback(() => {
@@ -116,6 +122,11 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
         const template = currProfile.spinnerDie.template;
         sim.turnToReadable = template != Templates.Dots && template != Templates.Colors;
         sim.onSettled = () => {
+            if (lockedRef.current && !inRecoveryRef.current) {
+                inRecoveryRef.current = setTimeout(() => {
+                    ref.current?.resetRecovery();
+                }, currProfile.recoveryTime * 1000);
+            }
             stopMusic();
             syncPose();
             renderBriefly();
@@ -134,7 +145,10 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
     useEffect(() => {
         if (freeze || !currProfile.spinnerMusic) stopMusic(0);
     }, [freeze, currProfile.spinnerMusic]);
-    useEffect(() => () => stopMusic(0), []);
+    useEffect(() => () => {
+        stopMusic(0);
+        if (inRecoveryRef.current) clearTimeout(inRecoveryRef.current);
+    }, []);
 
     useEffect(() => {
         if (freeze || !active) return;
@@ -171,6 +185,7 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
         updateCamera: () => {
         },
         resetRecovery: () => {
+            lockedRef.current = false;
             setInRecovery(false);
             if (inRecoveryRef.current != undefined) {
                 clearTimeout(inRecoveryRef.current);
@@ -213,14 +228,10 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
             return;
         }
 
-        if (inRecoveryRef.current && currProfile.recoveryTime) {
-            return;
-        }
-
         if (currProfile.recoveryTime > 0) {
-            inRecoveryRef.current = setTimeout(() => {
-                ref.current?.resetRecovery();
-            }, currProfile.recoveryTime * 1000);
+            if (lockedRef.current) return;
+            // the unlock countdown starts when the spinner rests (see onSettled)
+            lockedRef.current = true;
             setInRecovery(true);
         }
         ref.current?.rollDice();

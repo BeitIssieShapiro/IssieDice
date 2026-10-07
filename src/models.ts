@@ -50,6 +50,8 @@ export interface Dice {
    - add to settingsUI
    - use somewhere
 */
+export type SpinnerShape = "classic" | "rounded";
+
 export interface Profile {
     dice: Dice[];
     size: number;
@@ -59,6 +61,7 @@ export interface Profile {
     spinner: boolean // when true, a single spinner replaces the dice
     spinnerDie: Dice; // the spinner's template - uses faces 1-4
     spinnerMusic: boolean; // play "Sevivon Sov Sov Sov" while the spinner spins
+    spinnerShape: SpinnerShape; // classic: pointed tip, rounded: like the wooden ones
 }
 
 export const EmptyDice: Dice = {
@@ -79,6 +82,7 @@ export const EmptyProfile: Profile = {
     spinner: false,
     spinnerDie: { template: Templates.Hanukkah, active: true },
     spinnerMusic: true,
+    spinnerShape: "classic",
 };
 
 export const emptyFaceInfo: FaceInfo = {}

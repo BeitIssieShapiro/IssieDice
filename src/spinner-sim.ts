@@ -1,6 +1,6 @@
 import * as CANNON from "cannon-es";
 import { createFloor, createSpinnerShape, createWall, SpinnerTipY } from "./scene-elements";
-import type { Bounds } from "./models";
+import type { Bounds, SpinnerShape } from "./models";
 
 /*
  * Spinner (sevivon) simulation.
@@ -105,7 +105,7 @@ export class SpinnerSim {
     private settleFromPos = new CANNON.Vec3();
     private random: () => number;
 
-    constructor(random: () => number = Math.random) {
+    constructor(random: () => number = Math.random, shape: SpinnerShape = "classic") {
         this.random = random;
         this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -45, 0) });
         this.world.broadphase = new CANNON.NaiveBroadphase();
@@ -115,7 +115,7 @@ export class SpinnerSim {
 
         createFloor(this.world);
 
-        this.body = createSpinnerShape();
+        this.body = createSpinnerShape(shape);
         this.body.angularDamping = 0.3;
         this.body.linearDamping = 0.1;
         this.body.sleepSpeedLimit = 0.1;

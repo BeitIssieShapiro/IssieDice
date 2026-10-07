@@ -5,7 +5,7 @@ import { Platform, Settings as RNSettings } from 'react-native'
 import { ensureAndroidCompatible } from './utils';
 import { DefaultProfileName, fTranslate, translate } from './lang';
 import { NativeModules } from 'react-native';
-import { Dice, EmptyDice, EmptyProfile, FaceInfo, List, Profile, Templates, templatesList } from './models';
+import { Dice, EmptyDice, EmptyProfile, FaceInfo, List, Profile, SpinnerShape, Templates, templatesList } from './models';
 import { AlreadyExists, Folders, getCacheBusterSuffix, InvalidFileName, loadFile, loadJSON, saveJSON, writeFileWithCacheBuster } from './disk';
 import { SettingsKeys } from './settings-storage';
 
@@ -151,6 +151,7 @@ async function loadProfileIntoSettings(p: Profile, name: string) {
     Settings.set(SettingsKeys.Spinner, p.spinner ?? false);
     Settings.set(SettingsKeys.SpinnerTemplate, p.spinnerDie?.template ?? EmptyProfile.spinnerDie.template);
     Settings.set(SettingsKeys.SpinnerMusic, p.spinnerMusic ?? EmptyProfile.spinnerMusic);
+    Settings.set(SettingsKeys.SpinnerShape, p.spinnerShape ?? EmptyProfile.spinnerShape);
 
     Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
     Settings.setArray(SettingsKeys.DiceActive, diceActive);
@@ -177,6 +178,7 @@ export async function getCurrentProfile(): Promise<Profile> {
     const spinner = Settings.getBoolean(SettingsKeys.Spinner, false);
     const spinnerTemplate = Settings.getString(SettingsKeys.SpinnerTemplate, EmptyProfile.spinnerDie.template);
     const spinnerMusic = Settings.getBoolean(SettingsKeys.SpinnerMusic, EmptyProfile.spinnerMusic);
+    const spinnerShape = Settings.getString(SettingsKeys.SpinnerShape, EmptyProfile.spinnerShape) as SpinnerShape;
 
     const dice = [] as Dice[];
 
@@ -223,6 +225,7 @@ export async function getCurrentProfile(): Promise<Profile> {
         spinner,
         spinnerDie,
         spinnerMusic,
+        spinnerShape,
     };
 }
 

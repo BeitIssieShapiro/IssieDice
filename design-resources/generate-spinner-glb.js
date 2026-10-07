@@ -1,12 +1,16 @@
 /*
- * Generates assets/spinner.glb - a sevivon (dreidel) model.
+ * Generates a sevivon (dreidel) model:
  *
- *   node design-resources/generate-spinner-glb.js
+ *   node design-resources/generate-spinner-glb.js          -> assets/spinner.glb (classic)
+ *   node design-resources/generate-spinner-glb.js rounded  -> assets/spinner-rounded.glb
  *
  * Geometry (model units, Y is the spin axis):
  *   - body: box with half extents 1, centered at the origin
- *   - handle: small shoulder + cylinder above the body, up to y = HandleTop
- *   - tip: pyramid below the body, down to y = TipY
+ *   - classic: small shoulder + handle cylinder above the body, up to y = HandleTop;
+ *     pyramid below the body, down to y = TipY
+ *   - rounded (like the wooden ones): flat top with a thin handle up to y = HandleTop;
+ *     below the body a rounded bottom down to y = TipY - its horizontal cuts are squares
+ *     whose half size follows a quarter ellipse (see roundedBottomRing in src/scene-elements.ts)
  *
  * The 4 side faces use material "Material" and are UV-mapped to faces 0..3 of
  * the regular dice texture layout (see DiceLayout in src/edit-dice.tsx), so any
@@ -21,12 +25,15 @@
 const fs = require("fs");
 const path = require("path");
 
+const Rounded = process.argv[2] == "rounded";
+
 const HandleTop = 2.2;
-const ShoulderTop = 1.25;
+const ShoulderTop = Rounded ? 1 : 1.25;
 const ShoulderHalf = 0.35;
-const HandleRadius = 0.18;
+const HandleRadius = Rounded ? 0.14 : 0.18;
 const TipY = -2.2;
 const TipHalf = 0.06;
+const RoundedRings = 12;
 
 // face index -> cell (in a 4x4 grid) of the dice texture layout
 const FaceCells = [[1.5, 0], [0.5, 1], [1.5, 1], [2.5, 1]];
@@ -62,6 +69,16 @@ class Prim {
         verts.forEach((v, i) => { this.pos.push(v); this.nrm.push(normals[i]); this.uv.push([0, 0]); });
         this.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
     }
+    // smooth quad, winding fixed to agree with the given normals (may be degenerate: a triangle)
+    smoothQuadOriented(verts, normals) {
+        const n = cross(sub(verts[2], verts[0]), sub(verts[3], verts[1]));
+        const avg = [0, 1, 2].map(k => normals.reduce((sum, v) => sum + v[k], 0));
+        if (n[0] * avg[0] + n[1] * avg[1] + n[2] * avg[2] < 0) {
+            verts = [...verts].reverse();
+            normals = [...normals].reverse();
+        }
+        this.smoothQuad(verts, normals);
+    }
 }
 
 const faces = new Prim();
@@ -88,21 +105,45 @@ sides.forEach((s, i) => {
 // square ring helper: corners of a square at height y, half size h, CCW from above
 const square = (y, h) => [[-h, y, h], [h, y, h], [h, y, -h], [-h, y, -h]];
 
-// Shoulder (frustum from body top to the handle base) + its top cap
-const s0 = square(1, 1), s1 = square(ShoulderTop, ShoulderHalf);
-for (let i = 0; i < 4; i++) {
-    const j = (i + 1) % 4;
-    body.poly([s0[i], s0[j], s1[j], s1[i]]);
-}
-body.poly(s1); // top cap
+if (Rounded) {
+    body.poly(square(1, 1)); // flat top
 
-// Tip (frustum from body bottom down to a small flat tip)
-const t0 = square(-1, 1), t1 = square(TipY, TipHalf);
-for (let i = 0; i < 4; i++) {
-    const j = (i + 1) % 4;
-    body.poly([t0[j], t0[i], t1[i], t1[j]]);
+    // rounded bottom: square rings at y = -1 - depth * sin(a), half size cos(a)
+    const depth = -1 - TipY;
+    const ring = (k) => {
+        const a = (k / RoundedRings) * Math.PI / 2;
+        return { y: -1 - depth * Math.sin(a), h: Math.cos(a), a };
+    };
+    // outward horizontal direction of each side, in the order of square()'s edges
+    const sideDirs = [[0, 0, 1], [1, 0, 0], [0, 0, -1], [-1, 0, 0]];
+    // normal of the side surface at the ring with angle a (the profile is an ellipse)
+    const normal = (d, a) => norm([d[0] * depth * Math.cos(a), -Math.sin(a), d[2] * depth * Math.cos(a)]);
+    for (let k = 0; k < RoundedRings; k++) {
+        const r0 = ring(k), r1 = ring(k + 1);
+        const q0 = square(r0.y, r0.h), q1 = square(r1.y, r1.h);
+        for (let i = 0; i < 4; i++) {
+            const j = (i + 1) % 4;
+            const n0 = normal(sideDirs[i], r0.a), n1 = normal(sideDirs[i], r1.a);
+            body.smoothQuadOriented([q0[i], q0[j], q1[j], q1[i]], [n0, n0, n1, n1]);
+        }
+    }
+} else {
+    // Shoulder (frustum from body top to the handle base) + its top cap
+    const s0 = square(1, 1), s1 = square(ShoulderTop, ShoulderHalf);
+    for (let i = 0; i < 4; i++) {
+        const j = (i + 1) % 4;
+        body.poly([s0[i], s0[j], s1[j], s1[i]]);
+    }
+    body.poly(s1); // top cap
+
+    // Tip (frustum from body bottom down to a small flat tip)
+    const t0 = square(-1, 1), t1 = square(TipY, TipHalf);
+    for (let i = 0; i < 4; i++) {
+        const j = (i + 1) % 4;
+        body.poly([t0[j], t0[i], t1[i], t1[j]]);
+    }
+    body.poly(t1); // bottom cap
 }
-body.poly(t1); // bottom cap
 
 // Handle cylinder
 const Segs = 16;
@@ -217,6 +258,6 @@ const binHeader = Buffer.alloc(8);
 binHeader.writeUInt32LE(bin.length, 0);
 binHeader.writeUInt32LE(0x004e4942, 4);
 
-const out = path.join(__dirname, "../assets/spinner.glb");
+const out = path.join(__dirname, Rounded ? "../assets/spinner-rounded.glb" : "../assets/spinner.glb");
 fs.writeFileSync(out, Buffer.concat([header, jsonHeader, json, binHeader, bin]));
 console.log("written", out, "faces vertices:", faces.pos.length, "body vertices:", body.pos.length);
