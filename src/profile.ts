@@ -150,6 +150,7 @@ async function loadProfileIntoSettings(p: Profile, name: string) {
     Settings.set(SettingsKeys.SoundEnabled, p.soundEnabled);
     Settings.set(SettingsKeys.Spinner, p.spinner ?? false);
     Settings.set(SettingsKeys.SpinnerTemplate, p.spinnerDie?.template ?? EmptyProfile.spinnerDie.template);
+    Settings.set(SettingsKeys.SpinnerMusic, p.spinnerMusic ?? EmptyProfile.spinnerMusic);
 
     Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
     Settings.setArray(SettingsKeys.DiceActive, diceActive);
@@ -175,6 +176,7 @@ export async function getCurrentProfile(): Promise<Profile> {
     const soundEnabled = Settings.getBoolean(SettingsKeys.SoundEnabled, true);
     const spinner = Settings.getBoolean(SettingsKeys.Spinner, false);
     const spinnerTemplate = Settings.getString(SettingsKeys.SpinnerTemplate, EmptyProfile.spinnerDie.template);
+    const spinnerMusic = Settings.getBoolean(SettingsKeys.SpinnerMusic, EmptyProfile.spinnerMusic);
 
     const dice = [] as Dice[];
 
@@ -219,7 +221,8 @@ export async function getCurrentProfile(): Promise<Profile> {
         tableColor,
         soundEnabled,
         spinner,
-        spinnerDie
+        spinnerDie,
+        spinnerMusic,
     };
 }
 

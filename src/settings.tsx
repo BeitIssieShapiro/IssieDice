@@ -101,6 +101,11 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
+    function handleSetSpinnerMusic(enabled: boolean) {
+        Settings.set(SettingsKeys.SpinnerMusic, enabled);
+        setRevision(old => old + 1);
+    }
+
     function handleSetSpinner(spinner: boolean) {
         Settings.set(SettingsKeys.Spinner, spinner);
         setRevision(old => old + 1);
@@ -554,6 +559,20 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                     />}
                 title={translate(profile.spinner ? "EnableSpinnerSound" : "EnableSound")}
             />
+
+            {/* Spinner Music */}
+            {profile.spinner && <Section
+                marginHorizontal={marginHorizontal}
+
+                iconName="music"
+                component={
+                    <Switch
+                        value={profile.spinnerMusic}
+                        onValueChange={(enabled) => handleSetSpinnerMusic(enabled)}
+                        color={colors.switchColor}
+                    />}
+                title={translate("SpinnerMusic")}
+            />}
 
             {/* Dice Size (also the spinner's size) */}
             <Section

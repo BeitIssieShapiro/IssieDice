@@ -179,6 +179,7 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
                 soundEnabled: md.soundEnabled,
                 spinner: md.spinner ?? false,
                 spinnerDie: md.spinnerDie ?? EmptyProfile.spinnerDie,
+                spinnerMusic: md.spinnerMusic ?? EmptyProfile.spinnerMusic,
             }
 
             await saveProfileFile(md.name, p, true);

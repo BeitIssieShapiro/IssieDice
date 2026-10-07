@@ -58,6 +58,7 @@ export interface Profile {
     soundEnabled: boolean
     spinner: boolean // when true, a single spinner replaces the dice
     spinnerDie: Dice; // the spinner's template - uses faces 1-4
+    spinnerMusic: boolean; // play "Sevivon Sov Sov Sov" while the spinner spins
 }
 
 export const EmptyDice: Dice = {
@@ -77,6 +78,7 @@ export const EmptyProfile: Profile = {
     soundEnabled: true,
     spinner: false,
     spinnerDie: { template: Templates.Hanukkah, active: true },
+    spinnerMusic: true,
 };
 
 export const emptyFaceInfo: FaceInfo = {}

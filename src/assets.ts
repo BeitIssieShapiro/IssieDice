@@ -7,6 +7,7 @@ import { ensureAndroidCompatible } from "./utils";
 
 const assets = [
     { name: "dice-sound.mp3", asset: require("../assets/dice-sound.mp3") },
+    { name: "spinner-music.mp3", asset: require("../assets/spinner-music.mp3") },
     { name: "dots.png", asset: require("../assets/dots.png") },
     { name: "numbers.png", asset: require("../assets/numbers.png") },
     { name: "colors.png", asset: require("../assets/colors.png") },
@@ -49,6 +50,10 @@ export const Sounds: { [key: string]: AudioAsset } = {
     collision: {
         name: "collision",
         asset: getAssetLocalPath("dice-sound.mp3"),
+    },
+    spinnerMusic: {
+        name: "spinnerMusic",
+        asset: getAssetLocalPath("spinner-music.mp3"),
     },
 };
 

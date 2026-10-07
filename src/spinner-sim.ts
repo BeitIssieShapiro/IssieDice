@@ -82,6 +82,8 @@ export class SpinnerSim {
     face = 0;
     // rotation (around the up axis) of the camera's view direction, from +z
     viewYaw = 0;
+    // when settling, turn the spinner so the face is upright (not needed for faces that read the same at any angle)
+    turnToReadable = true;
     onSettled?: (face: number) => void;
     onCollide?: (impactVelocity: number) => void;
 
@@ -340,12 +342,12 @@ export class SpinnerSim {
             this.settleFrom.z * this.settleTo.z + this.settleFrom.w * this.settleTo.w < 0) {
             this.settleTo.set(-this.settleTo.x, -this.settleTo.y, -this.settleTo.z, -this.settleTo.w);
         }
-        // then turn around the vertical axis, so the handle points to the top of the screen
+        // then turn around the vertical axis, so the handle points to the top of the screen (if needed)
         const handle = this.settleTo.vmult(UpAxis);
         let yaw = this.viewYaw - Math.atan2(handle.x, handle.z);
         while (yaw > Math.PI) yaw -= 2 * Math.PI;
         while (yaw < -Math.PI) yaw += 2 * Math.PI;
-        this.settleYaw = yaw;
+        this.settleYaw = this.turnToReadable ? yaw : 0;
         this.settleFromPos.copy(this.body.position);
         this.phase = "settling";
         this.phaseStart = this.time;

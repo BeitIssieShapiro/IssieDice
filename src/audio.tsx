@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Alert, Image, PermissionsAndroid, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { AudioEncoderAndroidType, OutputFormatAndroidType, RecordBackType } from 'react-native-nitro-sound';
-import NitroSound from 'react-native-nitro-sound';
+import NitroSound, { createSound } from 'react-native-nitro-sound';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import path from 'path';
 
@@ -55,6 +55,50 @@ export async function playBundledAudio(asset: AudioAsset, volume: number = 1.0) 
         console.error("Error playing bundled audio:", error);
         return false;
     }
+}
+
+// a separate player for background music, so other sounds (which share NitroSound) don't stop it
+let musicPlayer: ReturnType<typeof createSound> | undefined;
+let musicFadeTimer: ReturnType<typeof setInterval> | undefined;
+
+function clearMusicFade() {
+    if (musicFadeTimer) {
+        clearInterval(musicFadeTimer);
+        musicFadeTimer = undefined;
+    }
+}
+
+export async function playMusic(asset: AudioAsset, volume: number = 1.0) {
+    try {
+        if (!musicPlayer) musicPlayer = createSound();
+        clearMusicFade();
+        try { await musicPlayer.stopPlayer(); } catch (_) {}
+        let uri = asset.asset as string;
+        if (!uri.startsWith("file://")) {
+            uri = "file://" + uri;
+        }
+        await musicPlayer.startPlayer(uri);
+        await musicPlayer.setVolume(volume);
+    } catch (error) {
+        console.error("Error playing music:", error);
+    }
+}
+
+/** fades the music out and stops it */
+export function stopMusic(fadeMs: number = 600) {
+    const player = musicPlayer;
+    if (!player || musicFadeTimer) return;
+    const steps = 6;
+    let step = 0;
+    musicFadeTimer = setInterval(() => {
+        step++;
+        if (step < steps) {
+            player.setVolume(1 - step / steps).catch(() => {});
+            return;
+        }
+        clearMusicFade();
+        player.stopPlayer().catch(() => {});
+    }, fadeMs / steps);
 }
 
 export const RecordButton = ({

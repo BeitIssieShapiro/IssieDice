@@ -18,6 +18,7 @@ export const SettingsKeys = {
     SoundEnabled:"SoundEnabled",
     Spinner: "Spinner",
     SpinnerTemplate: "SpinnerTemplate",
+    SpinnerMusic: "SpinnerMusic",
     LastColors: "LastColors",
 }
 

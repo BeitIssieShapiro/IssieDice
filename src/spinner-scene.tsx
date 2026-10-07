@@ -14,9 +14,9 @@ import {
     EntitySelector,
 } from "react-native-filament";
 import { useSharedValue } from "react-native-worklets-core";
-import { isStaticDie, Profile, templatesList } from "./models";
+import { isStaticDie, Profile, Templates, templatesList } from "./models";
 import { computeFloorBounds, WinSize } from "./utils";
-import { playAudio, playBundledAudio } from "./audio";
+import { playAudio, playBundledAudio, playMusic, stopMusic } from "./audio";
 import { getAssetLocalPath, Sounds } from "./assets";
 import { cameraHeight, computeDiceScale, DiceSceneMethods, focalLength, fov, quaternionToAngleAxis } from "./diceScene";
 import { computeVisibleFloorBounds, SpinnerSim } from "./spinner-sim";
@@ -112,7 +112,11 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
     }, [currWindowSize, currProfile.size]);
 
     useEffect(() => {
+        // dots and colors read the same at any angle
+        const template = currProfile.spinnerDie.template;
+        sim.turnToReadable = template != Templates.Dots && template != Templates.Colors;
         sim.onSettled = () => {
+            stopMusic();
             syncPose();
             renderBriefly();
         };
@@ -125,6 +129,12 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
             }
         };
     }, [sim, currProfile]);
+
+    // stop the music when the settings open, the music is turned off, or the spinner goes away
+    useEffect(() => {
+        if (freeze || !currProfile.spinnerMusic) stopMusic(0);
+    }, [freeze, currProfile.spinnerMusic]);
+    useEffect(() => () => stopMusic(0), []);
 
     useEffect(() => {
         if (freeze || !active) return;
@@ -149,6 +159,7 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
                 freezeTimerRef.current = undefined;
             }
             sim.spin();
+            if (currProfile.spinnerMusic) playMusic(Sounds.spinnerMusic);
             setActive(true);
         },
         update: (p) => {
