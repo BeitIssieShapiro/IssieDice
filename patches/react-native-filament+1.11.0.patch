@@ -43,6 +43,61 @@ index b86b4a3..d74abad 100644
    _materialInstances.push_back(newInstance);
  
    // Load the texture
+diff --git a/node_modules/react-native-filament/ios/src/RNFFilamentInstaller.mm b/node_modules/react-native-filament/ios/src/RNFFilamentInstaller.mm
+index af9f548..0b831eb 100644
+--- a/node_modules/react-native-filament/ios/src/RNFFilamentInstaller.mm
++++ b/node_modules/react-native-filament/ios/src/RNFFilamentInstaller.mm
+@@ -20,10 +20,12 @@
+ using namespace facebook;
+ using namespace margelo;
+ 
++#ifndef RCT_NEW_ARCH_ENABLED
+ // This is defined in RCTCxxBridge.mm, and we are technically using a private API here.
+ @interface RCTCxxBridge (CallInvoker)
+ - (std::shared_ptr<react::CallInvoker>)jsCallInvoker;
+ @end
++#endif
+ 
+ @implementation FilamentInstaller
+ 
+diff --git a/node_modules/react-native-filament/ios/src/RNFFilamentModule.mm b/node_modules/react-native-filament/ios/src/RNFFilamentModule.mm
+index 6078080..0fa02aa 100644
+--- a/node_modules/react-native-filament/ios/src/RNFFilamentModule.mm
++++ b/node_modules/react-native-filament/ios/src/RNFFilamentModule.mm
+@@ -48,8 +48,8 @@ - (NSNumber*)install {
+   jsi::Runtime* jsiRuntime = nullptr;
+   std::shared_ptr<react::CallInvoker> jsCallInvoker = nullptr;
+   if (_isBridgeless) {
+-    // If we are in bridgless mode we can cast directly to RCTCxxBridge to get our properties:
+-    RCTCxxBridge* cxxBridge = (RCTCxxBridge*)self.bridge;
++    // In bridgeless mode self.bridge is an RCTBridgeProxy which exposes runtime and jsCallInvoker:
++    RCTBridge* cxxBridge = self.bridge;
+     jsiRuntime = (jsi::Runtime*)cxxBridge.runtime;
+     jsCallInvoker = cxxBridge.jsCallInvoker;
+   } else {
+diff --git a/node_modules/react-native-filament/lib/commonjs/utilities/withCleanupScope.js b/node_modules/react-native-filament/lib/commonjs/utilities/withCleanupScope.js
+index 25c667a..a53c620 100644
+--- a/node_modules/react-native-filament/lib/commonjs/utilities/withCleanupScope.js
++++ b/node_modules/react-native-filament/lib/commonjs/utilities/withCleanupScope.js
+@@ -4,7 +4,6 @@ Object.defineProperty(exports, "__esModule", {
+   value: true
+ });
+ exports.withCleanupScope = withCleanupScope;
+-var _reactNative = require("react-native");
+ /**
+  * Operations that are releasing memory from JS should be executed after cleanup functions
+  * that are still operating on the resource.
+@@ -27,8 +26,8 @@ var _reactNative = require("react-native");
+  */
+ function withCleanupScope(cleanupFunction) {
+   return () => {
+-    // runAfterInteractions to make sure its called after all children have run their cleanup and all interactions are done
+-    _reactNative.InteractionManager.runAfterInteractions(() => {
++    // requestIdleCallback (InteractionManager was removed in RN 0.87) to make sure its called after all children have run their cleanup and all interactions are done
++    requestIdleCallback(() => {
+       // Cleanup in worklets context, as cleanup functions might also use the worklet context
+       // and we want to queue our cleanup after all other worklets have run
+       setTimeout(() => {
 diff --git a/node_modules/react-native-filament/lib/module/react/EntitySelector.js b/node_modules/react-native-filament/lib/module/react/EntitySelector.js
 index 3a204be..1b9ae1f 100644
 --- a/node_modules/react-native-filament/lib/module/react/EntitySelector.js
@@ -78,3 +133,47 @@ index e665d47..1fda3ac 100644
  
      // Adding a new render callback listener is an async operation
      Logger.debug('Setting render callback');
+diff --git a/node_modules/react-native-filament/lib/module/utilities/withCleanupScope.js b/node_modules/react-native-filament/lib/module/utilities/withCleanupScope.js
+index 67eceee..7e7f396 100644
+--- a/node_modules/react-native-filament/lib/module/utilities/withCleanupScope.js
++++ b/node_modules/react-native-filament/lib/module/utilities/withCleanupScope.js
+@@ -1,7 +1,5 @@
+ "use strict";
+ 
+-import { InteractionManager } from 'react-native';
+-
+ /**
+  * Operations that are releasing memory from JS should be executed after cleanup functions
+  * that are still operating on the resource.
+@@ -24,8 +22,8 @@ import { InteractionManager } from 'react-native';
+  */
+ export function withCleanupScope(cleanupFunction) {
+   return () => {
+-    // runAfterInteractions to make sure its called after all children have run their cleanup and all interactions are done
+-    InteractionManager.runAfterInteractions(() => {
++    // requestIdleCallback (InteractionManager was removed in RN 0.87) to make sure its called after all children have run their cleanup and all interactions are done
++    requestIdleCallback(() => {
+       // Cleanup in worklets context, as cleanup functions might also use the worklet context
+       // and we want to queue our cleanup after all other worklets have run
+       setTimeout(() => {
+diff --git a/node_modules/react-native-filament/src/utilities/withCleanupScope.ts b/node_modules/react-native-filament/src/utilities/withCleanupScope.ts
+index 20ec04e..632a560 100644
+--- a/node_modules/react-native-filament/src/utilities/withCleanupScope.ts
++++ b/node_modules/react-native-filament/src/utilities/withCleanupScope.ts
+@@ -1,5 +1,3 @@
+-import { InteractionManager } from 'react-native'
+-
+ /**
+  * Operations that are releasing memory from JS should be executed after cleanup functions
+  * that are still operating on the resource.
+@@ -22,8 +20,8 @@ import { InteractionManager } from 'react-native'
+  */
+ export function withCleanupScope(cleanupFunction: Function) {
+   return () => {
+-    // runAfterInteractions to make sure its called after all children have run their cleanup and all interactions are done
+-    InteractionManager.runAfterInteractions(() => {
++    // requestIdleCallback (InteractionManager was removed in RN 0.87) to make sure its called after all children have run their cleanup and all interactions are done
++    requestIdleCallback(() => {
+       // Cleanup in worklets context, as cleanup functions might also use the worklet context
+       // and we want to queue our cleanup after all other worklets have run
+       setTimeout(() => {
