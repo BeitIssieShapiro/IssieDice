@@ -1,8 +1,8 @@
 import * as RNFS from "@dr.pogodin/react-native-fs";
 
 import { fTranslate } from "./lang";
-import { Profile, Templates } from "./models";
-import { existsFolder, getCustomTypePath, getProfilePath, listCustomDice, listProfiles, loadFaceImages, loadProfileFile, profileFilePath, readTexture, saveProfileFile } from "./profile";
+import { EmptyProfile, Profile, Templates } from "./models";
+import { existsFolder, getCustomTypePath, getSpinnerMarkerPath, isCustomSpinner, getProfilePath, listCustomDice, listProfiles, loadFaceImages, loadProfileFile, profileFilePath, readTexture, saveProfileFile } from "./profile";
 import { doNothing, getTempFileName, loadFile, writeFile } from "./disk";
 import { ensureAndroidCompatible, joinPaths } from "./utils";
 import { unzip, zip } from "react-native-zip-archive";
@@ -32,6 +32,10 @@ export async function exportDice(name: string): Promise<string> {
         if (faceInfo.audioUri) {
             files.push(ensureAndroidCompatible(faceInfo.audioUri))
         }
+    }
+
+    if (await isCustomSpinner(name)) {
+        files.push(ensureAndroidCompatible(getSpinnerMarkerPath(name)));
     }
 
     const diceMaterialUri = await readTexture(name)
@@ -76,9 +80,9 @@ export async function exportProfile(name: string, alreadyIncludedCubes: string[]
 
     const profileZip = await zip([ensureAndroidCompatible(metaDataFile)], targetFile);
     const diceZips = [];
-    const diceNames = [];
-    for (const dice of p.dice) {
-        if (alreadyIncludedCubes.includes(dice.template) || dice.template.startsWith(Templates.prefix)) continue;
+    const diceNames: string[] = [];
+    for (const dice of [...p.dice, ...(p.spinnerDie ? [p.spinnerDie] : [])]) {
+        if (alreadyIncludedCubes.includes(dice.template) || diceNames.includes(dice.template) || dice.template.startsWith(Templates.prefix)) continue;
         diceNames.push(dice.template);
         const dieZip = await exportDice(dice.template)
         if (dieZip.length > 0) {
@@ -172,7 +176,9 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
                 size: md.size,
                 recoveryTime: md.recoveryTime,
                 tableColor: md.tableColor,
-                soundEnabled: md.soundEnabled
+                soundEnabled: md.soundEnabled,
+                spinner: md.spinner ?? false,
+                spinnerDie: md.spinnerDie ?? EmptyProfile.spinnerDie,
             }
 
             await saveProfileFile(md.name, p, true);

@@ -16,6 +16,8 @@ export const SettingsKeys = {
     RecoveryTime: "RecoveryTime",
     TableColor: "TableColor",
     SoundEnabled:"SoundEnabled",
+    Spinner: "Spinner",
+    SpinnerTemplate: "SpinnerTemplate",
     LastColors: "LastColors",
 }
 

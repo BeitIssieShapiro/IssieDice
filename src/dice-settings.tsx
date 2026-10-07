@@ -6,6 +6,7 @@ import { DicePreview } from "./edit-dice";
 import { colors, gStyles } from "./common-style";
 import { Switch } from "@rneui/themed";
 import { IsoCubePreview } from "./iso-cube-preview";
+import { SpinnerPreview } from "./spinner-preview";
 
 interface DiceSettingsProps {
     width: number,
@@ -14,9 +15,10 @@ interface DiceSettingsProps {
     onOpenLoadDice: () => void;
     onSetActive: (active: boolean) => void;
     onEditDice?: () => void;
+    isSpinner?: boolean;
 }
 
-export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onOpenLoadDice }: DiceSettingsProps) {
+export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onOpenLoadDice, isSpinner }: DiceSettingsProps) {
 
     let templ = templatesList.find(t => t.key == dice.template)!;
     const isMobile = width < 280 || height < 280;
@@ -29,15 +31,18 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
             <Text allowFontScaling={false} style={[styles.textValue, { textAlign: isRTL() ? "right" : "left" }]}>
                 {templ ? templ.name : dice.template}
             </Text>
-            <Switch
+            {/* the spinner is always active */}
+            {!isSpinner && <Switch
                 value={dice.active}
                 onValueChange={(active) => onSetActive(active)}
                 color={colors.switchColor}
-            />
+            />}
         </View>
         <View style={gStyles.cardBody}>
             <Spacer h={isMobile ? 5 : 20} />
-            {dice.faces && dice.faces.length > 0 ?
+            {isSpinner ?
+                <SpinnerPreview facesInfo={dice.faces && dice.faces.length > 0 ? dice.faces : templ?.image!} size={width / 3} /> :
+                dice.faces && dice.faces.length > 0 ?
                 (Platform.OS === 'android' ? <IsoCubePreview facesInfo={dice.faces} size={width / 3} /> : <DicePreview facesInfo={dice.faces} size={width / 3} />) :
                 (Platform.OS === 'android' ? <IsoCubePreview facesInfo={templ?.image} size={width / 3} /> : <DicePreview facesInfo={templ?.image} size={width / 3} />)
             }

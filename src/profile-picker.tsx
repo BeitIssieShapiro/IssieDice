@@ -9,6 +9,7 @@ import { List, Templates } from "./models";
 import { Folders } from "./disk";
 import { colors, gStyles, menuActionIcon } from "./common-style";
 import { IsoCubePreview } from "./iso-cube-preview";
+import { SpinnerPreview } from "./spinner-preview";
 
 
 
@@ -114,18 +115,19 @@ interface DiePickerProps {
     onExport?: (name: string) => void;
     currentDie: string;
     isNarrow: boolean;
+    spinner?: boolean; // picking the spinner's template: show spinner previews and spinner-only templates
 }
-export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelete, onEdit, onCreate, onExport, isNarrow }: DiePickerProps) {
+export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelete, onEdit, onCreate, onExport, isNarrow, spinner }: DiePickerProps) {
     const [list, setList] = useState<List[]>([]);
     const [revision, setRevision] = useState<number>(0);
 
     useEffect(() => {
         if (open) {
             ListElements(Folders.DiceTemplates).then(list => {
-                setList(list);
+                setList(spinner ? list : list.filter(item => !item.spinnerOnly));
             })
         }
-    }, [open, revision]);
+    }, [open, revision, spinner]);
 
     const dir: ViewStyle = { direction: isRTL() ? "rtl" : "ltr" };
     const create = onCreate && <IconButton icon={{ name: "plus", color: colors.titleBlue }} onPress={() => onCreate()} text={translate("Create")} />
@@ -156,8 +158,9 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
                                 <Pressable style={{ flex: 1, flexDirection: "row" }} onPress={() => onSelect(item.key)}>
                                     <RadioButton selected={currentDie == item.key} />
                                     <View style={[styles.listItem, isRTL() ? { direction: "rtl" } : {}]} key={item.key} >
-                                        {item && item.image && (Platform.OS === 'android' ? <IsoCubePreview size={45} facesInfo={item.image} /> : <DicePreview size={45} facesInfo={item.image} />)}
-                                        {item && !item.image && (Platform.OS === 'android' ? <IsoCubePreview size={45} facesInfo={item.faces!} /> : <DicePreview size={45} facesInfo={item.faces!} />)}
+                                        {item && spinner && <SpinnerPreview size={45} facesInfo={item.faces && item.faces.length > 0 ? item.faces : item.image!} />}
+                                        {item && !spinner && item.image && (Platform.OS === 'android' ? <IsoCubePreview size={45} facesInfo={item.image} /> : <DicePreview size={45} facesInfo={item.image} />)}
+                                        {item && !spinner && !item.image && (Platform.OS === 'android' ? <IsoCubePreview size={45} facesInfo={item.faces!} /> : <DicePreview size={45} facesInfo={item.faces!} />)}
                                         <Text
                                             allowFontScaling={false}
                                             numberOfLines={1}

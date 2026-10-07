@@ -21,8 +21,12 @@ import { NativeModules } from 'react-native';
 import { useIncomingURL } from "./linking-hook";
 import { getAssetLocalPath } from "./assets";
 import { DiePreview2 } from "./app2";
+import { SpinnerScene } from "./spinner-scene";
 
 const { FileCopyModule } = NativeModules;
+
+// OpenGL ES is deprecated on iOS (and fails to create a framebuffer on the iOS 27 simulator)
+const filamentBackend = Platform.OS === "ios" ? "metal" : "opengl";
 
 const initialImpulse = [0, -.3, -.3];
 const initialTorque = [.15, .08, -.08];
@@ -188,16 +192,28 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
           importInfo && <ImportInfoDialog importInfo={importInfo} onClose={() => setImportInfo(undefined)} />
         }
 
-        {profile && <FilamentScene backend="opengl">
-          <DiceScene
-            setInRecovery={setInRecovery}
-            ref={sceneRef}
-            freeze={openSettings > 0}
-            initialImpulse={initialImpulse}
-            initialTorque={initialTorque}
-            profile={revision >= 0 && profile ? profile : EmptyProfile}
-            windowSize={windowSize}
-          />
+        {/* A single FilamentScene (engine) for the app's lifetime: unmounting it crashes in filament's
+            teardown (material instances destroyed while still in use), so only the content is switched */}
+        {profile && <FilamentScene backend={filamentBackend}>
+          {profile.spinner ?
+            <SpinnerScene
+              key="spinner"
+              setInRecovery={setInRecovery}
+              ref={sceneRef}
+              freeze={openSettings > 0}
+              profile={profile}
+              windowSize={windowSize}
+            /> :
+            <DiceScene
+              key="dice"
+              setInRecovery={setInRecovery}
+              ref={sceneRef}
+              freeze={openSettings > 0}
+              initialImpulse={initialImpulse}
+              initialTorque={initialTorque}
+              profile={revision >= 0 && profile ? profile : EmptyProfile}
+              windowSize={windowSize}
+            />}
         </FilamentScene>
         }
       </>

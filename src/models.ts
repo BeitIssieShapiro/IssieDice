@@ -10,6 +10,7 @@ export enum Templates {
     Numbers = "__numbers",
     Colors = "__colors",
     Dots = "__dots",
+    Hanukkah = "__hanukkah",
 }
 
 export function isStaticDie(template: Templates): boolean {
@@ -55,6 +56,8 @@ export interface Profile {
     recoveryTime: number;
     tableColor: string;
     soundEnabled: boolean
+    spinner: boolean // when true, a single spinner replaces the dice
+    spinnerDie: Dice; // the spinner's template - uses faces 1-4
 }
 
 export const EmptyDice: Dice = {
@@ -71,7 +74,9 @@ export const EmptyProfile: Profile = {
     size: 2,
     recoveryTime: 15,
     tableColor: defaultFloorColor,
-    soundEnabled: true
+    soundEnabled: true,
+    spinner: false,
+    spinnerDie: { template: Templates.Hanukkah, active: true },
 };
 
 export const emptyFaceInfo: FaceInfo = {}
@@ -109,6 +114,7 @@ export interface List {
     image?: ImageSourcePropType;
     faces?: FaceInfo[];
     readOnly?: boolean;
+    spinnerOnly?: boolean;
 }
 
 export const templatesList = [
@@ -132,5 +138,12 @@ export const templatesList = [
         //image: require("../assets/dots.png"),
         image: {uri: getAssetLocalPath("dots.png", true)},
         readOnly: true,
+    },
+    {
+        key: Templates.Hanukkah,
+        name: translate("Hanukkah"),
+        image: {uri: getAssetLocalPath("hanukkah.png", true)},
+        readOnly: true,
+        spinnerOnly: true,
     }
 ]

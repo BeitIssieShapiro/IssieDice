@@ -56,3 +56,44 @@ export function createDieShape(): CANNON.Body {
         shape: beveledCubeShape,
     });
 }
+
+// Spinner (sevivon) geometry - keep in sync with design-resources/generate-spinner-glb.js
+export const SpinnerTipY = -2.2;
+const SpinnerHandleTop = 2.2;
+
+export function createSpinnerShape(): CANNON.Body {
+    const body = new CANNON.Body({ mass: 1 });
+
+    // main body
+    body.addShape(new CANNON.Box(new CANNON.Vec3(1, 1, 1)));
+
+    // bottom pyramid down to the tip (vertices relative to its own center, as cannon expects the origin inside the convex)
+    const tipCenterY = (SpinnerTipY - 1) / 2;
+    const top = -1 - tipCenterY;
+    const tip = new CANNON.ConvexPolyhedron({
+        vertices: [
+            new CANNON.Vec3(-1, top, 1),
+            new CANNON.Vec3(1, top, 1),
+            new CANNON.Vec3(1, top, -1),
+            new CANNON.Vec3(-1, top, -1),
+            new CANNON.Vec3(0, SpinnerTipY - tipCenterY, 0),
+        ],
+        faces: [
+            // CCW when seen from outside
+            [0, 1, 2, 3], // top (towards the body)
+            [1, 0, 4],
+            [2, 1, 4],
+            [3, 2, 4],
+            [0, 3, 4],
+        ],
+    });
+    body.addShape(tip, new CANNON.Vec3(0, tipCenterY, 0));
+
+    // handle (approximated as a thin box)
+    const handleHalfHeight = (SpinnerHandleTop - 1) / 2;
+    body.addShape(
+        new CANNON.Box(new CANNON.Vec3(0.2, handleHalfHeight, 0.2)),
+        new CANNON.Vec3(0, 1 + handleHalfHeight, 0)
+    );
+    return body;
+}

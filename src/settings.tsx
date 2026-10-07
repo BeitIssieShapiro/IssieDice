@@ -3,7 +3,7 @@ import { DefaultProfileName, fTranslate, isRTL, translate } from "./lang";
 
 import { getInsetsLimit, IconButton, NumberSelector, ScreenSubTitle, ScreenTitle, Section, Spacer } from "./components";
 import { useEffect, useState } from "react";
-import { deleteDice, deleteProfileFile, getCurrentProfile, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
+import { deleteDice, deleteProfileFile, getCurrentProfile, isCustomSpinner, isValidFilename, LoadProfileFileIntoSettings, renameProfileFile, saveProfileFile, verifyProfileNameFree } from "./profile";
 import { Settings } from "./setting-storage";
 import { DiceSettings } from "./dice-settings";
 import { DiePicker, ProfilePicker } from "./profile-picker";
@@ -24,6 +24,9 @@ import { Switch } from "@rneui/themed";
 import { About } from "./about";
 
 
+// index used with the dice template picker/editor for the spinner's template
+const SpinnerIndex = 4;
+
 interface SettingsProp {
     windowSize: { width: number, height: number };
     onChange: () => void;
@@ -36,6 +39,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
     const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
     const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined);
+    const [editAsSpinner, setEditAsSpinner] = useState<boolean>(false);
     const [setDieAfterCreate, setSetDieAfterCreate] = useState<number>(-1);
     const [profileBusy, setProfileBusy] = useState<boolean>(false);
     const [busy, setBusy] = useState<boolean>(false);
@@ -97,7 +101,23 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
+    function handleSetSpinner(spinner: boolean) {
+        Settings.set(SettingsKeys.Spinner, spinner);
+        setRevision(old => old + 1);
+    }
+
+    // a die created as a spinner is edited as a spinner (4 faces), any other die with all its 6 faces
+    async function editDie(name: string) {
+        setEditAsSpinner(await isCustomSpinner(name));
+        setEditOrCreateDice(name);
+    }
+
     function setDiceTemplate(index: number, newTemplate: Templates) {
+        if (index == SpinnerIndex) {
+            Settings.set(SettingsKeys.SpinnerTemplate, newTemplate);
+            setRevision(old => old + 1);
+            return;
+        }
         let newDiceTemplates = profile.dice.map(b => b.template);
         newDiceTemplates[index] = newTemplate as Templates;
         Settings.setArray(SettingsKeys.DiceTemplates, newDiceTemplates);
@@ -357,7 +377,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             }}
             onEdit={(template) => {
                 setOpenSelectTemplate(-1);
-                setEditOrCreateDice(template);
+                editDie(template);
                 setSetDieAfterCreate(-1);
             }}
             onClose={() => {
@@ -367,11 +387,15 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             onCreate={() => {
                 setSetDieAfterCreate(openSelectTemplate);
                 setOpenSelectTemplate(-1);
+                // created from the spinner's template list => a spinner (4 faces)
+                setEditAsSpinner(openSelectTemplate == SpinnerIndex);
                 setEditOrCreateDice("")
             }}
             onExport={handleExportDice}
             onDelete={(name, afterDelete) => handleDeleteDie(name, afterDelete)}
-            currentDie={openSelectTemplate >= 0 && openSelectTemplate < profile.dice.length ? profile.dice[openSelectTemplate].template : EmptyDice.template}
+            spinner={openSelectTemplate == SpinnerIndex}
+            currentDie={openSelectTemplate == SpinnerIndex ? profile.spinnerDie.template :
+                openSelectTemplate >= 0 && openSelectTemplate < profile.dice.length ? profile.dice[openSelectTemplate].template : EmptyDice.template}
         />
 
         <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={profile.tableColor}
@@ -415,6 +439,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
         {editOrCreateDice != undefined && <EditDice
             name={editOrCreateDice}
+            spinner={editAsSpinner}
             windowSize={windowSize}
             onClose={() => {
                 // todo rename cube
@@ -442,10 +467,23 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         />
 
 
-        {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("DiceSectionTitle")}</Text>}
+        {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate(profile.spinner ? "SpinnerSectionTitle" : "DiceSectionTitle")}</Text>}
         <ScrollView style={styles.settingHost} >
             <View style={[styles.cubes, { marginHorizontal }]}>
-                {
+                {profile.spinner ?
+                    <DiceSettings
+                        width={cubeSettingSize}
+                        height={cubeSettingSize * .8}
+                        isSpinner={true}
+                        dice={profile.spinnerDie}
+                        onSetActive={() => { }}
+                        onOpenLoadDice={() => setOpenSelectTemplate(SpinnerIndex)}
+                        onEditDice={isStaticDie(profile.spinnerDie.template) ? undefined : () => {
+                            setOpenSelectTemplate(-1);
+                            setSetDieAfterCreate(-1);
+                            editDie(profile.spinnerDie.template);
+                        }}
+                    /> :
                     [0, 1, 2, 3].map((i: any) => (
                         <DiceSettings
                             
@@ -459,7 +497,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                                 setOpenSelectTemplate(-1);
                                 setSetDieAfterCreate(-1);
                                 if (profile.dice.length > i) {
-                                    setEditOrCreateDice(profile.dice[i].template);
+                                    editDie(profile.dice[i].template);
                                 }
                             }}
                         />
@@ -469,6 +507,19 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
             </View>
 
             {!isMobile && <Text allowFontScaling={false} style={[gStyles.sectionSetHeaderText, isRTL() && { textAlign: "right" }]}>{translate("GeneralSectionTitle")}</Text>}
+
+            {/* Spinner mode - temporary UI, to be finalized */}
+            <Section
+                marginHorizontal={marginHorizontal}
+                iconName="rotate-3d-variant"
+                component={
+                    <Switch
+                        value={profile.spinner}
+                        onValueChange={(enabled) => handleSetSpinner(enabled)}
+                        color={colors.switchColor}
+                    />}
+                title={translate("SpinnerMode")}
+            />
 
             {/* Recovery time */}
             <Section
@@ -501,18 +552,18 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                         onValueChange={(enabled) => handleSetSoundEnabled(enabled)}
                         color={colors.switchColor}
                     />}
-                title={translate("EnableSound")}
+                title={translate(profile.spinner ? "EnableSpinnerSound" : "EnableSound")}
             />
 
             {/* Dice Size */}
-            <Section
+            {!profile.spinner && <Section
                 marginHorizontal={marginHorizontal}
 
                 iconName="dice-3-outline"
                 component={<NumberSelector min={1} max={5} value={profile.size}
                     onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} />}
                 title={translate("DiceSize")}
-            />
+            />}
 
             {/* Backup Color */}
             <Section

@@ -10,7 +10,9 @@ const assets = [
     { name: "dots.png", asset: require("../assets/dots.png") },
     { name: "numbers.png", asset: require("../assets/numbers.png") },
     { name: "colors.png", asset: require("../assets/colors.png") },
+    { name: "hanukkah.png", asset: require("../assets/hanukkah.png") },
     { name: "dice-empty.glb", asset: require("../assets/dice-empty.glb") },
+    { name: "spinner.glb", asset: require("../assets/spinner.glb") },
     { name: "transparent_shadow_material.filamat", asset: require("../assets/transparent_shadow_material.filamat") },
 ]
 

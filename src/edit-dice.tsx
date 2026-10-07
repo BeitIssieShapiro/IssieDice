@@ -2,7 +2,7 @@ import { ActivityIndicator, Alert, Image, ImageSourcePropType, Pressable, StyleS
 import { fTranslate, isRTL, translate } from "./lang";
 import { getInsetsLimit, MyIcon, ScreenSubTitle, ScreenTitle, Spacer } from "./components";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { existsFolder, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, renameDiceFolder } from "./profile";
+import { existsFolder, getCustomTypePath, getNextDieName, isValidFilename, loadFaceImages, markAsSpinner, renameDiceFolder } from "./profile";
 import { captureRef } from "react-native-view-shot";
 import path from "path";
 import { EditText } from "./edit-text";
@@ -19,6 +19,7 @@ interface EditDiceProps {
     onClose: () => void;
     onAfterSave: (name: string) => void;
     windowSize: WinSize
+    spinner?: boolean; // editing the spinner's template: only faces 1-4 are used
 }
 
 
@@ -29,7 +30,7 @@ export const DefaultFaceBackgroundColor = "#E7E7E7";
 
 const emptyFacesInfoArray = [emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo, emptyFaceInfo];
 
-export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDiceProps) {
+export function EditDice({ onClose, name, windowSize, onAfterSave, spinner }: EditDiceProps) {
     const [editedName, setEditedName] = useState<string>(name);
     const [openNameEditor, setOpenNameEditor] = useState<boolean>(false);
     const [editFace, setEditFace] = useState<number>(-1);
@@ -52,7 +53,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
 
     async function selectDieName() {
         // chooses a name with the patter Cube 1/2/3 the first which is available
-        const newCubeName = await getNextDieName("NewDieName");
+        const newCubeName = await getNextDieName(spinner ? "NewSpinnerName" : "NewDieName");
         setEditedName(newCubeName);
     }
 
@@ -142,6 +143,10 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
                     .then((filePath: string) => {
                         copyFileToFolder(filePath, textureFilePath, true)
                         console.log("saved the texture");
+                        if (spinner && name.length == 0) {
+                            // created as a spinner
+                            markAsSpinner(editedName).catch(e => console.log("fail marking as spinner", e));
+                        }
                         onAfterSave(editedName);
                     })
                     .finally(() => setBusy(false))
@@ -183,6 +188,7 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
     console.log("facesInfo", facesInfo)
 
     const isLandscape = windowSize.height < windowSize.width;
+    const faceIndexes = spinner ? [0, 1, 2, 3] : [0, 1, 2, 3, 4, 5];
     const faceSize = !isLandscape ?
         Math.min(windowSize.width / 4, FacePreviewSize, 0.15 * windowSize.height) :
         windowSize.width / 8;
@@ -204,9 +210,11 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
     </View>)
 
     return <View style={[gStyles.screenContainer]}>
-        <ScreenTitle title={translate(name.length > 0 ? "EditDice" : "CreateDice")} onClose={onClose} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
+        <ScreenTitle title={translate(spinner ?
+            (name.length > 0 ? "EditSpinner" : "CreateSpinner") :
+            (name.length > 0 ? "EditDice" : "CreateDice"))} onClose={onClose} icon={{ name: "check-bold", type: "MDI", size: 30, color: colors.titleBlue }} />
         <ScreenSubTitle
-            elementTitle={translate("DiceName")} elementName={editedName}
+            elementTitle={translate(spinner ? "SpinnerName" : "DiceName")} elementName={editedName}
             actionName={translate("EditDieName")}
             actionIcon={{ name: "edit", type: "AntDesign", color: colors.titleBlue, size: 30 }}
             onAction={() => setOpenNameEditor(true)}
@@ -248,15 +256,15 @@ export function EditDice({ onClose, name, windowSize, onAfterSave }: EditDicePro
             <View style={{ flexDirection: "column", width: "100%" }}>
                 {isLandscape ?
                     <View style={styles.faceRow}>
-                        {[0, 1, 2, 3, 4, 5].map(index => renderFaceRow(index))}
+                        {faceIndexes.map(index => renderFaceRow(index))}
                     </View>
                     :
                     <>
                         <View style={styles.faceRow}>
-                            {[0, 1, 2].map(index => renderFaceRow(index))}
+                            {faceIndexes.slice(0, faceIndexes.length / 2).map(index => renderFaceRow(index))}
                         </View>
                         <View style={styles.faceRow}>
-                            {[3, 4, 5].map(index => renderFaceRow(index))}
+                            {faceIndexes.slice(faceIndexes.length / 2).map(index => renderFaceRow(index))}
                         </View>
                     </>}
             </View>

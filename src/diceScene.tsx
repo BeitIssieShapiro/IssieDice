@@ -41,7 +41,7 @@ LogBox.ignoreLogs([
 ]);
 
 
-function quaternionToAngleAxis(q: CANNON.Quaternion): { angle: number; axis: [number, number, number] } {
+export function quaternionToAngleAxis(q: CANNON.Quaternion): { angle: number; axis: [number, number, number] } {
     const angle = 2 * Math.acos(q.w);
     const s = Math.sqrt(1 - q.w * q.w);
     let axis: [number, number, number];
@@ -86,10 +86,22 @@ function getDieX(i: number, count: number, offset: number): number {
         (i + 1) * offset);
 }
 
-const cameraHeight = 20;
-const focalLength = 35;
-const fov = computeVerticalFov(focalLength);
-const wallThickness = 0.01;
+// same as getDiceScale in DiceScene (which is kept inline as it runs in the render worklet)
+export function computeDiceScale(winSize: WinSize, diceSize: number) {
+    const winSizeFactor = 900 / winSize.height;
+    let scale = .5 * winSizeFactor * (diceSize + 2) / 2;
+
+    const width = Math.min(winSize.height, winSize.width);
+    if (width < 600) {
+        scale = scale * (width / 900);
+    }
+    return scale;
+}
+
+export const cameraHeight = 20;
+export const focalLength = 35;
+export const fov = computeVerticalFov(focalLength);
+export const wallThickness = 0.01;
 const FaceUpInit = [-1, -1, -1, -1];
 const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 

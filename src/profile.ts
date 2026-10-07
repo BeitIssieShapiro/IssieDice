@@ -60,7 +60,11 @@ export async function saveProfileFile(name: string, profile: Profile, overwrite 
         }
     }
 
-    const profileClean = { ...profile, dice: profile.dice.map(d => ({ template: d.template, active: d.active })) }
+    const profileClean = {
+        ...profile,
+        dice: profile.dice.map(d => ({ template: d.template, active: d.active })),
+        spinnerDie: { template: profile.spinnerDie?.template ?? EmptyProfile.spinnerDie.template, active: true },
+    }
     await saveJSON(profilePath, profileClean);
 }
 
@@ -144,6 +148,8 @@ async function loadProfileIntoSettings(p: Profile, name: string) {
     Settings.set(SettingsKeys.RecoveryTime, p.recoveryTime);
     Settings.set(SettingsKeys.TableColor, p.tableColor);
     Settings.set(SettingsKeys.SoundEnabled, p.soundEnabled);
+    Settings.set(SettingsKeys.Spinner, p.spinner ?? false);
+    Settings.set(SettingsKeys.SpinnerTemplate, p.spinnerDie?.template ?? EmptyProfile.spinnerDie.template);
 
     Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
     Settings.setArray(SettingsKeys.DiceActive, diceActive);
@@ -167,6 +173,8 @@ export async function getCurrentProfile(): Promise<Profile> {
     const recoveryTime = Settings.getNumber(SettingsKeys.RecoveryTime, EmptyProfile.recoveryTime);
     const tableColor = Settings.getString(SettingsKeys.TableColor, EmptyProfile.tableColor);
     const soundEnabled = Settings.getBoolean(SettingsKeys.SoundEnabled, true);
+    const spinner = Settings.getBoolean(SettingsKeys.Spinner, false);
+    const spinnerTemplate = Settings.getString(SettingsKeys.SpinnerTemplate, EmptyProfile.spinnerDie.template);
 
     const dice = [] as Dice[];
 
@@ -190,6 +198,18 @@ export async function getCurrentProfile(): Promise<Profile> {
         });
     }
 
+    let spinnerDie: Dice = { template: spinnerTemplate as Templates, active: true };
+    try {
+        spinnerDie = {
+            ...spinnerDie,
+            faces: spinnerTemplate.startsWith(Templates.prefix) ? [] : await loadFaceImages(spinnerTemplate),
+            texture: await readTexture(spinnerTemplate),
+        };
+    } catch (e) {
+        console.log("Error loading spinner faces", e);
+        spinnerDie = { ...EmptyProfile.spinnerDie, faces: [], texture: "" };
+    }
+
     console.log("readCurrentProfile", dice)
 
     return {
@@ -197,12 +217,29 @@ export async function getCurrentProfile(): Promise<Profile> {
         size,
         recoveryTime,
         tableColor,
-        soundEnabled
+        soundEnabled,
+        spinner,
+        spinnerDie
     };
 }
 
 export function getCustomTypePath(name: string): string {
     return `${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}/${name}`;
+}
+
+// a marker file in a custom die's folder, for dice created as a spinner (4 faces): they are only offered for the spinner
+const SpinnerMarkerFile = "spinner.json";
+
+export function getSpinnerMarkerPath(name: string): string {
+    return `${getCustomTypePath(name)}/${SpinnerMarkerFile}`;
+}
+
+export async function isCustomSpinner(name: string): Promise<boolean> {
+    return RNFS.exists(ensureAndroidCompatible(getSpinnerMarkerPath(name)));
+}
+
+export async function markAsSpinner(name: string) {
+    await RNFS.writeFile(ensureAndroidCompatible(getSpinnerMarkerPath(name)), JSON.stringify({ spinner: true }));
 }
 
 export function getProfilePath(name: string): string {
@@ -237,7 +274,8 @@ export async function listCustomDice(ommitFaces = false): Promise<List[]> {
                 key: folder.name,
                 name: folder.name,
                 faces: ommitFaces ? [] : await loadFaceImages(folder.name),
-                image: {uri:await readTexture(folder.name)}
+                image: {uri:await readTexture(folder.name)},
+                spinnerOnly: await isCustomSpinner(folder.name),
             })
         }
         return list;
@@ -327,6 +365,9 @@ export async function renameDiceFolder(currName: string, newName: string) {
     const diceTemplateTypes = Settings.getArray<string>(SettingsKeys.DiceTemplates, "string", [Templates.Numbers, Templates.Numbers, Templates.Numbers, Templates.Numbers]);
     const newList = diceTemplateTypes.map(template => template == currName ? newName : template);
     Settings.setArray(SettingsKeys.DiceTemplates, newList);
+    if (Settings.getString(SettingsKeys.SpinnerTemplate, "") == currName) {
+        Settings.set(SettingsKeys.SpinnerTemplate, newName);
+    }
 
     // Check all profile and change dice name if includes the old dice name
     const allProfiles = await listProfiles();
@@ -338,6 +379,10 @@ export async function renameDiceFolder(currName: string, newName: string) {
                 modified = true;
                 die.template = newName as Templates;
             }
+        }
+        if (profile.spinnerDie?.template == currName) {
+            modified = true;
+            profile.spinnerDie.template = newName as Templates;
         }
         if (modified) {
             //overwrite Profile after being modified
@@ -362,6 +407,10 @@ export async function deleteDice(name: string) {
                 die.template = Templates.Dots;
             }
         }
+        if (profile.spinnerDie?.template == name) {
+            modified = true;
+            profile.spinnerDie.template = EmptyProfile.spinnerDie.template;
+        }
         if (modified) {
             //overwrite Profile after being modified
             saveProfileFile(profileListItem.key, profile, true)
@@ -379,6 +428,9 @@ export async function deleteDice(name: string) {
     }
     if (modified) {
         Settings.setArray(SettingsKeys.DiceTemplates, diceTemplateType);
+    }
+    if (Settings.getString(SettingsKeys.SpinnerTemplate, "") == name) {
+        Settings.set(SettingsKeys.SpinnerTemplate, EmptyProfile.spinnerDie.template);
     }
 }
 
