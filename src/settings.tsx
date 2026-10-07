@@ -555,15 +555,15 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 title={translate(profile.spinner ? "EnableSpinnerSound" : "EnableSound")}
             />
 
-            {/* Dice Size */}
-            {!profile.spinner && <Section
+            {/* Dice Size (also the spinner's size) */}
+            <Section
                 marginHorizontal={marginHorizontal}
 
                 iconName="dice-3-outline"
                 component={<NumberSelector min={1} max={5} value={profile.size}
                     onUp={() => handleSetSize(profile.size + 1)} onDown={() => handleSetSize(profile.size - 1)} />}
-                title={translate("DiceSize")}
-            />}
+                title={translate(profile.spinner ? "SpinnerSize" : "DiceSize")}
+            />
 
             {/* Backup Color */}
             <Section

@@ -1,4 +1,4 @@
-import { getUpFace, restingQuaternion, SpinnerSim } from "../src/spinner-sim";
+import { computeVisibleFloorBounds, getUpFace, restingQuaternion, SpinnerSim } from "../src/spinner-sim";
 
 // deterministic pseudo random
 function mulberry32(seed: number) {
@@ -26,15 +26,24 @@ describe("SpinnerSim", () => {
         const runs = 100;
         for (let run = 0; run < runs; run++) {
             const sim = new SpinnerSim(mulberry32(run + 1));
-            sim.setBounds({ left: -12, right: 12, bottom: -9, top: 9 });
+            // alternate wide bounds and the tight ones of a tilted camera on a tablet
+            const bounds = run % 2 ? { left: -12, right: 12, bottom: -9, top: 9 } : { left: -4, right: 4, bottom: -5.8, top: 5.8 };
+            sim.setBounds(bounds);
             let settled = -1;
             sim.onSettled = (face) => settled = face;
             sim.spin();
             let t = 0;
             let minTipY = Infinity;
+            let prevPhase = sim.phase;
             while (settled < 0 && t < 15) {
                 sim.step(1 / 60);
                 t += 1 / 60;
+                if (prevPhase == "falling" && sim.phase == "settling") {
+                    // physics stopped with the spinner lying on a side (not leaning on its tip)
+                    const axis = (sim as any).settleFrom.vmult({ x: 0, y: 1, z: 0 });
+                    expect(Math.abs(axis.y)).toBeLessThan(0.3);
+                }
+                prevPhase = sim.phase;
                 if (sim.phase == "spinning") {
                     expect(sim.body.position.y).toBeGreaterThan(1);
                 }
@@ -44,11 +53,42 @@ describe("SpinnerSim", () => {
             expect(sim.phase).toBe("idle");
             expect(sim.body.position.y).toBeCloseTo(0, 3);
             expect(getUpFace(sim.body.quaternion)).toBe(settled);
-            expect(Math.abs(sim.body.position.x)).toBeLessThan(12);
-            expect(Math.abs(sim.body.position.z)).toBeLessThan(9);
+            // ends exactly in the resting orientation (face flat up, handle to the top of the screen)
+            const rest = restingQuaternion(settled);
+            const q = sim.body.quaternion;
+            expect(Math.abs(q.x * rest.x + q.y * rest.y + q.z * rest.z + q.w * rest.w)).toBeCloseTo(1, 4);
+            expect(Math.abs(sim.body.position.x)).toBeLessThan(bounds.right);
+            expect(Math.abs(sim.body.position.z)).toBeLessThan(bounds.top);
             counts[settled]++;
         }
         console.log("face distribution", counts);
         counts.forEach(c => expect(c).toBeGreaterThan(runs / 10));
+    });
+
+    test("resting orientation follows the view direction", () => {
+        const yaw = Math.PI / 8;
+        for (let face = 0; face < 4; face++) {
+            const q = restingQuaternion(face, yaw);
+            expect(getUpFace(q)).toBe(face);
+            const handle = q.vmult({ x: 0, y: 1, z: 0 } as any);
+            expect(handle.x).toBeCloseTo(Math.sin(yaw), 5);
+            expect(handle.z).toBeCloseTo(Math.cos(yaw), 5);
+        }
+    });
+
+    test("visible floor bounds", () => {
+        const fov = 2 * Math.atan(12 / 35);
+        const base = { left: -6, right: 6, bottom: -8, top: 8 };
+        // straight from the top (almost): limited by the visible half width 20 * tan(fov/2) * aspect
+        const top = computeVisibleFloorBounds([0, 20, -0.001], fov, 0.75, 0, base);
+        expect(top.right).toBeCloseTo(20 * Math.tan(fov / 2) * 0.75, 1);
+        // tilted south-south-west: smaller, but still a reasonable area, centered on the origin
+        const el = 55 * Math.PI / 180, az = 22.5 * Math.PI / 180;
+        const pos = [-Math.sin(az) * Math.cos(el) * 20, Math.sin(el) * 20, -Math.cos(az) * Math.cos(el) * 20];
+        const tilted = computeVisibleFloorBounds(pos, fov, 0.75, -1, base);
+        console.log("tilted bounds", tilted);
+        expect(tilted.right).toBeGreaterThan(3);
+        expect(tilted.right).toBeLessThan(base.right * 1.5);
+        expect(tilted.left).toBeCloseTo(-tilted.right, 5);
     });
 });

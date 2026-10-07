@@ -19,9 +19,20 @@ import { computeFloorBounds, WinSize } from "./utils";
 import { playAudio, playBundledAudio } from "./audio";
 import { getAssetLocalPath, Sounds } from "./assets";
 import { cameraHeight, computeDiceScale, DiceSceneMethods, focalLength, fov, quaternionToAngleAxis } from "./diceScene";
-import { SpinnerSim } from "./spinner-sim";
+import { computeVisibleFloorBounds, SpinnerSim } from "./spinner-sim";
 
 export const SpinnerModel = { uri: getAssetLocalPath("spinner.glb", true) };
+
+// The camera looks at the spinner from south-south-west (south is the bottom of the screen, west is left)
+const CameraElevation = 55 * Math.PI / 180;  // above the floor (90 would be straight from the top)
+const CameraAzimuth = 22.5 * Math.PI / 180;  // from south towards west
+const CameraPosition: Float3 = [
+    -Math.sin(CameraAzimuth) * Math.cos(CameraElevation) * cameraHeight,
+    Math.sin(CameraElevation) * cameraHeight,
+    -Math.cos(CameraAzimuth) * Math.cos(CameraElevation) * cameraHeight,
+];
+// the camera's horizontal view direction (the top of the screen) is +z rotated by this
+const ViewYaw = CameraAzimuth;
 
 interface SpinnerSceneProps {
     profile: Profile;
@@ -60,7 +71,9 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
     }
 
     const scale = computeDiceScale(currWindowSize, currProfile.size);
-    const bounds = computeFloorBounds(currWindowSize, cameraHeight, fov, 0);
+    // the floor is at y = -1 in physics units, i.e. -scale in world units
+    const bounds = computeVisibleFloorBounds(CameraPosition, fov, currWindowSize.width / currWindowSize.height, -scale,
+        computeFloorBounds(currWindowSize, cameraHeight, fov, 0));
 
     const position = useSharedValue<Float3>([0, 0, 0]);
     const rotation = useSharedValue<SpinnerRotation>({ angle: 0, axis: [1, 0, 0] });
@@ -88,6 +101,7 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
 
     useEffect(() => {
         scaleShared.value = scale;
+        sim.setViewYaw(ViewYaw);
         sim.setBounds({
             left: bounds.left / scale,
             right: bounds.right / scale,
@@ -214,7 +228,7 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
                     textureMap={{ materialName: "Material", textureSource: texture }} />}
             </ModelRenderer>
 
-            <Camera cameraPosition={[0, cameraHeight, bounds.bottom / 2]} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
+            <Camera cameraPosition={CameraPosition} cameraTarget={[0, 0, 0]} focalLengthInMillimeters={focalLength} />
         </FilamentView>
     );
 });
