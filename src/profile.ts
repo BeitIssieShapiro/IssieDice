@@ -276,12 +276,15 @@ export async function listCustomDice(ommitFaces = false): Promise<List[]> {
     return RNFS.readDir(ensureAndroidCompatible(`${RNFS.DocumentDirectoryPath}/${Folders.CustomDice}`)).then(async (folders) => {
         const list: List[] = [];
         for (const folder of folders) {
+            const spinner = await isCustomSpinner(folder.name);
             list.push({
                 key: folder.name,
                 name: folder.name,
                 faces: ommitFaces ? [] : await loadFaceImages(folder.name),
                 image: {uri:await readTexture(folder.name)},
-                spinnerOnly: await isCustomSpinner(folder.name),
+                spinnerOnly: spinner,
+                // custom dice (6 faces) are not offered for the spinner
+                diceOnly: !spinner,
             })
         }
         return list;

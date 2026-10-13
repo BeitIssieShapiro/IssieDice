@@ -121,6 +121,7 @@ export interface List {
     faces?: FaceInfo[];
     readOnly?: boolean;
     spinnerOnly?: boolean;
+    diceOnly?: boolean;
 }
 
 export const templatesList = [

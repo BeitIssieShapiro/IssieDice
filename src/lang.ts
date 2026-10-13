@@ -108,6 +108,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "DeleteProfileAlert": "Deleting profile '{1}', are you sure?",
 
         "SelectDiceTitle": "Select Dice",
+        "SelectSpinnerTitle": "Select Spinner",
         "NoItemsFound": "No Items Found",
         "EditDice": "Edit Die",
         "CreateDice": "Create Dice",
@@ -252,6 +253,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "BtnSelect": "בחר",
         "SelectProfileTitle": "בחירת פרופיל",
         "SelectDiceTitle": "בחירת קובייה",
+        "SelectSpinnerTitle": "בחירת סביבון",
         "NoItemsFound": "אין פריטים",
         "EditDice": "עריכת קוביה",
         "CreateDice": "יצירת קובייה חדשה",
@@ -377,6 +379,7 @@ const strings: { [key: string]: { [key: string]: string } } = {
         "BtnSelect": "اختر",
         "SelectProfileTitle": "اختيار الملف الشخصي",
         "SelectDiceTitle": "اختيار النرد",
+        "SelectSpinnerTitle": "اختيار الدوّامة",
         "NoItemsFound": "لا توجد عناصر",
         "EditDice": "تعديل النرد",
         "CreateDice": "إنشاء نرد جديد",

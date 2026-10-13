@@ -124,7 +124,7 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
     useEffect(() => {
         if (open) {
             ListElements(Folders.DiceTemplates).then(list => {
-                setList(spinner ? list : list.filter(item => !item.spinnerOnly));
+                setList(list.filter(item => spinner ? !item.diceOnly : !item.spinnerOnly));
             })
         }
     }, [open, revision, spinner]);
@@ -135,7 +135,7 @@ export function DiePicker({ open, height, currentDie, onClose, onSelect, onDelet
         style={[gStyles.pickerView]}>
         <View style={[gStyles.pickerTitleHost, dir]}>
             <Text allowFontScaling={false} style={gStyles.pickerTitleText}>{
-                translate("SelectDiceTitle")
+                translate(spinner ? "SelectSpinnerTitle" : "SelectDiceTitle")
             }</Text>
             <View style={[{ flexDirection: "row", alignItems: "center" }, dir]}>
                 {!isNarrow && create}
