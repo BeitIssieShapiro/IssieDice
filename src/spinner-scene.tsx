@@ -16,7 +16,7 @@ import { useSharedValue } from "react-native-worklets-core";
 import { DefaultSpinnerColor, isStaticDie, Profile, Templates, templatesList } from "./models";
 import { computeFloorBounds, darkenHexColor, hexToSrgb, safeColor, WinSize } from "./utils";
 import { playAudio, playBundledAudio, playMusic, stopMusic } from "./audio";
-import { getAssetLocalPath, Sounds } from "./assets";
+import { CollisionSounds, getAssetLocalPath, Sounds } from "./assets";
 import { cameraHeight, computeDiceScale, DiceSceneMethods, focalLength, fov, quaternionToAngleAxis } from "./diceScene";
 import { computeVisibleFloorBounds, SpinnerSim } from "./spinner-sim";
 import { SpinnerHandleTop, SpinnerTipY } from "./scene-elements";
@@ -259,7 +259,7 @@ export const SpinnerScene = forwardRef(({ profile, windowSize, freeze, setInReco
             if (!currProfile.soundEnabled) return;
             if (impactVelocity >= 2 && (lastTime < 0 || performance.now() - lastTime > 100)) {
                 lastTime = performance.now();
-                playBundledAudio(Sounds.collision, Math.min(1, impactVelocity / 10));
+                playBundledAudio(CollisionSounds[Math.floor(Math.random() * CollisionSounds.length)], Math.min(1, impactVelocity / 10));
             }
         };
     }, [sim, currProfile]);

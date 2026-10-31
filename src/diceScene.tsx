@@ -23,7 +23,7 @@ import { Bounds, Dice, Profile, Templates, templatesList } from "./models";
 import { animateYaw, computeFloorBounds, computeVerticalFov, darkenHexColor, getTopFace, hexToSrgb, safeColor, WinSize } from "./utils";
 import { createDieShape, createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio } from "./audio";
-import { getAssetLocalPath, Sounds } from "./assets";
+import { CollisionSounds, getAssetLocalPath, Sounds } from "./assets";
 import { boxCorners, FloorModel, shadowDirection, shadowPlacement, ShadowModel, toLinear } from "./table-elements";
 
 
@@ -395,7 +395,7 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
                         lastTime = performance.now();
                         const volume = Math.min(1, Math.abs(impactVelocity) / 10);
                         console.log("collide", impactVelocity)
-                        playBundledAudio(Sounds.collision, volume)
+                        playBundledAudio(CollisionSounds[Math.floor(Math.random() * CollisionSounds.length)], volume)
                     }
                 })
                 worldRef.current!.addBody(body);

@@ -6,7 +6,9 @@ import { Image } from "@rneui/base";
 import { ensureAndroidCompatible } from "./utils";
 
 const assets = [
-    { name: "dice-sound.mp3", asset: require("../assets/dice-sound.mp3") },
+    { name: "dice-sound-1.wav", asset: require("../assets/dice-sound-1.wav") },
+    { name: "dice-sound-2.wav", asset: require("../assets/dice-sound-2.wav") },
+    { name: "dice-sound-3.wav", asset: require("../assets/dice-sound-3.wav") },
     { name: "spinner-music.mp3", asset: require("../assets/spinner-music.mp3") },
     { name: "dots.png", asset: require("../assets/dots.png") },
     { name: "numbers.png", asset: require("../assets/numbers.png") },
@@ -50,11 +52,13 @@ async function loadAsset(asset: { name: string, asset: ImageSourcePropType }) {
     }
 }
 
+// variants of the collision sound, so repeated hits do not sound identical (see design-resources/generate-dice-sound.py)
+export const CollisionSounds: AudioAsset[] = [1, 2, 3].map(i => ({
+    name: "collision" + i,
+    asset: getAssetLocalPath(`dice-sound-${i}.wav`),
+}));
+
 export const Sounds: { [key: string]: AudioAsset } = {
-    collision: {
-        name: "collision",
-        asset: getAssetLocalPath("dice-sound.mp3"),
-    },
     spinnerMusic: {
         name: "spinnerMusic",
         asset: getAssetLocalPath("spinner-music.mp3"),

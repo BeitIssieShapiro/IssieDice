@@ -43,14 +43,23 @@ export async function playAudio(uri: string, volume?: number) {
     }
 }
 
+// short sound effects play on their own players, so a new one does not cut the previous ones off
+const EffectPlayerCount = 4;
+const effectPlayers: ReturnType<typeof createSound>[] = [];
+let nextEffectPlayer = 0;
+
 export async function playBundledAudio(asset: AudioAsset, volume: number = 1.0) {
     try {
-        try { await NitroSound.stopPlayer(); } catch (_) {}
+        if (effectPlayers.length < EffectPlayerCount) effectPlayers.push(createSound());
+        const player = effectPlayers[nextEffectPlayer % effectPlayers.length];
+        nextEffectPlayer++;
+        try { await player.stopPlayer(); } catch (_) {}
         let uri = asset.asset as string;
         if (!uri.startsWith("file://")) {
             uri = "file://" + uri;
         }
-        await NitroSound.startPlayer(uri);
+        await player.startPlayer(uri);
+        await player.setVolume(volume);
     } catch (error) {
         console.error("Error playing bundled audio:", error);
         return false;
