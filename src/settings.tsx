@@ -37,7 +37,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
     const [revision, setRevision] = useState<number>(0);
     const [showAbout, setShowAbout] = useState<boolean>(false)
     const [openLoadProfile, setOpenLoadProfile] = useState<boolean>(false);
-    const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
+    // which color the color picker edits
+    const [openColorPicker, setOpenColorPicker] = useState<"table" | "spinner" | "handle" | undefined>(undefined);
     const [editOrCreateDice, setEditOrCreateDice] = useState<string | undefined>(undefined);
     const [editAsSpinner, setEditAsSpinner] = useState<boolean>(false);
     const [setDieAfterCreate, setSetDieAfterCreate] = useState<number>(-1);
@@ -101,8 +102,8 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         setRevision(old => old + 1);
     }
 
-    function handleSetRoundedSpinner(rounded: boolean) {
-        Settings.set(SettingsKeys.SpinnerShape, rounded ? "rounded" : "classic");
+    function handleSetSpinnerColor(key: string, newColor: string) {
+        Settings.set(key, newColor);
         setRevision(old => old + 1);
     }
 
@@ -338,7 +339,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
         return <About onClose={() => setShowAbout(false)} />
     }
 
-    return <View style={[gStyles.screenContainer, getInsetsLimit(insets), { height: windowSize.height - insets.top - insets.bottom }]}>
+    return <View style={[gStyles.screenContainer, getInsetsLimit(insets), { height: windowSize.height, paddingBottom: insets.bottom }]}>
         {busy && <ActivityIndicator size={"large"} style={styles.busy} />}
 
         {/** Profile Picker */}
@@ -408,12 +409,19 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 openSelectTemplate >= 0 && openSelectTemplate < profile.dice.length ? profile.dice[openSelectTemplate].template : EmptyDice.template}
         />
 
-        <MyColorPicker title={translate("SelectColor")} allowCustom={true} color={profile.tableColor}
-            height={300} width={windowSize.width} isScreenNarrow={true} onClose={() => setOpenColorPicker(false)}
+        <MyColorPicker title={translate("SelectColor")} allowCustom={true}
+            color={openColorPicker == "spinner" ? profile.spinnerColor : openColorPicker == "handle" ? profile.spinnerHandleColor : profile.tableColor}
+            height={300} width={windowSize.width} isScreenNarrow={true} onClose={() => setOpenColorPicker(undefined)}
             onSelect={(color) => {
-                handleSetTableColor(color);
-                setOpenColorPicker(false);
-            }} open={openColorPicker}
+                if (openColorPicker == "spinner") {
+                    handleSetSpinnerColor(SettingsKeys.SpinnerColor, color);
+                } else if (openColorPicker == "handle") {
+                    handleSetSpinnerColor(SettingsKeys.SpinnerHandleColor, color);
+                } else {
+                    handleSetTableColor(color);
+                }
+                setOpenColorPicker(undefined);
+            }} open={openColorPicker != undefined}
         />
 
         {showEditProfileName != undefined && <EditText
@@ -485,7 +493,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                         width={cubeSettingSize}
                         height={cubeSettingSize * .8}
                         isSpinner={true}
-                        spinnerShape={profile.spinnerShape}
+                        spinnerColors={[profile.spinnerColor, profile.spinnerHandleColor]}
                         dice={profile.spinnerDie}
                         onSetActive={() => { }}
                         onOpenLoadDice={() => setOpenSelectTemplate(SpinnerIndex)}
@@ -548,7 +556,7 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
 
                 iconName="format-color-fill"
                 component={
-                    <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.tableColor) }]} onTouchEnd={() => setOpenColorPicker(true)} />}
+                    <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.tableColor) }]} onTouchEnd={() => setOpenColorPicker("table")} />}
                 title={translate("TableColor")}
             />
 
@@ -566,18 +574,24 @@ export function SettingsUI({ windowSize, onChange, onClose }: SettingsProp) {
                 title={translate(profile.spinner ? "EnableSpinnerSound" : "EnableSound")}
             />
 
-            {/* Spinner Shape */}
+            {/* Spinner Color */}
             {profile.spinner && <Section
                 marginHorizontal={marginHorizontal}
 
-                iconName="spin"
+                iconName="format-color-fill"
                 component={
-                    <Switch
-                        value={profile.spinnerShape == "rounded"}
-                        onValueChange={(rounded) => handleSetRoundedSpinner(rounded)}
-                        color={colors.switchColor}
-                    />}
-                title={translate("RoundedSpinner")}
+                    <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.spinnerColor) }]} onTouchEnd={() => setOpenColorPicker("spinner")} />}
+                title={translate("SpinnerColor")}
+            />}
+
+            {/* Spinner Handle Color */}
+            {profile.spinner && <Section
+                marginHorizontal={marginHorizontal}
+
+                iconName="format-color-fill"
+                component={
+                    <View style={[styles.colorCircle, { backgroundColor: safeColor(profile.spinnerHandleColor) }]} onTouchEnd={() => setOpenColorPicker("handle")} />}
+                title={translate("SpinnerHandleColor")}
             />}
 
             {/* Spinner Music */}

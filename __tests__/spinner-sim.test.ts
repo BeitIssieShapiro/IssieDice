@@ -1,4 +1,5 @@
 import { computeVisibleFloorBounds, getUpFace, restingQuaternion, SpinnerSim } from "../src/spinner-sim";
+import { SpinnerTipY } from "../src/scene-elements";
 
 // deterministic pseudo random
 function mulberry32(seed: number) {
@@ -21,11 +22,11 @@ describe("SpinnerSim", () => {
         }
     });
 
-    test.each(["classic", "rounded"] as const)("%s spinner spins, falls and settles on one of the 4 faces", (shape) => {
+    test("spinner spins, falls and settles on one of the 4 faces", () => {
         const counts = [0, 0, 0, 0];
         const runs = 100;
         for (let run = 0; run < runs; run++) {
-            const sim = new SpinnerSim(mulberry32(run + 1), shape);
+            const sim = new SpinnerSim(mulberry32(run + 1));
             // alternate wide bounds and the tight ones of a tilted camera on a tablet
             const bounds = run % 2 ? { left: -12, right: 12, bottom: -9, top: 9 } : { left: -4, right: 4, bottom: -5.8, top: 5.8 };
             sim.setBounds(bounds);
@@ -45,7 +46,8 @@ describe("SpinnerSim", () => {
                 }
                 prevPhase = sim.phase;
                 if (sim.phase == "spinning") {
-                    expect(sim.body.position.y).toBeGreaterThan(1);
+                    // standing on its tip (the floor is at -1)
+                    expect(sim.body.position.y).toBeGreaterThan(-1 - SpinnerTipY - 0.2);
                 }
                 minTipY = Math.min(minTipY, sim.body.position.y);
             }
@@ -53,15 +55,17 @@ describe("SpinnerSim", () => {
             expect(sim.phase).toBe("idle");
             expect(sim.body.position.y).toBeCloseTo(0, 3);
             expect(getUpFace(sim.body.quaternion)).toBe(settled);
+            expect(Math.abs(sim.body.position.x)).toBeLessThan(bounds.right);
+            expect(Math.abs(sim.body.position.z)).toBeLessThan(bounds.top);
+            // seen from the camera, turned around the spinner
+            sim.applyViewTurn();
             // ends exactly in the resting orientation (face flat up, handle to the top of the screen)
             const rest = restingQuaternion(settled);
             const q = sim.body.quaternion;
             expect(Math.abs(q.x * rest.x + q.y * rest.y + q.z * rest.z + q.w * rest.w)).toBeCloseTo(1, 4);
-            expect(Math.abs(sim.body.position.x)).toBeLessThan(bounds.right);
-            expect(Math.abs(sim.body.position.z)).toBeLessThan(bounds.top);
             counts[settled]++;
         }
-        console.log(shape, "face distribution", counts);
+        console.log("face distribution", counts);
         counts.forEach(c => expect(c).toBeGreaterThan(runs / 10));
     });
 

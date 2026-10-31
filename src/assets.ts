@@ -1,6 +1,6 @@
 import path from "path";
 import { AudioAsset } from "./audio";
-import { copyFileAssets, downloadFile, exists, TemporaryDirectoryPath } from "@dr.pogodin/react-native-fs";
+import { copyFileAssets, downloadFile, exists, TemporaryDirectoryPath, unlink } from "@dr.pogodin/react-native-fs";
 import { ImageSourcePropType, Platform } from "react-native";
 import { Image } from "@rneui/base";
 import { ensureAndroidCompatible } from "./utils";
@@ -14,8 +14,9 @@ const assets = [
     { name: "hanukkah.png", asset: require("../assets/hanukkah.png") },
     { name: "dice-empty.glb", asset: require("../assets/dice-empty.glb") },
     { name: "spinner.glb", asset: require("../assets/spinner.glb") },
-    { name: "spinner-rounded.glb", asset: require("../assets/spinner-rounded.glb") },
-    { name: "floor-lines.glb", asset: require("../assets/floor-lines.glb") },
+    { name: "floor.glb", asset: require("../assets/floor.glb") },
+    { name: "shadow.glb", asset: require("../assets/shadow.glb") },
+    { name: "backdrop.glb", asset: require("../assets/backdrop.glb") },
     { name: "transparent_shadow_material.filamat", asset: require("../assets/transparent_shadow_material.filamat") },
 ]
 
@@ -34,7 +35,8 @@ export function getAssetLocalPath(name: string, forceFilePrefix: boolean = false
 
 async function loadAsset(asset: { name: string, asset: ImageSourcePropType }) {
     const fileName = getAssetLocalPath(asset.name);
-    if (await exists(fileName)) return;
+    // always copy - a file left by a previous app version may not match this version's code
+    if (await exists(fileName)) await unlink(fileName);
     if (Platform.OS === 'android') {
         await copyFileAssets(asset.name, fileName);
     } else {

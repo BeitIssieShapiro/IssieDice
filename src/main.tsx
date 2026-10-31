@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Button, TouchableOpacity, SafeAreaView, Linking, Alert, Text, Dimensions, Platform, AppState } from "react-native";
+import { View, StyleSheet, Button, TouchableOpacity, Linking, Alert, Text, Dimensions, Platform, AppState } from "react-native";
 
 import { DiceScene, DiceSceneMethods } from "./diceScene";
 import { SettingsUI } from "./settings";
@@ -141,10 +141,12 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container} onLayout={(e) => {
-      let wz = e.nativeEvent.layout;
-      setWindowSize(wz);
-    }}>
+    // safe area at the top and sides only - the table goes down to the bottom edge (under the home indicator)
+    <View style={[styles.container, { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right }]}
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        setWindowSize({ width: width - insets.left - insets.right, height: height - insets.top });
+      }}>
 
       {/** indicator to a lock */}
       {/* {inRecovery && <View style={[styles.lockIndicator, { top: Math.max(4, insets.top), left: 5 + insets.left, zIndex: 1000 }]} />} */}
@@ -197,7 +199,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
         {profile && <FilamentScene backend={filamentBackend}>
           {profile.spinner ?
             <SpinnerScene
-              key={"spinner-" + profile.spinnerShape}
+              key="spinner"
               setInRecovery={setInRecovery}
               ref={sceneRef}
               freeze={openSettings > 0}
@@ -218,7 +220,7 @@ export default function App({ migratedDice }: { migratedDice: string[] }) {
         }
       </>
 
-    </SafeAreaView>
+    </View>
   );
 }
 

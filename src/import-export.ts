@@ -180,7 +180,8 @@ export async function importPackage(packagePath: string, importInfo: ImportInfo,
                 spinner: md.spinner ?? false,
                 spinnerDie: md.spinnerDie ?? EmptyProfile.spinnerDie,
                 spinnerMusic: md.spinnerMusic ?? EmptyProfile.spinnerMusic,
-                spinnerShape: md.spinnerShape ?? EmptyProfile.spinnerShape,
+                spinnerColor: md.spinnerColor ?? EmptyProfile.spinnerColor,
+                spinnerHandleColor: md.spinnerHandleColor ?? EmptyProfile.spinnerHandleColor,
             }
 
             await saveProfileFile(md.name, p, true);

@@ -19,7 +19,8 @@ export const SettingsKeys = {
     Spinner: "Spinner",
     SpinnerTemplate: "SpinnerTemplate",
     SpinnerMusic: "SpinnerMusic",
-    SpinnerShape: "SpinnerShape",
+    SpinnerColor: "SpinnerColor",
+    SpinnerHandleColor: "SpinnerHandleColor",
     LastColors: "LastColors",
 }
 

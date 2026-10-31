@@ -1,6 +1,6 @@
 import * as CANNON from "cannon-es";
-import { createFloor, createSpinnerShape, createWall, SpinnerTipY } from "./scene-elements";
-import type { Bounds, SpinnerShape } from "./models";
+import { createFloor, createSpinnerShape, createWall, SpinnerHandleTop, SpinnerTipY } from "./scene-elements";
+import type { Bounds } from "./models";
 
 /*
  * Spinner (sevivon) simulation.
@@ -15,7 +15,7 @@ import type { Bounds, SpinnerShape } from "./models";
  * the face is flat and readable (handle pointing to the top of the screen).
  */
 
-export type SpinnerPhase = "idle" | "spinning" | "falling" | "settling";
+export type SpinnerPhase = "idle" | "rising" | "spinning" | "falling" | "settling";
 
 // local outward normals of the 4 faces (see design-resources/generate-spinner-glb.js)
 const FaceNormals = [
@@ -29,10 +29,13 @@ const FloorY = -1;
 const UpAxis = new CANNON.Vec3(0, 1, 0);
 const TipToCenter = new CANNON.Vec3(0, -SpinnerTipY, 0);
 
+const RiseDuration = 0.6;       // sec - standing up from lying, and starting to turn
 const SpinDurationMin = 3;      // sec
 const SpinDurationMax = 5;      // sec
-const OmegaStart = 30;          // rad/sec
-const OmegaEnd = 4;             // rad/sec - spin speed when handing over to physics
+const SpinDirection = -1;       // 1: counterclockwise seen from above, -1: clockwise
+const OmegaStart = 14;          // rad/sec
+const RiseTurn = SpinDirection * OmegaStart * RiseDuration / 2;  // rad - turning while rising, speeding up to OmegaStart
+const OmegaEnd = 3;             // rad/sec - spin speed when handing over to physics
 const TiltStart = 0.03;         // rad
 const TiltEnd = 0.3;            // rad
 const PrecessionFactor = 25;    // precession speed = PrecessionFactor / omega
@@ -40,11 +43,13 @@ const FallTiltSpeed = 1.5;      // rad/sec - extra push to fall when handing ove
 const SettleDuration = 0.4;     // sec
 const FallTimeout = 6;          // sec - force settle if physics does not go to sleep
 const WallMargin = 1.2;         // keep the spinning spinner away from walls (body half size is 1)
-const LyingHalfLength = (2.2 - SpinnerTipY) / 2;  // half the length from tip to handle top
+const LyingHalfLength = (SpinnerHandleTop - SpinnerTipY) / 2;  // half the length from tip to handle top
 const MaxFallJitter = 35 * Math.PI / 180;         // random deviation of the fall direction
 const LyingTolerance = 0.25;    // |up component| of the spinner's axis, to consider it lying on a side
-const NudgeSpeed = 3;           // rad/sec - push to fall on a side, when resting on the tip's pyramid
-const MaxNudges = 6;
+const NudgeSpeed = 8;           // rad/sec - push to fall on a side, when resting on the tip's pyramid
+const MaxNudges = 10;
+const LeanAccel = 20;           // rad/sec^2 - tips a slow spinner leaning on its tip's pyramid over to a side
+const LeanMaxSpeed = 3;         // rad/sec - only while it turns slower than this (it is not falling by itself)
 const FallSpinFactor = 0.5;      // part of the spin kept when physics takes over
 
 function axisAngle(axis: CANNON.Vec3, angle: number) {
@@ -82,8 +87,10 @@ export class SpinnerSim {
     face = 0;
     // rotation (around the up axis) of the camera's view direction, from +z
     viewYaw = 0;
-    // when settling, turn the spinner so the face is upright (not needed for faces that read the same at any angle)
+    // when settled, turn the camera so the face is upright (not needed for faces that read the same at any angle)
     turnToReadable = true;
+    // the camera's turn around the vertical axis through the settled spinner, that shows its face upright
+    viewTurn = 0;
     onSettled?: (face: number) => void;
     onCollide?: (impactVelocity: number) => void;
 
@@ -100,12 +107,15 @@ export class SpinnerSim {
     private fallAngle = 0; // direction of the fall: (sin, 0, cos)
     private settleFrom = new CANNON.Quaternion();
     private settleTo = new CANNON.Quaternion();     // face up, flat - same heading as when it stopped
-    private settleYaw = 0;                          // then turned around the vertical axis by this
     private nudges = 0;
     private settleFromPos = new CANNON.Vec3();
+    private riseFrom = new CANNON.Quaternion();
+    private riseTo = new CANNON.Quaternion();       // the spin's start pose, without the turn while rising
+    private riseFromPos = new CANNON.Vec3();
+    private riseToPos = new CANNON.Vec3();
     private random: () => number;
 
-    constructor(random: () => number = Math.random, shape: SpinnerShape = "classic") {
+    constructor(random: () => number = Math.random) {
         this.random = random;
         this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -45, 0) });
         this.world.broadphase = new CANNON.NaiveBroadphase();
@@ -115,7 +125,7 @@ export class SpinnerSim {
 
         createFloor(this.world);
 
-        this.body = createSpinnerShape(shape);
+        this.body = createSpinnerShape();
         this.body.angularDamping = 0.3;
         this.body.linearDamping = 0.1;
         this.body.sleepSpeedLimit = 0.1;
@@ -166,14 +176,16 @@ export class SpinnerSim {
     }
 
     spin() {
-        this.phase = "spinning";
+        this.riseFrom.copy(this.body.quaternion);
+        this.riseFromPos.copy(this.body.position);
+        this.phase = "rising";
         this.phaseStart = this.time;
         this.spinDuration = SpinDurationMin + (SpinDurationMax - SpinDurationMin) * this.random();
         this.spinAngle = this.random() * 2 * Math.PI;
         this.planFall();
         // start the precession so it ends exactly in the fall direction
         // (the total precession is the integral of PrecessionFactor / omega, omega decreasing linearly)
-        const totalPrecession = PrecessionFactor * this.spinDuration / (OmegaEnd - OmegaStart) * Math.log(OmegaEnd / OmegaStart);
+        const totalPrecession = SpinDirection * PrecessionFactor * this.spinDuration / (OmegaEnd - OmegaStart) * Math.log(OmegaEnd / OmegaStart);
         this.precessionAngle = this.fallAngle - totalPrecession;
         this.tipStart.set(this.clampX(this.body.position.x), FloorY, this.clampZ(this.body.position.z));
         this.tip.copy(this.tipStart);
@@ -182,13 +194,43 @@ export class SpinnerSim {
         this.body.velocity.setZero();
         this.body.angularVelocity.setZero();
         this.body.wakeUp();
-        this.updateSpinPose(0);
+
+        // where the spin starts: a fixed pose, so it does not flip on the way (as a moving target could)
+        const q = this.spinQuaternion(TiltStart);
+        this.riseToPos.copy(this.tip.vadd(q.vmult(TipToCenter)));
+        q.mult(axisAngle(UpAxis, -RiseTurn), this.riseTo);
+        this.updateRisePose();
+    }
+
+    /** stands up from lying, to the pose the spin starts with, while starting to turn around its own axis */
+    private updateRisePose() {
+        const t = Math.min(1, (this.time - this.phaseStart) / RiseDuration);
+        const e = t * t * (3 - 2 * t);
+        // the turn speeds up to the spin's (RiseTurn in total)
+        this.riseFrom.slerp(this.riseTo, e).mult(axisAngle(UpAxis, RiseTurn * t * t), this.body.quaternion);
+        const from = this.riseFromPos;
+        const targetPos = this.riseToPos;
+        this.body.position.set(
+            from.x + (targetPos.x - from.x) * e,
+            // a bit up on the way, so the tip does not go through the floor
+            from.y + (targetPos.y - from.y) * e + Math.sin(Math.PI * e) * 0.5,
+            from.z + (targetPos.z - from.z) * e);
     }
 
     /** advance simulation by dt seconds */
     step(dt: number) {
         this.time += dt;
         switch (this.phase) {
+            case "rising":
+                if (this.time - this.phaseStart >= RiseDuration) {
+                    // the spin started when rising ended - in this step
+                    this.phase = "spinning";
+                    this.phaseStart += RiseDuration;
+                    this.updateSpinPose(this.time - this.phaseStart);
+                } else {
+                    this.updateRisePose();
+                }
+                break;
             case "spinning": {
                 const t = (this.time - this.phaseStart) / this.spinDuration;
                 if (t >= 1) {
@@ -199,6 +241,7 @@ export class SpinnerSim {
                 break;
             }
             case "falling":
+                this.tipOverIfLeaning(dt);
                 this.world.step(1 / 60, dt, 3);
                 if (this.phase == "falling" && this.time - this.phaseStart > FallTimeout) {
                     this.handleSleep();
@@ -207,10 +250,8 @@ export class SpinnerSim {
             case "settling": {
                 const t = Math.min(1, (this.time - this.phaseStart) / SettleDuration);
                 const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-                // lay the face flat (a small roll), while turning around the vertical axis to be readable
-                const flat = new CANNON.Quaternion();
-                this.settleFrom.slerp(this.settleTo, e, flat);
-                axisAngle(UpAxis, this.settleYaw * e).mult(flat, this.body.quaternion);
+                // lay the face flat (a small roll)
+                this.settleFrom.slerp(this.settleTo, e, this.body.quaternion);
                 const p = this.settleFromPos;
                 this.body.position.set(p.x, p.y + (FloorY + 1 - p.y) * e, p.z);
                 if (t >= 1) {
@@ -220,6 +261,19 @@ export class SpinnerSim {
                 break;
             }
         }
+    }
+
+    /**
+     * Once the camera turned by `yaw` around (x, z): moves the spinner to where it is seen from the camera's
+     * default view - turned by -yaw around (x, z), which moves to the center. Then the camera can go back
+     * to its default view. By default the full viewTurn, around the spinner.
+     */
+    applyViewTurn(yaw = this.viewTurn, x = this.body.position.x, z = this.body.position.z) {
+        const turn = axisAngle(UpAxis, -yaw);
+        const p = turn.vmult(new CANNON.Vec3(this.body.position.x - x, 0, this.body.position.z - z));
+        this.body.position.set(p.x, this.body.position.y, p.z);
+        this.body.quaternion.copy(turn.mult(this.body.quaternion));
+        this.viewTurn = 0;
     }
 
     /**
@@ -256,8 +310,8 @@ export class SpinnerSim {
 
     private spinState() {
         const t = Math.min(1, (this.time - this.phaseStart) / this.spinDuration);
-        const omega = OmegaStart + (OmegaEnd - OmegaStart) * t;
-        const precessionSpeed = PrecessionFactor / omega;
+        const omega = SpinDirection * (OmegaStart + (OmegaEnd - OmegaStart) * t);
+        const precessionSpeed = PrecessionFactor / omega;  // same direction as the spin
         const tilt = TiltStart + (TiltEnd - TiltStart) * t * t;
         return { omega, precessionSpeed, tilt };
     }
@@ -311,19 +365,35 @@ export class SpinnerSim {
         this.nudges = 0;
     }
 
+    /** the direction to turn, so a spinner leaning on its tip's pyramid falls on a side - undefined when lying */
+    private tipOverAxis(): CANNON.Vec3 | undefined {
+        const axis = this.body.quaternion.vmult(UpAxis);
+        if (Math.abs(axis.y) <= LyingTolerance) return undefined;
+        const lean = new CANNON.Vec3(axis.x, 0, axis.z);
+        if (lean.length() < 1e-3) lean.set(1, 0, 0);
+        const w = UpAxis.cross(lean);
+        w.normalize();
+        return w.scale(Math.sign(axis.y));
+    }
+
+    /** don't let it stop half way, leaning on its tip and a face's bottom edge: keep tipping it over */
+    private tipOverIfLeaning(dt: number) {
+        if (this.body.angularVelocity.length() > LeanMaxSpeed) return;
+        const w = this.tipOverAxis();
+        if (!w) return;
+        this.body.angularVelocity.vadd(w.scale(LeanAccel * dt), this.body.angularVelocity);
+        this.body.wakeUp();
+    }
+
     private handleSleep() {
         if (this.phase != "falling") return;
         const q = this.body.quaternion;
 
         // Resting on the tip's pyramid (leaning, not lying on a side)? push it further in the direction it leans
-        const axis = q.vmult(UpAxis);
-        if (Math.abs(axis.y) > LyingTolerance && this.nudges < MaxNudges) {
+        const w = this.tipOverAxis();
+        if (w && this.nudges < MaxNudges) {
             this.nudges++;
-            const lean = new CANNON.Vec3(axis.x, 0, axis.z);
-            if (lean.length() < 1e-3) lean.set(1, 0, 0);
-            const w = UpAxis.cross(lean);
-            w.normalize();
-            this.body.angularVelocity.copy(w.scale(NudgeSpeed * Math.sign(axis.y)));
+            this.body.angularVelocity.copy(w.scale(NudgeSpeed));
             this.body.wakeUp();
             return;
         }
@@ -342,12 +412,12 @@ export class SpinnerSim {
             this.settleFrom.z * this.settleTo.z + this.settleFrom.w * this.settleTo.w < 0) {
             this.settleTo.set(-this.settleTo.x, -this.settleTo.y, -this.settleTo.z, -this.settleTo.w);
         }
-        // then turn around the vertical axis, so the handle points to the top of the screen (if needed)
+        // the camera then turns around it, so the handle points to the top of the screen (if needed)
         const handle = this.settleTo.vmult(UpAxis);
         let yaw = this.viewYaw - Math.atan2(handle.x, handle.z);
         while (yaw > Math.PI) yaw -= 2 * Math.PI;
         while (yaw < -Math.PI) yaw += 2 * Math.PI;
-        this.settleYaw = this.turnToReadable ? yaw : 0;
+        this.viewTurn = this.turnToReadable ? -yaw : 0;
         this.settleFromPos.copy(this.body.position);
         this.phase = "settling";
         this.phaseStart = this.time;

@@ -24,6 +24,7 @@ import { animateYaw, computeFloorBounds, computeVerticalFov, darkenHexColor, get
 import { createDieShape, createFloor, createWall } from "./scene-elements";
 import { playAudio, playBundledAudio } from "./audio";
 import { getAssetLocalPath, Sounds } from "./assets";
+import { boxCorners, FloorModel, shadowDirection, shadowPlacement, ShadowModel, toLinear } from "./table-elements";
 
 
 export const DiceModel = { uri: getAssetLocalPath("dice-empty.glb", true) };
@@ -103,6 +104,10 @@ export const focalLength = 35;
 export const fov = computeVerticalFov(focalLength);
 export const wallThickness = 0.01;
 const FaceUpInit = [-1, -1, -1, -1];
+// points of a die casting its shadow (model units, local): the rounded cube's corners
+const ShadowPoints = boxCorners(0.85, 0.85, 0.85);
+// the camera looks down from the bottom of the screen (-z): the top of the screen is +z
+const ShadowDir = shadowDirection([0, 0, 1]);
 const canonicalYaw = [Math.PI / 2, Math.PI, 0, 0, -Math.PI / 2, Math.PI]
 
 
@@ -153,6 +158,18 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
         return e
     });
 
+
+    const floorModel = useModel(FloorModel);
+    const floorEntity = getAssetFromModel(floorModel)?.getRenderableEntities()[0];
+    const shadowModels = [useModel(ShadowModel), useModel(ShadowModel), useModel(ShadowModel), useModel(ShadowModel)];
+    const shadowEntities = shadowModels.map(m => getAssetFromModel(m)?.getRenderableEntities()[0]);
+
+    useEffect(() => {
+        if (!floorEntity) return;
+        // the floor's texture is nearly white - it takes the table's color
+        renderableManager.getMaterialInstanceAt(floorEntity, 0)
+            .setFloat4Parameter("baseColorFactor", toLinear(hexToSrgb(safeColor(profile.tableColor)).slice(0, 3)));
+    }, [floorEntity, profile.tableColor]);
 
     //#region Setup shadow plane
     // const shadowMaterialBuffer = useBuffer({ source: TransparentShadowMaterial })
@@ -476,6 +493,15 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
         const scale = getDiceScale();
         console.log("render callback", diceSize, diceActive[0].value, diceActive[1].value, diceActive[2].value, diceActive[3].value)
         const hideTransform = transformManager.createIdentityMatrix().translate([-1000, 0, 0]);
+        // Rendered at scale * (pos + [0, scale, 0] + R * v) - in the same units (before the scale), the floor
+        // (y = -1 of the physics, where a die's center is at y = 0) is at y = scale - 1
+        const floorY = scale - 1;
+        if (floorEntity) {
+            let floorTransform = transformManager.createIdentityMatrix();
+            floorTransform = floorTransform.translate([0, floorY - 0.001, 0]);
+            floorTransform = floorTransform.scaling([scale, scale, scale]);
+            transformManager.setTransform(floorEntity, floorTransform);
+        }
         for (let i = 0; i < 4; i++) {
             const entity = generalEntity[i];
 
@@ -496,9 +522,25 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
                     transformManager.setTransform(entity, hideTransform);
                 }
 
+                const shadowEntity = shadowEntities[i];
+                if (shadowEntity) {
+                    if (diceActive[i].value) {
+                        const [hx, hz, yaw, x, z] = shadowPlacement(ShadowPoints, angle, axis, pos, floorY, ShadowDir[0], ShadowDir[1]);
+                        let shadowTransform = transformManager.createIdentityMatrix();
+                        shadowTransform = shadowTransform.scaling([hx, 1, hz]);
+                        shadowTransform = shadowTransform.rotate(yaw, [0, 1, 0]);
+                        // just above the floor
+                        shadowTransform = shadowTransform.translate([x, floorY + 0.01, z]);
+                        shadowTransform = shadowTransform.scaling([scale, scale, scale]);
+                        transformManager.setTransform(shadowEntity, shadowTransform);
+                    } else {
+                        transformManager.setTransform(shadowEntity, hideTransform);
+                    }
+                }
+
             } else console.log("entity null", i)
         }
-    }, [dicePosition, diceRotation, generalEntity, transformManager, diceSize])
+    }, [dicePosition, diceRotation, generalEntity, transformManager, diceSize, floorEntity, shadowEntities])
 
     const inRecoveryRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
@@ -553,6 +595,8 @@ export const DiceScene = forwardRef(({ profile, windowSize, freeze, setInRecover
                 onTouchStart={handleViewClicked}>
 
                 <DefaultLight />
+                <ModelRenderer model={floorModel} castShadow={false} receiveShadow={false} />
+                {shadowModels.map((m, i) => <ModelRenderer key={"shadow" + i} model={m} castShadow={false} receiveShadow={false} />)}
                 {/* <EnvironmentalLight source={{ uri: 'RNF_default_env_ibl.ktx' }} /> */}
                 {/* <Light type="directional" intensity={100_000} colorKelvin={6_500} castShadows={true}
                     //falloffRadius={bounds.right}

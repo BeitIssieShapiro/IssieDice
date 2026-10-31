@@ -1,23 +1,19 @@
 import React from 'react';
 import { ImageSourcePropType } from 'react-native';
 import Svg, { G, Rect, Polygon, Image as SvgImage, Defs, ClipPath, Text as SvgText } from 'react-native-svg';
-import { FaceInfo, SpinnerShape } from './models';
+import { DefaultSpinnerColor, FaceInfo } from './models';
 import { ensureAndroidCompatible } from './utils';
 import { DefaultFaceBackgroundColor, FontFactor } from './edit-dice';
-import { roundedBottomRing } from './scene-elements';
+import { SpinnerHandleTop, SpinnerTipY } from './scene-elements';
 
 interface SpinnerPreviewProps {
     facesInfo: FaceInfo[] | ImageSourcePropType;
     size: number;
-    shape?: SpinnerShape;
+    colors?: [string, string]; // body, handle
 }
 
 // Model dimensions - same as design-resources/generate-spinner-glb.js (body half size is 1)
-const TipY = -2.2;
-const HandleTop = 2.2;
-const HandleRadius = 0.18;
-const RoundedHandleRadius = 0.14;
-const RoundedRings = 8;
+const HandleRadius = 0.2;
 
 // Isometric projection, looking from the corner between the +z (face 0) and +x (face 1) faces
 const Unit = 25;
@@ -41,27 +37,30 @@ const VisibleFaces = [
 
 const FaceUnits = 100; // a face is drawn in a 100x100 local coordinate system
 
-const BodyColor = "#D99E40";
-const BodyColorDark = "#B07A25";
-const BodyColorLight = "#EBBD6A";
+/** the color scaled by `factor` (< 1 darker, > 1 lighter towards white) */
+function shade(color: string, factor: number): string {
+    const m = /^#?([0-9a-f]{6})$/i.exec(color);
+    if (!m) return color;
+    const n = parseInt(m[1], 16);
+    const c = [n >> 16, (n >> 8) & 255, n & 255].map(v =>
+        Math.round(factor < 1 ? v * factor : v + (255 - v) * (factor - 1)));
+    return "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
+}
 
 /**
  * A static 2D preview of the spinner (sevivon) showing faces 1 and 2.
  */
-export function SpinnerPreview({ facesInfo, size, shape }: SpinnerPreviewProps) {
+export function SpinnerPreview({ facesInfo, size, colors }: SpinnerPreviewProps) {
+    const bodyColor = colors?.[0] ?? DefaultSpinnerColor;
+    const bodyColorDark = shade(bodyColor, 0.8);
+    const bodyColorLight = shade(bodyColor, 1.25);
+    const handleColor = shade(colors?.[1] ?? DefaultSpinnerColor, 0.9);
     const singleImageUri = !Array.isArray(facesInfo) ? (facesInfo as any)?.uri as string | undefined : undefined;
     const faces = Array.isArray(facesInfo) ? facesInfo as FaceInfo[] : undefined;
 
     const handleBase = project(0, 1.1, 0);
-    const handleTopPt = project(0, HandleTop, 0);
-    const handleWidth = 2 * (shape == "rounded" ? RoundedHandleRadius : HandleRadius) * Unit;
-
-    // the rounded bottom of the 2 visible sides: down the left edge to the tip, and back up the right edge
-    const rings = Array.from({ length: RoundedRings + 1 }, (_, k) => roundedBottomRing(k, RoundedRings));
-    const roundedSide = (edge: (h: number) => [[number, number], [number, number]]) => [
-        ...rings.map(({ y, h }) => [edge(h)[0][0], y, edge(h)[0][1]] as [number, number, number]),
-        ...rings.slice().reverse().map(({ y, h }) => [edge(h)[1][0], y, edge(h)[1][1]] as [number, number, number]),
-    ];
+    const handleTopPt = project(0, SpinnerHandleTop, 0);
+    const handleWidth = 2 * HandleRadius * Unit;
 
     return (
         <Svg width={size} height={size} viewBox="-57 -57 114 114">
@@ -72,21 +71,16 @@ export function SpinnerPreview({ facesInfo, size, shape }: SpinnerPreviewProps) 
             </Defs>
 
             {/* tip */}
-            {shape == "rounded" ? <>
-                <Polygon points={points(...roundedSide(h => [[-h, h], [h, h]]))} fill={BodyColor} />
-                <Polygon points={points(...roundedSide(h => [[h, h], [h, -h]]))} fill={BodyColorDark} />
-            </> : <>
-                <Polygon points={points([-1, -1, 1], [1, -1, 1], [0, TipY, 0])} fill={BodyColor} />
-                <Polygon points={points([1, -1, 1], [1, -1, -1], [0, TipY, 0])} fill={BodyColorDark} />
-            </>}
+            <Polygon points={points([-1, -1, 1], [1, -1, 1], [0, SpinnerTipY, 0])} fill={bodyColor} />
+            <Polygon points={points([1, -1, 1], [1, -1, -1], [0, SpinnerTipY, 0])} fill={bodyColorDark} />
 
             {/* top */}
-            <Polygon points={points([-1, 1, 1], [1, 1, 1], [1, 1, -1], [-1, 1, -1])} fill={BodyColorLight} />
+            <Polygon points={points([-1, 1, 1], [1, 1, 1], [1, 1, -1], [-1, 1, -1])} fill={bodyColorLight} />
 
             {/* handle */}
             <Rect x={handleTopPt[0] - handleWidth / 2} y={handleTopPt[1]}
                 width={handleWidth} height={handleBase[1] - handleTopPt[1]}
-                rx={handleWidth / 2} fill={BodyColorDark} />
+                rx={handleWidth / 2} fill={handleColor} />
 
             {/* side faces */}
             {VisibleFaces.map(({ index, topLeft, right }) => {

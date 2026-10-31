@@ -1,5 +1,5 @@
 import { Platform, StyleSheet, Text, View } from "react-native";
-import { Dice, SpinnerShape, templatesList } from "./models";
+import { Dice, templatesList } from "./models";
 import { isRTL, translate } from "./lang";
 import { IconButton, MyIcon, Spacer } from "./components";
 import { DicePreview } from "./edit-dice";
@@ -16,10 +16,10 @@ interface DiceSettingsProps {
     onSetActive: (active: boolean) => void;
     onEditDice?: () => void;
     isSpinner?: boolean;
-    spinnerShape?: SpinnerShape;
+    spinnerColors?: [string, string]; // body, handle
 }
 
-export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onOpenLoadDice, isSpinner, spinnerShape }: DiceSettingsProps) {
+export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onOpenLoadDice, isSpinner, spinnerColors }: DiceSettingsProps) {
 
     let templ = templatesList.find(t => t.key == dice.template)!;
     const isMobile = width < 280 || height < 280;
@@ -42,7 +42,7 @@ export function DiceSettings({ width, height, dice, onSetActive, onEditDice, onO
         <View style={gStyles.cardBody}>
             <Spacer h={isMobile ? 5 : 20} />
             {isSpinner ?
-                <SpinnerPreview facesInfo={dice.faces && dice.faces.length > 0 ? dice.faces : templ?.image!} size={width / 3} shape={spinnerShape} /> :
+                <SpinnerPreview facesInfo={dice.faces && dice.faces.length > 0 ? dice.faces : templ?.image!} size={width / 3} colors={spinnerColors} /> :
                 dice.faces && dice.faces.length > 0 ?
                 (Platform.OS === 'android' ? <IsoCubePreview facesInfo={dice.faces} size={width / 3} /> : <DicePreview facesInfo={dice.faces} size={width / 3} />) :
                 (Platform.OS === 'android' ? <IsoCubePreview facesInfo={templ?.image} size={width / 3} /> : <DicePreview facesInfo={templ?.image} size={width / 3} />)
