@@ -4,7 +4,9 @@ buildscript {
         minSdkVersion = 24
         compileSdkVersion = 37
         targetSdkVersion = 36
-        ndkVersion = "27.1.12297006"
+        // must match the NDK AGP builds libraries without their own ndkVersion with (react-native-filament),
+        // or the packaged libc++_shared.so lacks symbols they need and Filament fails to load
+        ndkVersion = "28.2.13676358"
         kotlinVersion = "2.2.0"
     }
     repositories {
