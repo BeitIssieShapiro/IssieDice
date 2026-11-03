@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-image-crop-tools/android/build.gradle b/node_modules/react-native-image-crop-tools/android/build.gradle
+index 4366d92..d5d13e1 100644
+--- a/node_modules/react-native-image-crop-tools/android/build.gradle
++++ b/node_modules/react-native-image-crop-tools/android/build.gradle
+@@ -41,7 +41,7 @@ android {
+     buildTypes {
+         release {
+             minifyEnabled false
+-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
++            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+         }
+     }
+ }
